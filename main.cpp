@@ -2,6 +2,7 @@
 #include <model.h>
 #include <controller.h>
 #include <QApplication>
+#include <QObject>
 
 int main(int argc, char *argv[])
 {
@@ -26,7 +27,8 @@ int main(int argc, char *argv[])
     controller.setModel(&model);
     controller.setView(&view);
 
-
+    QObject::connect(&view, SIGNAL(mousePressed(QMouseEvent *event, Model::ViewportType type)),
+            &controller, SIGNAL(mousePressed(QMouseEvent *event, Model::ViewportType type)));
 
 
     view.show();

@@ -2,10 +2,16 @@
 #include <camera.h>
 #include "GL/glu.h"
 #include <QMatrix4x4>
+#include <model.h>
 
-Viewport::Viewport(QWidget *parent) :
+
+inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
+inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
+
+Viewport::Viewport(QWidget *parent, Model::ViewportType type) :
     QGLWidget(parent)
 {
+    type_ = type;
 
     // set cube vertices
     float x = 0.5f;
@@ -55,8 +61,8 @@ Viewport::Viewport(QWidget *parent) :
     originalVertices.push_back(std::vector<float> (position5, position5 + 3));
     originalVertices.push_back(std::vector<float> (position6, position6 + 3));
 
-    // set up Camera
-    camera = new Camera(this, Camera::PERSPECTIVE, false);
+    // set up default Camera
+    camera_ = new Camera();
 }
 
 QSize Viewport::minimumSizeHint() const
@@ -73,7 +79,7 @@ void Viewport::initializeGL()
 {
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_COLOR_MATERIAL);
 
     // init shading model to flat shading
     glShadeModel(GL_FLAT);
@@ -96,18 +102,32 @@ void Viewport::paintGL()
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+    // get camera configuration
+    QVector3D cameraPosition = camera_->getPosition();
+    QVector3D cameraPOI = camera_->getPointOfInterest();
+    QVector3D cameraUp = camera_->getUpVector();
+
     // set modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glMultMatrixf(camera->getCameraMatrix().constData());
+
+    glMultMatrix(camera_->getCameraMatrix().constData());
+    gluLookAt(cameraPosition.x(), cameraPosition.y(), cameraPosition.z(),
+              cameraPOI.x(), cameraPOI.y(), cameraPOI.z(),
+              cameraUp.x(), cameraUp.y(), cameraUp.z());
 
 
-
+    // draw scene
     glBegin(GL_QUADS);
 
-    // draw all faces of the cube and set color and normal accordingly
     for (uint i = 0; i < originalVertices.size(); i++) {
-        glColor3f(1,0,0);
+        if (i < 4) glColor3f(1,0,0);
+        else if (i < 8) glColor3f(0,1,0);
+        else if (i < 12) glColor3f(0,1,1);
+        else if (i < 16) glColor3f(1,1,0);
+        else if (i < 20) glColor3f(1,0,1);
+        else if (i < 24) glColor3f(0,0,1);
         glVertex3f(originalVertices[i][0], originalVertices[i][1], originalVertices[i][2]);
     }
 
@@ -123,28 +143,18 @@ void Viewport::resizeGL(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    if (camera->getProjectionMode() == Camera::PERSPECTIVE) {
+    if (camera_->getProjectionMode() == Camera::PERSPECTIVE) {
         if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 10.0d);
-        else gluPerspective(45.0d, 0.0d, 0.01d, 10.0d);
-    } else if (camera->getProjectionMode() == Camera::ORTHOGRAPHIC) {
-        glOrtho(-width / 2, width / 2, -height / 2, height / 2, 0.01, 10.0);
+    } else if (camera_->getProjectionMode() == Camera::ORTHOGRAPHIC) {
+        if (height != 0) glOrtho(- (float) width/height, (float) width/height, -1, 1, 0.01, 10.0);
     }
 }
 
-void Viewport::mousePressEvent(QMouseEvent *event)
-{
 
+// ====================== SETTERS ========================= //
+
+void Viewport::setCamera(Camera *camera) {
+    camera_ = camera;
 }
-
-void Viewport::mouseMoveEvent(QMouseEvent *event)
-{
-
-}
-
-void Viewport::wheelEvent(QWheelEvent *event)
-{
-
-}
-
 
 

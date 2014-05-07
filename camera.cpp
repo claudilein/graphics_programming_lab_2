@@ -1,10 +1,12 @@
 #include "camera.h"
 
-Camera::Camera(QObject *parent, ProjectionMode mode, bool lockRotation) :
+Camera::Camera(QObject *parent, ProjectionMode mode, bool lockRotation, QVector3D position, QVector3D up) :
     QObject(parent)
 {
     mode_ = mode;
     lockRotation_ = lockRotation;
+    startPosition_ = position;
+    up_ = up;
     reset();
 }
 
@@ -32,8 +34,9 @@ void Camera::setProjectionMode(ProjectionMode mode)
 
 void Camera::reset()
 {
+    position_ = startPosition_;
     rotation_ = QQuaternion();
-    translation_ = QVector3D(0,0,-3);
+    translation_ = QVector3D();
     pointOfInterest_ = QVector3D();
 }
 
@@ -60,4 +63,9 @@ QVector3D Camera::getPosition()
 QVector3D Camera::getPointOfInterest()
 {
     return pointOfInterest_;
+}
+
+QVector3D Camera::getUpVector()
+{
+    return up_;
 }

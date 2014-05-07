@@ -4,6 +4,7 @@
 #include <QObject>
 #include <view.h>
 #include <model.h>
+#include <mousecontroller.h>
 
 class Controller : public QObject
 {
@@ -16,11 +17,21 @@ public:
 
 signals:
 
-public slots:
+public slots:    
+    void mousePressEvent(QMouseEvent *event, Model::ViewportType type);
+    void mouseMoveEvent(QMouseEvent *event, Model::ViewportType type);
+    void wheelEvent(QWheelEvent *event, Model::ViewportType type);
 
 private:
     View *view_;
     Model *model_;
+
+    MouseController *mousePerspective;
+    MouseController *mouseFront;
+    MouseController *mouseLeft;
+    MouseController *mouseTop;
+
+
 
 
 

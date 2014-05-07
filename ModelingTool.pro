@@ -19,13 +19,15 @@ SOURCES += main.cpp\
     controller.cpp \
     viewport.cpp \
     camera.cpp \
-    model.cpp
+    model.cpp \
+    mousecontroller.cpp
 
 HEADERS  += view.h \
     controller.h \
     viewport.h \
     camera.h \
-    model.h
+    model.h \
+    mousecontroller.h
 
 RESOURCES += \
     resources.qrc

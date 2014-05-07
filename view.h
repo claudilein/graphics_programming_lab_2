@@ -22,6 +22,14 @@ public:
 
     void setModel(Model *model);
 
+    Viewport* getViewport(Model::ViewportType type);
+
+signals:
+
+    void mousePressed(QMouseEvent *event, Model::ViewportType type);
+    void mouseMoved(QMouseEvent *event, Model::ViewportType type);
+    void wheelTurned(QMouseEvent *event, Model::ViewportType type);
+
 private:
 
     Model *model_;
