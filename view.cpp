@@ -7,6 +7,7 @@
 #include <QSlider>
 #include <QToolBar>
 #include <QStatusBar>
+#include <QToolButton>
 
 View::View(QWidget *parent)
     : QMainWindow(parent)
@@ -43,18 +44,23 @@ View::View(QWidget *parent)
     objectMenu = new QMenu("&Object");
 
     createCubeAction = new QAction("Create &Cube", objectMenu);
+    createCubeAction->setIcon(QIcon(":/img/box.png"));
     //connect(createCubeAction, SIGNAL(triggered()), controller, SLOT(createCube()));
 
     createSphereAction = new QAction("Create &Sphere", objectMenu);
+    createSphereAction->setIcon(QIcon(":/img/sphere.png"));
     //connect(createSphereAction, SIGNAL(triggered()), controller, SLOT(createSphere()));
 
     createCylinderAction = new QAction("Create C&ylinder", objectMenu);
+    createCylinderAction->setIcon(QIcon(":/img/cylinder.png"));
     //connect(createCylinderAction, SIGNAL(triggered()), controller, SLOT(createCylinder()));
 
     createConeAction = new QAction("Create Co&ne", objectMenu);
+    createConeAction->setIcon(QIcon(":/img/cone.png"));
     //connect(createConeAction, SIGNAL(triggered()), controller, SLOT(createCone()));
 
     createTorusAction = new QAction("Create &Torus", objectMenu);
+    createTorusAction->setIcon(QIcon(":/img/torus.png"));
     //connect(createTorusAction, SIGNAL(triggered()), controller, SLOT(createTorus()));
 
     deleteSelectedObjectAction = new QAction("&Delete selected object", objectMenu);
@@ -75,12 +81,21 @@ View::View(QWidget *parent)
     // == INTERACTION MODE MENU == //
 
     interactionModeMenu = new QMenu("&Interaction Mode");
+    interactionModeGroup = new QActionGroup(interactionModeMenu);
 
     setCameraModeAction = new QAction("Ca&mera Mode", interactionModeMenu);
+    setCameraModeAction->setIcon(QIcon(":/img/camera.png"));
+    setCameraModeAction->setCheckable(true);
+    setCameraModeAction->setChecked(true);
     //connect(setCameraModeAction, SIGNAL(triggered()), controller, SLOT(selectMode(CAMERA_MODE)));
 
     setObjectManipulationModeAction = new QAction("Ob&ject Manipulation Mode", interactionModeMenu);
+    setObjectManipulationModeAction->setIcon(QIcon(":/img/select.png"));
+    setObjectManipulationModeAction->setCheckable(true);
     //connect(setObjectManipulationModeAction, SIGNAL(triggered()), controller, SLOT(selectMode(OBJECT_MANIPULATION_MODE)));
+
+    interactionModeGroup->addAction(setCameraModeAction);
+    interactionModeGroup->addAction(setObjectManipulationModeAction);
 
     interactionModeMenu->addAction(setCameraModeAction);
     interactionModeMenu->addAction(setObjectManipulationModeAction);
@@ -91,6 +106,7 @@ View::View(QWidget *parent)
     cameraMenu = new QMenu("C&amera Menu");
 
     resetCameraAction = new QAction("&Reset Camera", cameraMenu);
+    resetCameraAction->setIcon(QIcon(":/img/cam_home.png"));
     //connect(resetCameraAction, SIGNAL(triggered()), controller, SLOT(resetCamera(Camera)));
 
     cameraMenu->addAction(resetCameraAction);
@@ -99,15 +115,35 @@ View::View(QWidget *parent)
     // == VIEW MODE MENU == //
 
     viewModeMenu = new QMenu("&View Mode");
+    viewModeGroup = new QActionGroup(viewModeMenu);
+
+    viewModeButton = new QToolButton(viewModeMenu);
+    viewModeButton->setMenu(viewModeMenu);
+    viewModeButton->setPopupMode(QToolButton::InstantPopup);
+    viewModeButton->setIcon(QIcon(":/img/viewports.png"));
 
     setSingleViewModeAction = new QAction("S&ingle View", viewModeMenu);
+    setSingleViewModeAction->setIcon(QIcon(":/img/view-single.png"));
+    setSingleViewModeAction->setShortcut(tr("1"));
+    setSingleViewModeAction->setCheckable(true);
+    setSingleViewModeAction->setChecked(true);
     //connect(setSingleViewModeAction, SIGNAL(triggered()), controller, SLOT(setViewMode(SINGLE)));
 
     setDualViewModeAction = new QAction("&Dual View", viewModeMenu);
+    setDualViewModeAction->setShortcut(tr("2"));
+    setDualViewModeAction->setIcon(QIcon(":/img/view-dual.png"));
+    setDualViewModeAction->setCheckable(true);
     //connect(setDualViewModeAction, SIGNAL(triggered()), controller, SLOT(setViewMode(DUAL)));
 
     setQuadViewModeAction = new QAction("&Quad View", viewModeMenu);
+    setQuadViewModeAction->setShortcut(tr("4"));
+    setQuadViewModeAction->setIcon(QIcon(":/img/viewports.png"));
+    setQuadViewModeAction->setCheckable(true);
     //connect(setQuadViewModeAction, SIGNAL(triggered()), controller, SLOT(setViewMode(QUAD)));
+
+    viewModeGroup->addAction(setSingleViewModeAction);
+    viewModeGroup->addAction(setDualViewModeAction);
+    viewModeGroup->addAction(setQuadViewModeAction);
 
     viewModeMenu->addAction(setSingleViewModeAction);
     viewModeMenu->addAction(setDualViewModeAction);
@@ -122,9 +158,57 @@ View::View(QWidget *parent)
     menuBar->addMenu(cameraMenu);
     menuBar->addMenu(viewModeMenu);
 
+    // ===== TOOL BAR ===== //
+
+    toolBar->addAction(createCubeAction);
+    toolBar->addAction(createSphereAction);
+    toolBar->addAction(createCylinderAction);
+    toolBar->addAction(createConeAction);
+    toolBar->addAction(createTorusAction);
+
+    toolBar->addSeparator();
+    toolBar->addAction(setCameraModeAction);
+    toolBar->addAction(setObjectManipulationModeAction);
+    toolBar->addAction(resetCameraAction);
+
+    toolBar->addSeparator();
+    toolBar->addWidget(viewModeButton);
+
+    toolBar->addSeparator();
+    toolBar->addWidget(tesselationSlider);
+
+
+    // ===== VIEWPORTS ===== //
+
+    viewportPerspective = new Viewport(this);
+    viewportFront = new Viewport(this);
+    viewportLeft = new Viewport(this);
+    viewportTop = new Viewport(this);
+
+    splitterHorizontalTop = new QSplitter(this);
+    splitterHorizontalTop->addWidget(viewportPerspective);
+    splitterHorizontalTop->addWidget(viewportFront);
+
+    splitterHorizontalBottom = new QSplitter(this);
+    splitterHorizontalBottom->addWidget(viewportLeft);
+    splitterHorizontalBottom->addWidget(viewportTop);
+
+    splitterVertical = new QSplitter(this);
+    splitterVertical->setOrientation(Qt::Vertical);
+    splitterVertical->addWidget(splitterHorizontalTop);
+    splitterVertical->addWidget(splitterHorizontalBottom);
+
+    setCentralWidget(splitterVertical);
+
 }
 
 View::~View()
 {
 
 }
+
+void View::setModel(Model *model)
+{
+    model_ = model;
+}
+

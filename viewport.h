@@ -4,6 +4,7 @@
 #include <QGLWidget>
 #include <QGLShader>
 #include <QGLShaderProgram>
+#include <camera.h>
 
 class Viewport : public QGLWidget
 {
@@ -11,18 +12,21 @@ class Viewport : public QGLWidget
 public:
     explicit Viewport(QWidget *parent = 0);
 
+    QSize minimumSizeHint() const;
+    QSize sizeHint() const;
+
 signals:
 
 public slots:
 
 
 protected:
-//    void initializeGL();
-//    void paintGL();
-//    void resizeGL(int width, int height);
-//    void mousePressEvent(QMouseEvent *event);
-//    void mouseMoveEvent(QMouseEvent *event);
-//    void wheelEvent(QWheelEvent *event);
+    void initializeGL();
+    void paintGL();
+    void resizeGL(int width, int height);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
 
 private:
     // shader that uses phong shading on the object
@@ -34,6 +38,12 @@ private:
     QGLShaderProgram *selectionProgram;
     QGLShader *selectionVertexShader;
     QGLShader *selectionFragmentShader;
+
+    // vertices of cube
+    std::vector<std::vector<float> > originalVertices;
+
+    // Camera
+    Camera *camera;
 
 };
 

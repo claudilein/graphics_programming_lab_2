@@ -2,6 +2,8 @@
 #define CONTROLLER_H
 
 #include <QObject>
+#include <view.h>
+#include <model.h>
 
 class Controller : public QObject
 {
@@ -9,9 +11,18 @@ class Controller : public QObject
 public:
     explicit Controller(QObject *parent = 0);
 
+    void setModel(Model *model);
+    void setView(View *view);
+
 signals:
 
 public slots:
+
+private:
+    View *view_;
+    Model *model_;
+
+
 
 };
 

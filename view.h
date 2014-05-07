@@ -1,14 +1,16 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include <controller.h>
-
+#include <model.h>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QToolBar>
 #include <QMenu>
 #include <QAction>
 #include <QSlider>
+#include <QToolButton>
+#include <QSplitter>
+#include <viewport.h>
 
 class View : public QMainWindow
 {
@@ -18,7 +20,11 @@ public:
     View(QWidget *parent = 0);
     ~View();
 
-    Controller *controller;
+    void setModel(Model *model);
+
+private:
+
+    Model *model_;
 
 
     // visible Items
@@ -44,6 +50,7 @@ public:
 
     // == INTERACTION MODE MENU == //
     QMenu *interactionModeMenu;
+    QActionGroup *interactionModeGroup;
     QAction *setCameraModeAction;
     QAction *setObjectManipulationModeAction;
 
@@ -53,10 +60,21 @@ public:
 
     // == VIEW MODE MENU == //
     QMenu *viewModeMenu;
+    QToolButton *viewModeButton;
+    QActionGroup *viewModeGroup;
     QAction *setSingleViewModeAction;
     QAction *setDualViewModeAction;
     QAction *setQuadViewModeAction;
 
+    // == VIEWPORTS == //
+    Viewport *viewportPerspective;
+    Viewport *viewportFront;
+    Viewport *viewportLeft;
+    Viewport *viewportTop;
+
+    QSplitter *splitterHorizontalTop;
+    QSplitter *splitterHorizontalBottom;
+    QSplitter *splitterVertical;
 
 };
 

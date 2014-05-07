@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/box.png</file>
+        <file>img/camera.png</file>
+        <file>img/cone.png</file>
+        <file>img/cylinder.png</file>
+        <file>img/select.png</file>
+        <file>img/sphere.png</file>
+        <file>img/torus.png</file>
+        <file>img/view-dual.png</file>
+        <file>img/view-single.png</file>
+        <file>img/viewports.png</file>
+        <file>img/cam_home.png</file>
+    </qresource>
+</RCC>
