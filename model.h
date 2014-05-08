@@ -11,17 +11,20 @@ public:
     explicit Model(QObject *parent = 0);
     enum ViewportType {PERSPECTIVE, FRONT, LEFT, TOP};
 
+
+    Camera* getCamera(ViewportType type);
+    bool getActive(ViewportType type);
+
 signals:
 
 public slots:
-    Camera* getCamera(ViewportType type);
 
+    void setActive(Model::ViewportType type);
 
 private:
-    Camera *perspectiveCamera;
-    Camera *frontCamera;
-    Camera *leftCamera;
-    Camera *topCamera;
+    static const int NR_CAMERAS = 4;
+    Camera *cameras_[NR_CAMERAS];
+    ViewportType active_;
 
 
 };

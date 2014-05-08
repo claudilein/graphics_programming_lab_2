@@ -178,12 +178,26 @@ View::View(QWidget *parent)
     toolBar->addWidget(tesselationSlider);
 
 
+
+
+
+}
+
+View::~View()
+{
+
+}
+
+void View::setModel(Model *model)
+{
+    model_ = model;
+
     // ===== VIEWPORTS ===== //
 
-    viewportPerspective = new Viewport(this, Model::PERSPECTIVE);
-    viewportFront = new Viewport(this, Model::FRONT);
-    viewportLeft = new Viewport(this, Model::LEFT);
-    viewportTop = new Viewport(this, Model::TOP);
+    viewportPerspective = new Viewport(this, Model::PERSPECTIVE, model_);
+    viewportFront = new Viewport(this, Model::FRONT, model_);
+    viewportLeft = new Viewport(this, Model::LEFT, model_);
+    viewportTop = new Viewport(this, Model::TOP, model_);
 
     splitterHorizontalTop = new QSplitter(this);
     splitterHorizontalTop->addWidget(viewportPerspective);
@@ -201,51 +215,6 @@ View::View(QWidget *parent)
     setCentralWidget(splitterVertical);
 
 
-
-    // connect signals
-    /*
-    connect(viewportPerspective, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)));
-    connect(viewportPerspective, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)));
-    connect(viewportPerspective, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)));
-
-
-    connect(viewportFront, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)));
-    connect(viewportFront, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)));
-    connect(viewportFront, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)));
-
-
-    connect(viewportLeft, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)));
-    connect(viewportLeft, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)));
-    connect(viewportLeft, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)));
-
-
-
-    connect(viewportTop, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mouseMoved(QMouseEvent*,Model::ViewportType)));
-    connect(viewportTop, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(mousePressed(QMouseEvent*,Model::ViewportType)));
-    connect(viewportTop, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)),
-            this, SIGNAL(wheelTurned(QMouseEvent*,Model::ViewportType)));
-            */
-}
-
-View::~View()
-{
-
-}
-
-void View::setModel(Model *model)
-{
-    model_ = model;
     viewportPerspective->setCamera(model_->getCamera(Model::PERSPECTIVE));
     viewportFront->setCamera(model_->getCamera(Model::FRONT));
     viewportLeft->setCamera(model_->getCamera(Model::LEFT));

@@ -7,6 +7,8 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <viewport.h>
+#include <camera.h>
+#include <model.h>
 
 
 class MouseController : public QObject
@@ -14,9 +16,11 @@ class MouseController : public QObject
     Q_OBJECT
 
 public:
-    explicit MouseController(QObject *parent = 0, Viewport *viewport = 0);
+    explicit MouseController(QObject *parent = 0, Viewport *viewport = 0, Camera *camera = 0);
 
 signals:
+    void updateViewport();
+    void setViewportActive(Model::ViewportType type);
 
 public slots:
 
@@ -26,6 +30,8 @@ public slots:
 
 private:
     Viewport *viewport_;
+    Camera *camera_;
+    float trackballRadius_;
 
     QVector2D lastTranslationPoint_;
     QVector3D lastRotationPoint_;

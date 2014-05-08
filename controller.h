@@ -14,13 +14,11 @@ public:
 
     void setModel(Model *model);
     void setView(View *view);
+    void createMouseControllers();
 
 signals:
 
-public slots:    
-    void mousePressEvent(QMouseEvent *event, Model::ViewportType type);
-    void mouseMoveEvent(QMouseEvent *event, Model::ViewportType type);
-    void wheelEvent(QWheelEvent *event, Model::ViewportType type);
+public slots:
 
 private:
     View *view_;

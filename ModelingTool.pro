@@ -6,7 +6,7 @@
 
 QT       += core gui opengl
 
-LIBS     += -lGLU
+LIBS     += -lGLU -L$$PWD/glew-1.9.0/lib/ -lGLEW
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -31,3 +31,7 @@ HEADERS  += view.h \
 
 RESOURCES += \
     resources.qrc
+
+
+INCLUDEPATH += $$PWD/glew-1.9.0/include
+DEPENDPATH += $$PWD/glew-1.9.0/include

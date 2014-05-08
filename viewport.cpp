@@ -1,17 +1,20 @@
+#include <GL/glew.h>
 #include "viewport.h"
 #include <camera.h>
 #include "GL/glu.h"
 #include <QMatrix4x4>
 #include <model.h>
-
+#include <iostream>
+#include <GL/glut.h>
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
 
-Viewport::Viewport(QWidget *parent, Model::ViewportType type) :
+Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     QGLWidget(parent)
 {
     type_ = type;
+    model_ = model;
 
     // set cube vertices
     float x = 0.5f;
@@ -77,6 +80,13 @@ QSize Viewport::sizeHint() const
 
 void Viewport::initializeGL()
 {
+    // Initialize GLEW
+    glewExperimental = true; // Needed for core profile
+    if (glewInit() != GLEW_OK) {
+        fprintf(stderr, "Failed to initialize GLEW\n");
+        exit(EXIT_FAILURE);
+    }
+
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
@@ -95,12 +105,73 @@ void Viewport::initializeGL()
     // set clear color
     glClearColor(0, 0.5, 0.5, 1);
 
+
+
+    // ==== CREATE FRAMEBUFFER AND ITS TEXTURES ==== //
+
+    // create a texture for the colors
+    glGenTextures(1, &colorTexture_);
+    glBindTexture(GL_TEXTURE_2D, colorTexture_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_BGRA, GL_FLOAT, 0);
+
+    // create a texture for the object IDs
+    glGenTextures(1, &idTexture_);
+    glBindTexture(GL_TEXTURE_2D, idTexture_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width(), height(), 0, GL_RED, GL_FLOAT, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // create a renderbuffer object to store depth info - openGL needs this for depth test
+    glGenRenderbuffers(1, &depthTexture_);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthTexture_);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width(), height());
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    // create a framebuffer object
+    glGenFramebuffers(1, &framebuffer_);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
+
+    // attach the textures to FBO color attachment points
+    glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT0,  // 2. attachment point
+                           GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                           colorTexture_,             // 4. tex ID
+                           0);                    // 5. mipmap level: 0(base)
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT1,  // 2. attachment point
+                           GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                           idTexture_,             // 4. tex ID
+                           0);                    // 5. mipmap level: 0(base)
+
+    // attach the renderbuffer to depth attachment point
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
+                              GL_DEPTH_ATTACHMENT, // 2. attachment point
+                              GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+                              depthTexture_);     // 4. rbo ID
+
+    checkFramebufferStatus();
+
+    // ============================================================ //
+
 }
 
 void Viewport::paintGL()
 {
+
+
+
+
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+    if (model_->getActive(type_))
+    {
+        std::cout << "active: " << type_ << std::endl;
+    } else {
+        std::cout << "inactive: " << type_ << std::endl;
+    }
 
 
     // get camera configuration
@@ -112,10 +183,10 @@ void Viewport::paintGL()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glMultMatrix(camera_->getCameraMatrix().constData());
     gluLookAt(cameraPosition.x(), cameraPosition.y(), cameraPosition.z(),
               cameraPOI.x(), cameraPOI.y(), cameraPOI.z(),
               cameraUp.x(), cameraUp.y(), cameraUp.z());
+    glMultMatrix(camera_->getCameraMatrix().constData());
 
 
     // draw scene
@@ -132,6 +203,8 @@ void Viewport::paintGL()
     }
 
     glEnd();
+
+
 
 }
 
@@ -157,4 +230,42 @@ void Viewport::setCamera(Camera *camera) {
     camera_ = camera;
 }
 
+// ====================== GETTERS ========================= //
 
+Model::ViewportType Viewport::getType() {
+    return type_;
+}
+
+// ====================== SLOTS =========================== //
+
+
+bool Viewport::checkFramebufferStatus() {
+    GLenum status;
+    status=(GLenum)glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+    switch(status) {
+        case GL_FRAMEBUFFER_COMPLETE_EXT:
+            return true;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+            printf("Framebuffer incomplete,incomplete attachment\n");
+            return false;
+        case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+            printf("Unsupported framebuffer format\n");
+            return false;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+            printf("Framebuffer incomplete,missing attachment\n");
+            return false;
+        case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
+            printf("Framebuffer incomplete,attached images must have same dimensions\n");
+            return false;
+        case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
+             printf("Framebuffer incomplete,attached images must have same format\n");
+            return false;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
+            printf("Framebuffer incomplete,missing draw buffer\n");
+            return false;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
+            printf("Framebuffer incomplete,missing read buffer\n");
+            return false;
+    }
+    return false;
+}

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVector3D>
 #include <QMatrix4x4>
+#include <QVector2D>
 
 class Camera : public QObject
 {
@@ -18,7 +19,8 @@ signals:
 public slots:
 
     void rotate(QQuaternion newRotation);
-    void translate(QVector3D newTranslation);
+    void translate(QVector2D newTranslation);
+    void zoom(float zoom);
     void setPointOfInterest(QVector3D newPointOfInterest);
     void setProjectionMode(ProjectionMode newMode);
     void reset();
@@ -28,6 +30,7 @@ public slots:
     QVector3D getPosition();
     QVector3D getPointOfInterest();
     QVector3D getUpVector();
+    float getZoom();
 
 private:
     ProjectionMode mode_;
@@ -36,9 +39,11 @@ private:
     QVector3D startPosition_;
     QVector3D position_;
     QVector3D up_;
+
     QVector3D pointOfInterest_;
     QQuaternion rotation_;
-    QVector3D translation_;
+    QVector2D translation_;
+    float zoom_;
 
 };
 

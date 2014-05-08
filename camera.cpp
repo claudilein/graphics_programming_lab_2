@@ -15,7 +15,7 @@ void Camera::rotate(QQuaternion rotation)
     rotation_ = rotation_ * rotation;
 }
 
-void Camera::translate(QVector3D translation)
+void Camera::translate(QVector2D translation)
 {
     translation_ = translation_ + translation;
 }
@@ -31,12 +31,17 @@ void Camera::setProjectionMode(ProjectionMode mode)
     mode_ = mode;
 }
 
+void Camera::zoom(float zoom)
+{
+    zoom_ = zoom;
+}
 
 void Camera::reset()
 {
     position_ = startPosition_;
     rotation_ = QQuaternion();
-    translation_ = QVector3D();
+    zoom_ = -2;
+    translation_ = QVector2D();
     pointOfInterest_ = QVector3D();
 }
 
@@ -68,4 +73,9 @@ QVector3D Camera::getPointOfInterest()
 QVector3D Camera::getUpVector()
 {
     return up_;
+}
+
+float Camera::getZoom()
+{
+    return zoom_;
 }
