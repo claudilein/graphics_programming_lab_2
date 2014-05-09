@@ -1,0 +1,22 @@
+#version 120
+
+varying vec3 normal;
+varying vec3 lightRay;
+varying vec3 viewRay;
+//uniform int nrLightSources;
+//uniform int id;
+
+void main() {
+
+	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+	normal = normalize(gl_NormalMatrix * gl_Normal);
+	lightRay = gl_LightSource[0].position.xyz - vec3(gl_ModelViewMatrix * gl_Vertex);
+	viewRay = (- gl_ModelViewMatrix * gl_Vertex).xyz;
+
+	gl_FrontColor = gl_Color;
+	gl_BackColor = gl_Color;
+
+	//for (int i = 0; i < nrLightSources; i++) {
+	//	lightRay[i] = gl_LightSource[i].position.xyz - vec3(gl_ModelViewMatrix * gl_Vertex);
+	//}
+}

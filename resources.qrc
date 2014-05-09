@@ -11,5 +11,7 @@
         <file>img/view-single.png</file>
         <file>img/viewports.png</file>
         <file>img/cam_home.png</file>
+        <file>shaders/phongVertexShader.vertexShader</file>
+        <file>shaders/phongFragmentShader.fragmentShader</file>
     </qresource>
 </RCC>

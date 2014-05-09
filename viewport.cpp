@@ -153,6 +153,19 @@ void Viewport::initializeGL()
 
     // ============================================================ //
 
+    // compile and link shaders
+    phongProgram = new QGLShaderProgram(this);
+
+    phongVertexShader = new QGLShader(QGLShader::Vertex, this);
+    phongFragmentShader = new QGLShader(QGLShader::Fragment, this);
+
+    phongVertexShader->compileSourceFile(":/shaders/phongVertexShader.vertexShader");
+    phongFragmentShader->compileSourceFile(":/shaders/phongFragmentShader.fragmentShader");
+
+    phongProgram->addShader(phongVertexShader);
+    phongProgram->addShader(phongFragmentShader);
+    phongProgram->link();
+
 }
 
 void Viewport::paintGL()

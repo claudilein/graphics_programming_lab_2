@@ -1,0 +1,32 @@
+#version 120
+
+varying vec3 normal;
+varying vec3 lightRay;
+varying vec3 viewRay;
+
+void main() {
+	vec3 N = normalize(normal);
+	vec3 L = normalize(lightRay);
+	vec3 V = normalize(viewRay);
+
+	float LdotN = dot(L, N);
+
+	// only calculate lighting if light source is not behind the surface
+	if (LdotN > 0) {
+		// R = reflection ray
+		vec3 R = 2 * LdotN * N - L;
+		float RdotV = max(0, dot(R,V));
+
+		// diffuse = kd * <L,N> * ld
+		vec4 diffuseColor = gl_Color * LdotN * gl_LightSource[0].diffuse;
+
+		// specular = ks * <R,V>^n * ls
+		vec4 specularColor = gl_FrontMaterial.specular * pow(RdotV, gl_FrontMaterial.shininess) * gl_LightSource[0].specular;
+
+		gl_FragColor = diffuseColor + specularColor;
+	} else {
+		gl_FragColor = vec4(0,0,0,1);
+	}
+
+
+}
