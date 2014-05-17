@@ -65,6 +65,8 @@ private:
     GLuint idTexture_;
     GLuint depthTexture_;
 
+    GLuint id_ID_;
+
     bool checkFramebufferStatus();
 
     Cube *cube_;

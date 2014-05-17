@@ -27,6 +27,7 @@ public:
     attribute getVertexColors();
     attribute getVertexNormals();
     virtual void draw();
+    int getID();
 
 signals:
 

@@ -45,23 +45,24 @@ View::View(QWidget *parent)
 
     createCubeAction = new QAction("Create &Cube", objectMenu);
     createCubeAction->setIcon(QIcon(":/img/box.png"));
-    //connect(createCubeAction, SIGNAL(triggered()), controller, SLOT(createCube()));
+    connect(createCubeAction, SIGNAL(triggered()), this, SIGNAL(createCube()));
+
 
     createSphereAction = new QAction("Create &Sphere", objectMenu);
     createSphereAction->setIcon(QIcon(":/img/sphere.png"));
-    //connect(createSphereAction, SIGNAL(triggered()), controller, SLOT(createSphere()));
+    connect(createSphereAction, SIGNAL(triggered()), this, SIGNAL(createSphere()));
 
     createCylinderAction = new QAction("Create C&ylinder", objectMenu);
     createCylinderAction->setIcon(QIcon(":/img/cylinder.png"));
-    //connect(createCylinderAction, SIGNAL(triggered()), controller, SLOT(createCylinder()));
+    connect(createCylinderAction, SIGNAL(triggered()), this, SIGNAL(createCylinder()));
 
     createConeAction = new QAction("Create Co&ne", objectMenu);
     createConeAction->setIcon(QIcon(":/img/cone.png"));
-    //connect(createConeAction, SIGNAL(triggered()), controller, SLOT(createCone()));
+    connect(createConeAction, SIGNAL(triggered()), this, SIGNAL(createCone()));
 
     createTorusAction = new QAction("Create &Torus", objectMenu);
     createTorusAction->setIcon(QIcon(":/img/torus.png"));
-    //connect(createTorusAction, SIGNAL(triggered()), controller, SLOT(createTorus()));
+    connect(createTorusAction, SIGNAL(triggered()), this, SIGNAL(createTorus()));
 
     deleteSelectedObjectAction = new QAction("&Delete selected object", objectMenu);
     //connect(deleteSelectedObjectAction, SIGNAL(triggered()), controller, SLOT(deleteSelectedObject()));

@@ -1,5 +1,6 @@
 #include "cone.h"
 #include <math.h>
+#include <iostream>
 
 Cone::Cone(std::string name, int id, int tesselation,
            float radius, float height) :
@@ -8,8 +9,7 @@ Cone::Cone(std::string name, int id, int tesselation,
     height_(height)
 {
 
-    //int steps = 1 << tesselation;
-    int steps = 10;
+    int steps = 4 + tesselation_;
     for (int i = 0; i < steps; i++) {
         double phi_left = 2 * M_PI * i / static_cast<double>(steps);
         double phi_right = 2 * M_PI * (i + 1) / static_cast<double>(steps);
@@ -67,6 +67,7 @@ Cone::Cone(std::string name, int id, int tesselation,
 
 
 void Cone::draw() {
+
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
@@ -79,10 +80,11 @@ void Cone::draw() {
         (void*)0            // array buffer offset
     );
 
-    glEnableVertexAttribArray(1);
+
+    glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
     glVertexAttribPointer(
-        1,                  // attribute 1
+        2,                  // attribute 1
         3,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?
@@ -90,19 +92,22 @@ void Cone::draw() {
         (void*)0            // array buffer offset
     );
 
-    glEnableVertexAttribArray(2);
+
+    glEnableVertexAttribArray(3);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
     glVertexAttribPointer(
-        2,                  // attribute 2
+        3,                  // attribute 2
         3,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?
         0,                  // stride
         (void*)0            // array buffer offset
     );
+
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+
 
     glDrawElements(
         GL_TRIANGLES,      // mode
@@ -110,5 +115,8 @@ void Cone::draw() {
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
     );
+
+
+
 
 }

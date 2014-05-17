@@ -4,7 +4,6 @@
 Controller::Controller(QObject *parent) :
     QObject(parent)
 {
-
 }
 
 
@@ -17,6 +16,12 @@ void Controller::setModel(Model *model)
 
 void Controller::setView(View *view) {
     view_ = view;
+
+    connect(view_, SIGNAL(createCube()), model_, SLOT(addCube()));
+    connect(view_, SIGNAL(createSphere()), model_, SLOT(addSphere()));
+    connect(view_, SIGNAL(createCylinder()), model_, SLOT(addCylinder()));
+    connect(view_, SIGNAL(createCone()), model_, SLOT(addCone()));
+    connect(view_, SIGNAL(createTorus()), model_, SLOT(addTorus()));
 }
 
 void Controller::createMouseControllers() {

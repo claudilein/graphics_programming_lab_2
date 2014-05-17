@@ -4,6 +4,9 @@ varying vec3 normal;
 varying vec3 lightRay;
 varying vec3 viewRay;
 
+uniform float id;
+
+
 void main() {
 	vec3 N = normalize(normal);
 	vec3 L = normalize(lightRay);
@@ -28,6 +31,6 @@ void main() {
 		gl_FragColor = vec4(0,0,0,1);
 	}
 
-gl_FragColor = vec4(V, 1);
+//gl_FragColor = vec4(V, 1);
 
 }

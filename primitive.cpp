@@ -40,5 +40,10 @@ Primitive::attribute Primitive::getVertexNormals()
 }
 
 void Primitive::draw() {
+    std::cout << "Primitive->draw was called " << std::endl;
+}
 
+int Primitive::getID()
+{
+    return id_;
 }

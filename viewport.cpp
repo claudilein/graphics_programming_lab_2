@@ -10,6 +10,7 @@
 #include <cone.h>
 #include <cylinder.h>
 #include <grid.h>
+#include <primitive.h>
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
@@ -19,58 +20,6 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
 {
     type_ = type;
     model_ = model;
-
-
-
-    // set cube vertices
-    float x = 0.5f;
-
-    float position0[3] = {-x, -x, +x};
-    float position1[3] = {+x, -x, +x};
-    float position2[3] = {+x, -x, -x};
-    float position3[3] = {-x, -x, -x};
-    float position4[3] = {-x, +x, +x};
-    float position5[3] = {+x, +x, +x};
-    float position6[3] = {+x, +x, -x};
-    float position7[3] = {-x, +x, -x};
-
-    // front
-    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
-    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
-    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
-    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
-
-    // right
-    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
-    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
-    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
-    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
-
-    // back
-    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
-    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
-    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
-    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
-
-    // left
-    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
-    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
-    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
-    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
-
-    // bottom
-    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
-    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
-    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
-    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
-
-    // top
-    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
-    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
-    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
-    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
-
-
 
 
 
@@ -112,6 +61,14 @@ void Viewport::initializeGL()
     // position lightsource
     float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
+
+    // set material properties for the cube
+    float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
+    int shininess = 120.0f;
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
+    glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+
 
     // set clear color
     glClearColor(0, 0.5, 0.5, 1);
@@ -161,6 +118,9 @@ void Viewport::initializeGL()
                               depthTexture_);     // 4. rbo ID
 
     checkFramebufferStatus();
+    // define the index array for the outputs
+    GLuint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2,  attachments);
 
     // ============================================================ //
 
@@ -180,17 +140,15 @@ void Viewport::initializeGL()
     phongProgram->link();
     phongProgram->bind();
 
+
     //GLuint mvp;
     //mvp = glGetUniformLocation(phongProgram, "MVP");
 
-    grid_ = new Grid("Cube 1", 0, 0);
-    cube_ = new Cube("bla", 0, 0);
-    //torus_ = new Torus("Torus 1", 0, 0, 0.5, 1.5, 10, 10);
-    //sphere_ = new Sphere("Sphere 1", 0, 0, 1, 10, 10);
-    //cone_ = new Cone("Cone 1 ", 0, 0, 1, 2);
-    //cylinder_ = new Cylinder("Cylinder 1 ", 0, 0, 1, 2);
+    id_ID_ = glGetUniformLocation(phongProgram->programId(), "id");
 
-    std::cout << "torus created " << std::endl;
+    grid_ = new Grid("Grid", 0, 0);
+    torus_ = new Torus("s", 0, 0, 0.5, 1.5, 10, 10);
+
 }
 
 void Viewport::paintGL()
@@ -222,27 +180,25 @@ void Viewport::paintGL()
     glMultMatrix(camera_->getCameraMatrix().constData());
 
 
-    //glUniformMatrix4fv(model_view_projection_matrix_ID_simple_, 1, GL_FALSE, model_view_projection_matrix_.data());
-    grid_->draw();
-    cube_->draw();
+//    grid_->draw();
 
 
+    QList<Primitive*> *primitives = model_->getScenegraph();
 
-    // draw scene
-/*    glBegin(GL_QUADS);
+    for (int i = 0; i < primitives->size(); i++) {
 
-    for (uint i = 0; i < originalVertices.size(); i++) {
-        if (i < 4) glColor3f(1,0,0);
-        else if (i < 8) glColor3f(0,1,0);
-        else if (i < 12) glColor3f(0,1,1);
-        else if (i < 16) glColor3f(1,1,0);
-        else if (i < 20) glColor3f(1,0,1);
-        else if (i < 24) glColor3f(0,0,1);
-        glVertex3f(originalVertices[i][0], originalVertices[i][1], originalVertices[i][2]);
+        glUniform1f(id_ID_, primitives->at(i)->getID());
+        primitives->at(i)->draw();
     }
 
-    glEnd();
-    */
+
+
+
+//    cube_->draw();
+    torus_->draw();
+
+
+
 
 
 
