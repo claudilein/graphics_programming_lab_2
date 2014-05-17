@@ -87,7 +87,7 @@ Cube::Cube(std::string name, int id, int tesselation) :
         vertexNormals_.push_back(float3(normal5));
     }
 
-    float color[3] = {1, 0, 0};
+    float color[3] = {0, 1, 0};
     for (int i = 0; i < vertexPositions_.size(); i++) {
         vertexColors_.push_back(float3(color));
     }

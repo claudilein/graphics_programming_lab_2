@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <QObject>
 #include <vector>
+#include <QQuaternion>
+#include <QVector3D>
 
 
 
@@ -23,9 +25,9 @@ public:
 
     explicit Primitive(QObject *parent = 0, std::string name = 0, int id = 0, int tesselation = 0);
 
-    attribute getVertexPositions();
-    attribute getVertexColors();
-    attribute getVertexNormals();
+    void translate(QVector3D translation);
+    void rotate(QQuaternion rotation);
+    QMatrix4x4 getModelMatrix();
     virtual void draw();
 
 signals:
@@ -47,6 +49,9 @@ protected:
     GLuint vertexBufferNormals_;
     GLuint vertexBufferColors_;
     GLuint indexBuffer_;
+
+    QVector3D translation_;
+    QQuaternion rotation_;
 };
 
 #endif // PRIMITIVE_H

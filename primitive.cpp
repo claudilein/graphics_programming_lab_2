@@ -1,5 +1,6 @@
 #include "primitive.h"
 #include <iostream>
+#include <QMatrix4x4>
 
 
 Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation) :
@@ -24,21 +25,24 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation)
 }
 
 
-Primitive::attribute Primitive::getVertexPositions()
-{
-    return vertexPositions_;
-}
-
-Primitive::attribute Primitive::getVertexColors()
-{
-    return vertexColors_;
-}
-
-Primitive::attribute Primitive::getVertexNormals()
-{
-    return vertexNormals_;
-}
-
 void Primitive::draw() {
 
+}
+
+void Primitive::translate(QVector3D translation)
+{
+    translation_ += translation;
+}
+
+void Primitive::rotate(QQuaternion rotation)
+{
+    rotation_ = rotation_ * rotation;
+}
+
+QMatrix4x4 Primitive::getModelMatrix()
+{
+    QMatrix4x4 modelMatrix;
+    modelMatrix.rotate(rotation_);
+    modelMatrix.translate(translation_);
+    return modelMatrix;
 }

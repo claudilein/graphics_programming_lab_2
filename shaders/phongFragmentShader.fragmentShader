@@ -4,12 +4,15 @@ varying vec3 normal;
 varying vec3 lightRay;
 varying vec3 viewRay;
 
+uniform int id;
+
 void main() {
 	vec3 N = normalize(normal);
 	vec3 L = normalize(lightRay);
 	vec3 V = normalize(viewRay);
 
 	float LdotN = dot(L, N);
+vec4 farbe = vec4(1,0,0,1);
 
 	// only calculate lighting if light source is not behind the surface
 	if (LdotN > 0) {
@@ -18,16 +21,18 @@ void main() {
 		float RdotV = max(0, dot(R,V));
 
 		// diffuse = kd * <L,N> * ld
-		vec4 diffuseColor = gl_Color * LdotN * gl_LightSource[0].diffuse;
+		vec4 diffuseColor = gl_Color * LdotN; //* gl_LightSource[0].diffuse;
+		//vec4 diffuseColor = farbe * LdotN * farbe;
 
 		// specular = ks * <R,V>^n * ls
 		vec4 specularColor = gl_FrontMaterial.specular * pow(RdotV, gl_FrontMaterial.shininess) * gl_LightSource[0].specular;
 
-		gl_FragColor = diffuseColor + specularColor;
+		gl_FragColor = diffuseColor;
 	} else {
 		gl_FragColor = vec4(0,0,0,1);
 	}
 
-gl_FragColor = vec4(V, 1);
+	//gl_FragColor = vec4(V, 1);
+	gl_FragColor[1] = id;
 
 }

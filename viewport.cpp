@@ -227,25 +227,6 @@ void Viewport::paintGL()
     cube_->draw();
 
 
-
-    // draw scene
-/*    glBegin(GL_QUADS);
-
-    for (uint i = 0; i < originalVertices.size(); i++) {
-        if (i < 4) glColor3f(1,0,0);
-        else if (i < 8) glColor3f(0,1,0);
-        else if (i < 12) glColor3f(0,1,1);
-        else if (i < 16) glColor3f(1,1,0);
-        else if (i < 20) glColor3f(1,0,1);
-        else if (i < 24) glColor3f(0,0,1);
-        glVertex3f(originalVertices[i][0], originalVertices[i][1], originalVertices[i][2]);
-    }
-
-    glEnd();
-    */
-
-
-
 }
 
 void Viewport::resizeGL(int width, int height)
