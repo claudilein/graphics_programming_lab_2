@@ -5,7 +5,11 @@
 #include <QMatrix4x4>
 #include <model.h>
 #include <iostream>
-#include <GL/glut.h>
+#include <cube.h>
+#include <torus.h>
+#include <cone.h>
+#include <cylinder.h>
+#include <grid.h>
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
@@ -15,6 +19,8 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
 {
     type_ = type;
     model_ = model;
+
+
 
     // set cube vertices
     float x = 0.5f;
@@ -64,6 +70,10 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     originalVertices.push_back(std::vector<float> (position5, position5 + 3));
     originalVertices.push_back(std::vector<float> (position6, position6 + 3));
 
+
+
+
+
     // set up default Camera
     camera_ = new Camera();
 }
@@ -89,6 +99,7 @@ void Viewport::initializeGL()
 
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_COLOR_MATERIAL);
 
     // init shading model to flat shading
@@ -153,6 +164,8 @@ void Viewport::initializeGL()
 
     // ============================================================ //
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // compile and link shaders
     phongProgram = new QGLShaderProgram(this);
 
@@ -165,18 +178,25 @@ void Viewport::initializeGL()
     phongProgram->addShader(phongVertexShader);
     phongProgram->addShader(phongFragmentShader);
     phongProgram->link();
+    phongProgram->bind();
 
+    //GLuint mvp;
+    //mvp = glGetUniformLocation(phongProgram, "MVP");
+
+    grid_ = new Grid("Cube 1", 0, 0);
+    cube_ = new Cube("bla", 0, 0);
+    //torus_ = new Torus("Torus 1", 0, 0, 0.5, 1.5, 10, 10);
+    //sphere_ = new Sphere("Sphere 1", 0, 0, 1, 10, 10);
+    //cone_ = new Cone("Cone 1 ", 0, 0, 1, 2);
+    //cylinder_ = new Cylinder("Cylinder 1 ", 0, 0, 1, 2);
+
+    std::cout << "torus created " << std::endl;
 }
 
 void Viewport::paintGL()
 {
-
-
-
-
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 
     if (model_->getActive(type_))
@@ -202,8 +222,14 @@ void Viewport::paintGL()
     glMultMatrix(camera_->getCameraMatrix().constData());
 
 
+    //glUniformMatrix4fv(model_view_projection_matrix_ID_simple_, 1, GL_FALSE, model_view_projection_matrix_.data());
+    grid_->draw();
+    cube_->draw();
+
+
+
     // draw scene
-    glBegin(GL_QUADS);
+/*    glBegin(GL_QUADS);
 
     for (uint i = 0; i < originalVertices.size(); i++) {
         if (i < 4) glColor3f(1,0,0);
@@ -216,6 +242,7 @@ void Viewport::paintGL()
     }
 
     glEnd();
+    */
 
 
 

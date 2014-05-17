@@ -1,3 +1,4 @@
+#include <GL/glew.h>
 #include "view.h"
 #include <model.h>
 #include <controller.h>

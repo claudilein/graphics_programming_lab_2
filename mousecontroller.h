@@ -1,7 +1,6 @@
 #ifndef MOUSECONTROLLER_H
 #define MOUSECONTROLLER_H
 
-
 #include <QObject>
 #include <QMouseEvent>
 #include <QVector2D>

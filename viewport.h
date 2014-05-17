@@ -1,11 +1,18 @@
 #ifndef VIEWPORT_H
 #define VIEWPORT_H
 
+#include <GL/glew.h>
 #include <QGLWidget>
 #include <QGLShader>
 #include <QGLShaderProgram>
 #include <camera.h>
 #include <model.h>
+#include <cube.h>
+#include <torus.h>
+#include <sphere.h>
+#include <cone.h>
+#include <cylinder.h>
+#include <grid.h>
 
 class Viewport : public QGLWidget
 {
@@ -59,6 +66,13 @@ private:
     GLuint depthTexture_;
 
     bool checkFramebufferStatus();
+
+    Cube *cube_;
+    Torus *torus_;
+    Sphere *sphere_;
+    Cone *cone_;
+    Cylinder *cylinder_;
+    Grid *grid_;
 
 
 };
