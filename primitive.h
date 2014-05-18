@@ -29,6 +29,7 @@ public:
     void rotate(QQuaternion rotation);
     QMatrix4x4 getModelMatrix();
     virtual void draw();
+    int getID();
 
 signals:
 

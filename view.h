@@ -25,6 +25,15 @@ public:
     Viewport* getViewport(Model::ViewportType type);
 
 signals:
+    void createCube();
+    void createSphere();
+    void createCylinder();
+    void createCone();
+    void createTorus();
+
+    void setSingleViewMode();
+    void setDualViewMode();
+    void setQuadViewMode();
 
 private:
 

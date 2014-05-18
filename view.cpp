@@ -45,23 +45,24 @@ View::View(QWidget *parent)
 
     createCubeAction = new QAction("Create &Cube", objectMenu);
     createCubeAction->setIcon(QIcon(":/img/box.png"));
-    //connect(createCubeAction, SIGNAL(triggered()), controller, SLOT(createCube()));
+    connect(createCubeAction, SIGNAL(triggered()), this, SIGNAL(createCube()));
+
 
     createSphereAction = new QAction("Create &Sphere", objectMenu);
     createSphereAction->setIcon(QIcon(":/img/sphere.png"));
-    //connect(createSphereAction, SIGNAL(triggered()), controller, SLOT(createSphere()));
+    connect(createSphereAction, SIGNAL(triggered()), this, SIGNAL(createSphere()));
 
     createCylinderAction = new QAction("Create C&ylinder", objectMenu);
     createCylinderAction->setIcon(QIcon(":/img/cylinder.png"));
-    //connect(createCylinderAction, SIGNAL(triggered()), controller, SLOT(createCylinder()));
+    connect(createCylinderAction, SIGNAL(triggered()), this, SIGNAL(createCylinder()));
 
     createConeAction = new QAction("Create Co&ne", objectMenu);
     createConeAction->setIcon(QIcon(":/img/cone.png"));
-    //connect(createConeAction, SIGNAL(triggered()), controller, SLOT(createCone()));
+    connect(createConeAction, SIGNAL(triggered()), this, SIGNAL(createCone()));
 
     createTorusAction = new QAction("Create &Torus", objectMenu);
     createTorusAction->setIcon(QIcon(":/img/torus.png"));
-    //connect(createTorusAction, SIGNAL(triggered()), controller, SLOT(createTorus()));
+    connect(createTorusAction, SIGNAL(triggered()), this, SIGNAL(createTorus()));
 
     deleteSelectedObjectAction = new QAction("&Delete selected object", objectMenu);
     //connect(deleteSelectedObjectAction, SIGNAL(triggered()), controller, SLOT(deleteSelectedObject()));
@@ -127,19 +128,19 @@ View::View(QWidget *parent)
     setSingleViewModeAction->setShortcut(tr("1"));
     setSingleViewModeAction->setCheckable(true);
     setSingleViewModeAction->setChecked(true);
-    //connect(setSingleViewModeAction, SIGNAL(triggered()), controller, SLOT(setViewMode(SINGLE)));
+    connect(setSingleViewModeAction, SIGNAL(triggered()), this, SIGNAL(setSingleViewMode()));
 
     setDualViewModeAction = new QAction("&Dual View", viewModeMenu);
     setDualViewModeAction->setShortcut(tr("2"));
     setDualViewModeAction->setIcon(QIcon(":/img/view-dual.png"));
     setDualViewModeAction->setCheckable(true);
-    //connect(setDualViewModeAction, SIGNAL(triggered()), controller, SLOT(setViewMode(DUAL)));
+    connect(setSingleViewModeAction, SIGNAL(triggered()), this, SIGNAL(setDualViewMode()));
 
     setQuadViewModeAction = new QAction("&Quad View", viewModeMenu);
     setQuadViewModeAction->setShortcut(tr("4"));
     setQuadViewModeAction->setIcon(QIcon(":/img/viewports.png"));
     setQuadViewModeAction->setCheckable(true);
-    //connect(setQuadViewModeAction, SIGNAL(triggered()), controller, SLOT(setViewMode(QUAD)));
+    connect(setSingleViewModeAction, SIGNAL(triggered()), this, SIGNAL(setQuadViewMode()));
 
     viewModeGroup->addAction(setSingleViewModeAction);
     viewModeGroup->addAction(setDualViewModeAction);
@@ -176,7 +177,6 @@ View::View(QWidget *parent)
 
     toolBar->addSeparator();
     toolBar->addWidget(tesselationSlider);
-
 
 
 
@@ -219,6 +219,11 @@ void View::setModel(Model *model)
     viewportFront->setCamera(model_->getCamera(Model::FRONT));
     viewportLeft->setCamera(model_->getCamera(Model::LEFT));
     viewportTop->setCamera(model_->getCamera(Model::TOP));
+
+    connect(model_, SIGNAL(updateGL()), viewportPerspective, SLOT(updateGL()));
+    connect(model_, SIGNAL(updateGL()), viewportFront, SLOT(updateGL()));
+    connect(model_, SIGNAL(updateGL()), viewportLeft, SLOT(updateGL()));
+    connect(model_, SIGNAL(updateGL()), viewportTop, SLOT(updateGL()));
 
 }
 

@@ -85,10 +85,10 @@ void Sphere::draw() {
         (void*)0            // array buffer offset
     );
 
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
     glVertexAttribPointer(
-        1,                  // attribute 1
+        2,                  // attribute 1
         3,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?
@@ -96,10 +96,10 @@ void Sphere::draw() {
         (void*)0            // array buffer offset
     );
 
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
     glVertexAttribPointer(
-        2,                  // attribute 2
+        3,                  // attribute 2
         3,                  // size
         GL_FLOAT,           // type
         GL_FALSE,           // normalized?

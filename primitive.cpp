@@ -9,18 +9,14 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation)
     id_(id),
     tesselation_(tesselation)
 {
-    std::cout << "gen vertex array" << std::endl;
     glGenVertexArrays(1, &vertexArray_);
-    std::cout << "binding vertex array" << std::endl;
     glBindVertexArray(vertexArray_);
 
-    std::cout << "gen positions" << std::endl;
     glGenBuffers(1, &vertexBufferPositions_);
     glGenBuffers(1, &vertexBufferNormals_);
     glGenBuffers(1, &vertexBufferColors_);
 
     glGenBuffers(1, &indexBuffer_);
-    std::cout << "created all buffers " << std::endl;
 
 }
 
@@ -45,4 +41,10 @@ QMatrix4x4 Primitive::getModelMatrix()
     modelMatrix.rotate(rotation_);
     modelMatrix.translate(translation_);
     return modelMatrix;
+}
+
+
+int Primitive::getID()
+{
+    return id_;
 }

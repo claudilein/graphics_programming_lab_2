@@ -20,6 +20,8 @@ public:
 signals:
     void updateViewport();
     void setViewportActive(Model::ViewportType type);
+    void setClickedId(int x, int y);
+    void setActivePrimitive(int id);
 
 public slots:
 

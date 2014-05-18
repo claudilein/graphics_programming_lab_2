@@ -1,0 +1,11 @@
+#version 120
+
+uniform sampler2D idTexture;
+varying vec2 texCoord;
+
+void main() {
+
+	gl_Position = gl_Vertex + vec4(0.25, 0, 0, 0);
+	texCoord = gl_MultiTexCoord0.st;
+
+}

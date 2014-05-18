@@ -13,8 +13,10 @@ MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *ca
     connect(viewport_, SIGNAL(mousePressEvent(QMouseEvent*)), this, SLOT(mousePressEvent(QMouseEvent*)));
     connect(viewport_, SIGNAL(mouseMoveEvent(QMouseEvent*)), this, SLOT(mouseMoveEvent(QMouseEvent*)));
     connect(viewport_, SIGNAL(wheelEvent(QWheelEvent*)), this, SLOT(wheelEvent(QWheelEvent*)));
+    connect(viewport_, SIGNAL(setActivePrimitive(int)), this, SIGNAL(setActivePrimitive(int)));
 
     connect(this, SIGNAL(updateViewport()), viewport_, SLOT(updateGL()));
+    connect(this, SIGNAL(setClickedId(int,int)), viewport_, SLOT(setClickedId(int,int)));
 }
 
 
@@ -27,6 +29,7 @@ void MouseController::mousePressEvent(QMouseEvent *event)
         lastTranslationPoint_ = QVector2D(event->x(), event->y());
     } else if (event->button() == Qt::LeftButton) {
         lastRotationPoint_ = mapPointToTrackball(event->x(), event->y());
+        emit setClickedId(event->x(), viewport_->height() - event->y());
     }
 
     emit setViewportActive(viewport_->getType());

@@ -10,6 +10,7 @@
 #include <cone.h>
 #include <cylinder.h>
 #include <grid.h>
+#include <primitive.h>
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
@@ -21,62 +22,10 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     model_ = model;
 
 
-
-    // set cube vertices
-    float x = 0.5f;
-
-    float position0[3] = {-x, -x, +x};
-    float position1[3] = {+x, -x, +x};
-    float position2[3] = {+x, -x, -x};
-    float position3[3] = {-x, -x, -x};
-    float position4[3] = {-x, +x, +x};
-    float position5[3] = {+x, +x, +x};
-    float position6[3] = {+x, +x, -x};
-    float position7[3] = {-x, +x, -x};
-
-    // front
-    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
-    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
-    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
-    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
-
-    // right
-    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
-    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
-    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
-    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
-
-    // back
-    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
-    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
-    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
-    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
-
-    // left
-    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
-    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
-    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
-    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
-
-    // bottom
-    originalVertices.push_back(std::vector<float> (position3, position3 + 3));
-    originalVertices.push_back(std::vector<float> (position0, position0 + 3));
-    originalVertices.push_back(std::vector<float> (position1, position1 + 3));
-    originalVertices.push_back(std::vector<float> (position2, position2 + 3));
-
-    // top
-    originalVertices.push_back(std::vector<float> (position7, position7 + 3));
-    originalVertices.push_back(std::vector<float> (position4, position4 + 3));
-    originalVertices.push_back(std::vector<float> (position5, position5 + 3));
-    originalVertices.push_back(std::vector<float> (position6, position6 + 3));
-
-
-
-
-
     // set up default Camera
     camera_ = new Camera();
 }
+
 
 QSize Viewport::minimumSizeHint() const
 {
@@ -113,6 +62,14 @@ void Viewport::initializeGL()
     float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
 
+    // set material properties for the cube
+    float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
+    int shininess = 120.0f;
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
+    glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+
+
     // set clear color
     glClearColor(0, 0.5, 0.5, 1);
 
@@ -123,48 +80,59 @@ void Viewport::initializeGL()
     // create a texture for the colors
     glGenTextures(1, &colorTexture_);
     glBindTexture(GL_TEXTURE_2D, colorTexture_);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_BGRA, GL_FLOAT, 0);
 
     // create a texture for the object IDs
     glGenTextures(1, &idTexture_);
     glBindTexture(GL_TEXTURE_2D, idTexture_);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width(), height(), 0, GL_RED, GL_FLOAT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // create a renderbuffer object to store depth info - openGL needs this for depth test
-    glGenRenderbuffers(1, &depthTexture_);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthTexture_);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width(), height());
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glGenRenderbuffersEXT(1, &depthTexture_);
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthTexture_);
+    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width(), height());
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
     // create a framebuffer object
-    glGenFramebuffers(1, &framebuffer_);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
+    glGenFramebuffersEXT(1, &framebuffer_);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_);
 
     // attach the textures to FBO color attachment points
-    glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
-                           GL_COLOR_ATTACHMENT0,  // 2. attachment point
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT0_EXT,  // 2. attachment point
                            GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
                            colorTexture_,             // 4. tex ID
                            0);                    // 5. mipmap level: 0(base)
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
-                           GL_COLOR_ATTACHMENT1,  // 2. attachment point
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT1_EXT,  // 2. attachment point
                            GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
                            idTexture_,             // 4. tex ID
                            0);                    // 5. mipmap level: 0(base)
 
     // attach the renderbuffer to depth attachment point
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
-                              GL_DEPTH_ATTACHMENT, // 2. attachment point
-                              GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,      // 1. fbo target: GL_FRAMEBUFFER
+                              GL_DEPTH_ATTACHMENT_EXT, // 2. attachment point
+                              GL_RENDERBUFFER_EXT,     // 3. rbo target: GL_RENDERBUFFER
                               depthTexture_);     // 4. rbo ID
 
     checkFramebufferStatus();
+    // define the index array for the outputs
+    GLuint attachments[2] = { GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT };
+    glDrawBuffers(2,  attachments);
 
     // ============================================================ //
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // compile and link shaders
     phongProgram = new QGLShaderProgram(this);
@@ -178,23 +146,41 @@ void Viewport::initializeGL()
     phongProgram->addShader(phongVertexShader);
     phongProgram->addShader(phongFragmentShader);
     phongProgram->link();
-    phongProgram->bind();
+
+
+    selectionProgram = new QGLShaderProgram(this);
+    selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
+    selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
+
+    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionFragmentShader.fragmentShader");
+
+    selectionProgram->addShader(selectionVertexShader);
+    selectionProgram->addShader(selectionFragmentShader);
+    selectionProgram->link();
 
     //GLuint mvp;
     //mvp = glGetUniformLocation(phongProgram, "MVP");
 
-    grid_ = new Grid("Cube 1", 0, 0);
-    cube_ = new Cube("bla", 0, 0);
-    //torus_ = new Torus("Torus 1", 0, 0, 0.5, 1.5, 10, 10);
-    //sphere_ = new Sphere("Sphere 1", 0, 0, 1, 10, 10);
-    //cone_ = new Cone("Cone 1 ", 0, 0, 1, 2);
-    //cylinder_ = new Cylinder("Cylinder 1 ", 0, 0, 1, 2);
+    idPhongID_ = glGetUniformLocation(phongProgram->programId(), "id");
 
-    std::cout << "torus created " << std::endl;
+    idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
+    colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
+    idSelectionID_ = glGetUniformLocation(selectionProgram->programId(), "id");
+
+    grid_ = new Grid("Grid", 0, 0);
+    torus_ = new Torus("s", 1, 0, 0.5, 1.5, 10, 10);
+
 }
 
 void Viewport::paintGL()
 {
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_);
+    GLuint attachments[2] = { GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT };
+    glDrawBuffers(2,  attachments);
+
+    phongProgram->bind();
+
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -222,11 +208,143 @@ void Viewport::paintGL()
     glMultMatrix(camera_->getCameraMatrix().constData());
 
 
-    //glUniformMatrix4fv(model_view_projection_matrix_ID_simple_, 1, GL_FALSE, model_view_projection_matrix_.data());
-    grid_->draw();
-    cube_->draw();
+    QList<Primitive*> *primitives = model_->getScenegraph();
+
+    for (int i = 0; i < primitives->size(); i++) {
+
+        glUniform1f(idPhongID_, primitives->at(i)->getID());
+        primitives->at(i)->draw();
+        std::cout << "viewport: " << type_ << ", id: " << primitives->at(i)->getID() << std::endl;
+    }
 
 
+
+//    cube_->draw();
+
+    glUniform1f(idPhongID_, torus_->getID());
+    torus_->draw();
+
+    phongProgram->release();
+
+    selectionProgram->bind();
+
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    GLuint vertexArray;
+    GLuint vertexBufferPositions;
+    GLuint vertexBufferTextureCoords;
+    GLuint indexBuffer;
+
+    glGenVertexArrays(1, &vertexArray);
+    glBindVertexArray(vertexArray);
+
+    glGenBuffers(1, &vertexBufferPositions);
+    glGenBuffers(1, &vertexBufferTextureCoords);
+
+    glGenBuffers(1, &indexBuffer);
+
+    std::vector<float> vertexPositions;
+    vertexPositions.push_back(1);
+    vertexPositions.push_back(1);
+    vertexPositions.push_back(0);
+
+    vertexPositions.push_back(-1);
+    vertexPositions.push_back(1);
+    vertexPositions.push_back(0);
+
+    vertexPositions.push_back(-1);
+    vertexPositions.push_back(-1);
+    vertexPositions.push_back(0);
+
+    vertexPositions.push_back(1);
+    vertexPositions.push_back(-1);
+    vertexPositions.push_back(0);
+
+    std::vector<float> vertexTextureCoords;
+    vertexTextureCoords.push_back(1);
+    vertexTextureCoords.push_back(1);
+    vertexTextureCoords.push_back(0);
+
+    vertexTextureCoords.push_back(0);
+    vertexTextureCoords.push_back(1);
+    vertexTextureCoords.push_back(0);
+
+    vertexTextureCoords.push_back(0);
+    vertexTextureCoords.push_back(0);
+    vertexTextureCoords.push_back(0);
+
+    vertexTextureCoords.push_back(1);
+    vertexTextureCoords.push_back(0);
+    vertexTextureCoords.push_back(0);
+
+    std::vector<int> indicesList;
+    indicesList.push_back(0);
+    indicesList.push_back(1);
+    indicesList.push_back(2);
+    indicesList.push_back(3);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions);
+    glBufferData(GL_ARRAY_BUFFER, vertexPositions.size() * sizeof(float), &vertexPositions[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoords);
+    glBufferData(GL_ARRAY_BUFFER, vertexTextureCoords.size() *  sizeof(float), &vertexTextureCoords[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList.size() * sizeof(uint), &indicesList[0], GL_STATIC_DRAW);
+
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions);
+    glVertexAttribPointer(
+        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoords);
+    glVertexAttribPointer(
+        1,                  // attribute 1
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
+    // Index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, colorTexture_);
+    glUniform1i(colorTextureID_, 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, idTexture_);
+    glUniform1i(idTextureID_, 2);
+
+
+
+
+
+    glDrawElements(
+        GL_QUADS,      // mode
+        indicesList.size(),    // count
+        GL_UNSIGNED_INT,       // type
+        (void*)0           // element array buffer offset
+    );
+
+    selectionProgram->release();
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Viewport::resizeGL(int width, int height)
@@ -258,6 +376,21 @@ Model::ViewportType Viewport::getType() {
 }
 
 // ====================== SLOTS =========================== //
+
+void Viewport::setClickedId(int x, int y) {
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_);
+    GLfloat pixels[4];
+    glReadBuffer(GL_COLOR_ATTACHMENT1);
+    glReadPixels(x, y, 1, 1, GL_RED, GL_FLOAT, pixels);
+    std::cout << "mouse position: " << x << ", " << y << std::endl;
+    std::cout << "ID: " << pixels[0] << ", crap: " << pixels[1] << " " << pixels[2] << " " << pixels[3] << std::endl;
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+    int id = pixels[0];
+
+    emit setActivePrimitive(id);
+}
+
 
 
 bool Viewport::checkFramebufferStatus() {

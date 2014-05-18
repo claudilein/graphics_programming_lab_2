@@ -19,6 +19,9 @@ public:
 signals:
 
 public slots:
+    void setSingleViewMode();
+    void setDualViewMode();
+    void setQuadViewMode();
 
 private:
     View *view_;

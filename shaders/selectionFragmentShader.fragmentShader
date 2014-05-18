@@ -1,0 +1,11 @@
+#version 120
+
+varying vec2 texCoord;
+// idTexture uses the RED channel only!
+uniform sampler2D idTexture;
+uniform sampler2D colorTexture;
+
+void main() {
+	gl_FragColor = texture2D(idTexture, texCoord);
+	//gl_FragColor = vec4(texCoord, 0, 1);
+}

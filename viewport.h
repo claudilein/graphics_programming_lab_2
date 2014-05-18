@@ -19,21 +19,22 @@ class Viewport : public QGLWidget
     Q_OBJECT
 public:
     explicit Viewport(QWidget *parent = 0, Model::ViewportType type = Model::PERSPECTIVE, Model *model = 0);
-
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
     void setCamera(Camera *camera);
     Model::ViewportType getType();
 
+
 signals:
 
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+    void setActivePrimitive(int id);
 
 public slots:
-
+    void setClickedId(int x, int y);
 
 protected:
     void initializeGL();
@@ -41,6 +42,7 @@ protected:
     void resizeGL(int width, int height);
 
 private:
+
     // shader that uses phong shading on the object
     QGLShaderProgram *phongProgram;
     QGLShader *phongVertexShader;
@@ -64,6 +66,11 @@ private:
     GLuint colorTexture_;
     GLuint idTexture_;
     GLuint depthTexture_;
+
+    GLuint idPhongID_;
+    GLuint idSelectionID_;
+    GLuint idTextureID_;
+    GLuint colorTextureID_;
 
     bool checkFramebufferStatus();
 

@@ -4,7 +4,6 @@
 Controller::Controller(QObject *parent) :
     QObject(parent)
 {
-
 }
 
 
@@ -17,6 +16,16 @@ void Controller::setModel(Model *model)
 
 void Controller::setView(View *view) {
     view_ = view;
+
+    connect(view_, SIGNAL(createCube()), model_, SLOT(addCube()));
+    connect(view_, SIGNAL(createSphere()), model_, SLOT(addSphere()));
+    connect(view_, SIGNAL(createCylinder()), model_, SLOT(addCylinder()));
+    connect(view_, SIGNAL(createCone()), model_, SLOT(addCone()));
+    connect(view_, SIGNAL(createTorus()), model_, SLOT(addTorus()));
+
+    connect(view_, SIGNAL(setSingleViewMode()), this, SLOT(setSingleViewMode()));
+    connect(view_, SIGNAL(setDualViewMode()), this, SLOT(setDualViewMode()));
+    connect(view_, SIGNAL(setQuadViewMode()), this, SLOT(setQuadViewMode()));
 }
 
 void Controller::createMouseControllers() {
@@ -33,4 +42,36 @@ void Controller::createMouseControllers() {
     connect(mouseFront, SIGNAL(setViewportActive(Model::ViewportType)), model_, SLOT(setActive(Model::ViewportType)));
     connect(mouseLeft, SIGNAL(setViewportActive(Model::ViewportType)), model_, SLOT(setActive(Model::ViewportType)));
     connect(mouseTop, SIGNAL(setViewportActive(Model::ViewportType)), model_, SLOT(setActive(Model::ViewportType)));
+
+    connect(mousePerspective, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
+    connect(mouseFront, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
+    connect(mouseLeft, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
+    connect(mouseTop, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
+}
+
+void Controller::setSingleViewMode()
+{
+
+    std::cout << "setting single view" << std::endl;
+    view_->getViewport(Model::PERSPECTIVE)->show();
+    view_->getViewport(Model::FRONT)->setHidden(true);
+    view_->getViewport(Model::LEFT)->hide();
+    view_->getViewport(Model::TOP)->hide();
+    std::cout << "hidden: " << view_->getViewport(Model::FRONT)->isHidden() << std::endl;
+}
+
+void Controller::setDualViewMode()
+{
+    view_->getViewport(Model::PERSPECTIVE)->show();
+    view_->getViewport(Model::FRONT)->show();
+    view_->getViewport(Model::LEFT)->hide();
+    view_->getViewport(Model::TOP)->hide();
+}
+
+void Controller::setQuadViewMode()
+{
+    view_->getViewport(Model::PERSPECTIVE)->show();
+    view_->getViewport(Model::FRONT)->show();
+    view_->getViewport(Model::LEFT)->show();
+    view_->getViewport(Model::TOP)->show();
 }

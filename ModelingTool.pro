@@ -46,6 +46,11 @@ HEADERS  += view.h \
 RESOURCES += \
     resources.qrc
 
+OTHER_FILES += \
+    shaders/phongVertexShader.vertexShader \
+    shaders/phongFragmentShader.fragmentShader \
+    shaders/selectionVertexShader.vertexShader \
+    shaders/selectionFragmentShader.fragmentShader
 
 INCLUDEPATH += $$PWD/glew-1.9.0/include
 DEPENDPATH += $$PWD/glew-1.9.0/include
