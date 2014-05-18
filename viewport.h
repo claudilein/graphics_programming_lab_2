@@ -31,10 +31,11 @@ signals:
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
-    void setActivePrimitive(int id);
+    void setActivePrimitive(float id);
 
 public slots:
     void setClickedId(int x, int y);
+    void copyVAOData(Primitive *p);
 
 protected:
     void initializeGL();
@@ -71,6 +72,10 @@ private:
     GLuint idSelectionID_;
     GLuint idTextureID_;
     GLuint colorTextureID_;
+    GLuint offsetXID_;
+    GLuint offsetYID_;
+    GLuint activeViewportID_;
+
 
     bool checkFramebufferStatus();
 

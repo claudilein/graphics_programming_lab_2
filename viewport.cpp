@@ -167,9 +167,14 @@ void Viewport::initializeGL()
     idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
     colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
     idSelectionID_ = glGetUniformLocation(selectionProgram->programId(), "id");
+    offsetXID_ = glGetUniformLocation(selectionProgram->programId(), "offsetX");
+    offsetYID_ = glGetUniformLocation(selectionProgram->programId(), "offsetY");
+    activeViewportID_ = glGetUniformLocation(selectionProgram->programId(), "active");
+
+
 
     grid_ = new Grid("Grid", 0, 0);
-    torus_ = new Torus("s", 1, 0, 0.5, 1.5, 10, 10);
+
 
 }
 
@@ -185,12 +190,6 @@ void Viewport::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    if (model_->getActive(type_))
-    {
-        std::cout << "active: " << type_ << std::endl;
-    } else {
-        std::cout << "inactive: " << type_ << std::endl;
-    }
 
 
     // get camera configuration
@@ -214,15 +213,8 @@ void Viewport::paintGL()
 
         glUniform1f(idPhongID_, primitives->at(i)->getID());
         primitives->at(i)->draw();
-        std::cout << "viewport: " << type_ << ", id: " << primitives->at(i)->getID() << std::endl;
     }
 
-
-
-//    cube_->draw();
-
-    glUniform1f(idPhongID_, torus_->getID());
-    torus_->draw();
 
     phongProgram->release();
 
@@ -330,7 +322,20 @@ void Viewport::paintGL()
     glBindTexture(GL_TEXTURE_2D, idTexture_);
     glUniform1i(idTextureID_, 2);
 
+    float id;
 
+    if (model_->getActivePrimitive() != NULL) {
+        id = model_->getActivePrimitive()->getID();
+    } else {
+        id = 0;
+    }
+
+    bool viewportActive = model_->isActiveViewport(type_);
+
+    glUniform1f(idSelectionID_, id);
+    glUniform1f(offsetXID_, 1.0f / width());
+    glUniform1f(offsetYID_, 1.0f / height());
+    glUniform1i(activeViewportID_, viewportActive);
 
 
 
@@ -386,11 +391,16 @@ void Viewport::setClickedId(int x, int y) {
     std::cout << "ID: " << pixels[0] << ", crap: " << pixels[1] << " " << pixels[2] << " " << pixels[3] << std::endl;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
-    int id = pixels[0];
+    float id = pixels[0];
 
     emit setActivePrimitive(id);
 }
 
+
+void Viewport::copyVAOData(Primitive *p) {
+    this->makeCurrent();
+    p->copyVAOToCurrentContext();
+}
 
 
 bool Viewport::checkFramebufferStatus() {

@@ -26,6 +26,8 @@ void Controller::setView(View *view) {
     connect(view_, SIGNAL(setSingleViewMode()), this, SLOT(setSingleViewMode()));
     connect(view_, SIGNAL(setDualViewMode()), this, SLOT(setDualViewMode()));
     connect(view_, SIGNAL(setQuadViewMode()), this, SLOT(setQuadViewMode()));
+
+    connect(view_, SIGNAL(setTesselation(int)), model_, SLOT(setTesselation(int)));
 }
 
 void Controller::createMouseControllers() {
@@ -43,10 +45,10 @@ void Controller::createMouseControllers() {
     connect(mouseLeft, SIGNAL(setViewportActive(Model::ViewportType)), model_, SLOT(setActive(Model::ViewportType)));
     connect(mouseTop, SIGNAL(setViewportActive(Model::ViewportType)), model_, SLOT(setActive(Model::ViewportType)));
 
-    connect(mousePerspective, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
-    connect(mouseFront, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
-    connect(mouseLeft, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
-    connect(mouseTop, SIGNAL(setActivePrimitive(int)), model_, SLOT(setActivePrimitive(int)));
+    connect(mousePerspective, SIGNAL(setActivePrimitive(float)), model_, SLOT(setActivePrimitive(float)));
+    connect(mouseFront, SIGNAL(setActivePrimitive(float)), model_, SLOT(setActivePrimitive(float)));
+    connect(mouseLeft, SIGNAL(setActivePrimitive(float)), model_, SLOT(setActivePrimitive(float)));
+    connect(mouseTop, SIGNAL(setActivePrimitive(float)), model_, SLOT(setActivePrimitive(float)));
 }
 
 void Controller::setSingleViewMode()

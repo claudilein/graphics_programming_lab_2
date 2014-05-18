@@ -7,8 +7,6 @@ attribute vec3 tex;
 void main() {
 
 	gl_Position = gl_Vertex;
-	//texCoord = gl_MultiTexCoord0.st;
-	//texCoord = tex.xy;
 	texCoord = tex.xy;
 
 }

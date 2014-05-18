@@ -30,7 +30,10 @@ int main(int argc, char *argv[])
 
 
 
+
     view.show();
+
+    model.addCube();
 
     return a.exec();
 }

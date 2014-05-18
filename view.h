@@ -11,6 +11,9 @@
 #include <QToolButton>
 #include <QSplitter>
 #include <viewport.h>
+#include <QLabel>
+#include <QTreeView>
+#include <QDockWidget>
 
 class View : public QMainWindow
 {
@@ -35,6 +38,11 @@ signals:
     void setDualViewMode();
     void setQuadViewMode();
 
+    void setTesselation(int t);
+
+public slots:
+    void updateStatusBar();
+
 private:
 
     Model *model_;
@@ -45,6 +53,7 @@ private:
     QMenuBar *menuBar;
     QToolBar *toolBar;
     QStatusBar *statusBar;
+    QLabel *activePrimitiveLabel;
     QSlider *tesselationSlider;
 
     // == FILE MENU == //
@@ -88,6 +97,11 @@ private:
     QSplitter *splitterHorizontalTop;
     QSplitter *splitterHorizontalBottom;
     QSplitter *splitterVertical;
+
+    // === OUTLINER === //
+    QTreeView *outliner;
+    QDockWidget *dockWidget;
+
 
 };
 

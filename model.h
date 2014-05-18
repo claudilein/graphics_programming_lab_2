@@ -4,6 +4,7 @@
 #include <QObject>
 #include <camera.h>
 #include <primitive.h>
+#include <scenegraph.h>
 
 class Model : public QObject
 {
@@ -15,10 +16,14 @@ public:
 
 
     Camera* getCamera(ViewportType type);
-    bool getActive(ViewportType type);
+    bool isActiveViewport(ViewportType type);
+    Primitive* getActivePrimitive();
     QList<Primitive*>* getScenegraph();
+    Scenegraph* getScenegraphModel();
 
 signals:
+    void copyVAOData(Primitive *p);
+    void updateStatusBar();
     void updateGL();
 
 public slots:
@@ -29,16 +34,18 @@ public slots:
     void addCylinder();
     void addCone();
     void addTorus();
-    void setActivePrimitive(int ID);
+    void setActivePrimitive(float ID);
+    void setTesselation(int t);
 
 private:
     static const int NR_CAMERAS = 4;
     static const int NR_PRIMITIVES = 5;
     Camera *cameras_[NR_CAMERAS];
     ViewportType active_;
-    int activePrimitiveID_;
+    Primitive* activePrimitive_;
 
-    QList<Primitive*> *scenegraph_;
+    //QList<Primitive*> *scenegraph_;
+    Scenegraph *scenegraphModel_;
     std::vector<int> idCounters_;
     int nrIDs_;
     int tesselation_;

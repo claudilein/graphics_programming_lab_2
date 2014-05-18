@@ -8,6 +8,8 @@
 #include <QToolBar>
 #include <QStatusBar>
 #include <QToolButton>
+#include <QTreeView>
+#include <QDockWidget>
 
 View::View(QWidget *parent)
     : QMainWindow(parent)
@@ -22,11 +24,18 @@ View::View(QWidget *parent)
     statusBar = new QStatusBar(this);
     setStatusBar(statusBar);
 
+    activePrimitiveLabel = new QLabel("Background");
+    activePrimitiveLabel->setAlignment(Qt::AlignLeft);
+    activePrimitiveLabel->setMinimumSize(activePrimitiveLabel->sizeHint());
+
+    statusBar->addWidget(activePrimitiveLabel);
+
     tesselationSlider = new QSlider(toolBar);
     tesselationSlider->setOrientation(Qt::Horizontal);
     tesselationSlider->setFixedWidth(80);
     tesselationSlider->setRange(1, 50);
-    // connect..
+    connect(tesselationSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setTesselation(int)));
+
 
     // == FILE MENU == //
 
@@ -181,6 +190,11 @@ View::View(QWidget *parent)
 
 
 
+
+
+
+
+
 }
 
 View::~View()
@@ -220,10 +234,29 @@ void View::setModel(Model *model)
     viewportLeft->setCamera(model_->getCamera(Model::LEFT));
     viewportTop->setCamera(model_->getCamera(Model::TOP));
 
+
+    // ===== OUTLINER ===== //
+
+    dockWidget = new QDockWidget("Outliner: ", this);
+    outliner = new QTreeView(dockWidget);
+
+    addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+
+    outliner->setModel(model_->getScenegraphModel());
+    dockWidget->setWidget(outliner);
+
+
     connect(model_, SIGNAL(updateGL()), viewportPerspective, SLOT(updateGL()));
     connect(model_, SIGNAL(updateGL()), viewportFront, SLOT(updateGL()));
     connect(model_, SIGNAL(updateGL()), viewportLeft, SLOT(updateGL()));
     connect(model_, SIGNAL(updateGL()), viewportTop, SLOT(updateGL()));
+
+    connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportPerspective, SLOT(copyVAOData(Primitive*)));
+    connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportFront, SLOT(copyVAOData(Primitive*)));
+    connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportLeft, SLOT(copyVAOData(Primitive*)));
+    connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportTop, SLOT(copyVAOData(Primitive*)));
+
+    connect(model_, SIGNAL(updateStatusBar()), this, SLOT(updateStatusBar()));
 
 }
 
@@ -236,6 +269,18 @@ Viewport* View::getViewport(Model::ViewportType type)
     case Model::TOP: return viewportTop;
     default: return viewportPerspective;
     }
+}
+
+void View::updateStatusBar()
+{
+    if (model_->getActivePrimitive() != NULL) {
+        activePrimitiveLabel->setText(QString::fromStdString(model_->getActivePrimitive()->getName()));
+    } else {
+        activePrimitiveLabel->setText(QString("Background"));
+    }
+
+    outliner->setModel(0);
+    outliner->setModel(model_->getScenegraphModel());
 }
 
 

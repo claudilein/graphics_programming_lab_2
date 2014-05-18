@@ -30,10 +30,13 @@ public:
     QMatrix4x4 getModelMatrix();
     virtual void draw();
     int getID();
+    std::string getName();
+    void setName(std::string name);
 
 signals:
 
 public slots:
+    void copyVAOToCurrentContext();
 
 protected:
     std::string name_;

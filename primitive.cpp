@@ -20,6 +20,22 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation)
 
 }
 
+void Primitive::copyVAOToCurrentContext() {
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
+    glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
+    glBufferData(GL_ARRAY_BUFFER, vertexNormals_.size() * 3 * sizeof(float3), &vertexNormals_[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
+    glBufferData(GL_ARRAY_BUFFER, vertexColors_.size() * 3 * sizeof(float3), &vertexColors_[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
+
+}
 
 void Primitive::draw() {
 
@@ -35,6 +51,11 @@ void Primitive::rotate(QQuaternion rotation)
     rotation_ = rotation_ * rotation;
 }
 
+void Primitive::setName(std::string name)
+{
+    name_ = name;
+}
+
 QMatrix4x4 Primitive::getModelMatrix()
 {
     QMatrix4x4 modelMatrix;
@@ -47,4 +68,9 @@ QMatrix4x4 Primitive::getModelMatrix()
 int Primitive::getID()
 {
     return id_;
+}
+
+std::string Primitive::getName()
+{
+    return name_;
 }

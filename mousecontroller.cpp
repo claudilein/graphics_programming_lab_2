@@ -13,7 +13,7 @@ MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *ca
     connect(viewport_, SIGNAL(mousePressEvent(QMouseEvent*)), this, SLOT(mousePressEvent(QMouseEvent*)));
     connect(viewport_, SIGNAL(mouseMoveEvent(QMouseEvent*)), this, SLOT(mouseMoveEvent(QMouseEvent*)));
     connect(viewport_, SIGNAL(wheelEvent(QWheelEvent*)), this, SLOT(wheelEvent(QWheelEvent*)));
-    connect(viewport_, SIGNAL(setActivePrimitive(int)), this, SIGNAL(setActivePrimitive(int)));
+    connect(viewport_, SIGNAL(setActivePrimitive(float)), this, SIGNAL(setActivePrimitive(float)));
 
     connect(this, SIGNAL(updateViewport()), viewport_, SLOT(updateGL()));
     connect(this, SIGNAL(setClickedId(int,int)), viewport_, SLOT(setClickedId(int,int)));
