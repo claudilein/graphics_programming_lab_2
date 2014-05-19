@@ -22,8 +22,10 @@ public:
     void addPrimitive(Primitive *p);
     void deletePrimitive(Primitive *p);
     QList<Primitive*>* getPrimitiveList();
+    Primitive* getPrimitive(QModelIndex index);
 
 signals:
+    void itemNameChanged();
 
 public slots:
 

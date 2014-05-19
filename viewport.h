@@ -77,6 +77,8 @@ private:
     GLuint activeViewportID_;
     GLuint colorID_;
 
+    float light0Position_[4];
+
 
     bool checkFramebufferStatus();
 

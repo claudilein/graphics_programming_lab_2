@@ -12,7 +12,7 @@ class Camera : public QObject
 public:
     enum ProjectionMode {ORTHOGRAPHIC, PERSPECTIVE};
     explicit Camera(QObject *parent = 0, ProjectionMode mode = PERSPECTIVE, bool lockRotation = false,
-                    QVector3D position = QVector3D(0,0,-3), QVector3D up = QVector3D(0,1,0));
+                    QQuaternion rotation = QQuaternion());
     QQuaternion getRotation();
 
 signals:
@@ -34,6 +34,7 @@ private:
 
     QVector3D pointOfInterest_;
     QQuaternion rotation_;
+    QQuaternion initialRotation_;
     float zoom_;
 
 };

@@ -48,7 +48,6 @@ void Viewport::initializeGL()
 
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
     glEnable(GL_COLOR_MATERIAL);
 
     // init shading model to flat shading
@@ -59,10 +58,11 @@ void Viewport::initializeGL()
     glEnable(GL_LIGHT0);
 
     // position lightsource
-    float positionLight0[4] = {0.5f, 0.0f, 2.0f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_POSITION, positionLight0);
+    light0Position_[0] = 1.0f;
+    light0Position_[1] = 1.0f;
+    light0Position_[2] = 3.5f;
+    light0Position_[3] = 1.0f;
 
-    // set material properties for the cube
     float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
     int shininess = 120.0f;
 
@@ -147,11 +147,11 @@ void Viewport::initializeGL()
     phongProgram->addShader(phongFragmentShader);
 
     glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
-    //glBindAttribLocation(phongProgram->programId(), 2, "c");
+    //glBindAttribLocation(phongProgram->programId(), 2, "color_in");
 
     phongProgram->link();
-//    std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "n") << std::endl;
-    //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "c") << std::endl;
+//    std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "normal_in") << std::endl;
+    //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "color_in") << std::endl;
 
     selectionProgram = new QGLShaderProgram(this);
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
@@ -182,7 +182,6 @@ void Viewport::initializeGL()
     // attribute buffer 2: colors
     glEnableVertexAttribArray(2);
 
-    std::cout << "creating grid " << std::endl;
     grid_ = new Grid("Grid", 0, 0, Primitive::float3(0.72, 0.72, 0.72));
 
 
@@ -199,10 +198,14 @@ void Viewport::paintGL()
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
     // set modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMultMatrix(camera_->getCameraMatrix().constData());
+
+    glLightfv(GL_LIGHT0, GL_POSITION, light0Position_);
+
 
 
     grid_->copyVAOToCurrentContext();
@@ -390,13 +393,12 @@ Model::ViewportType Viewport::getType() {
 // ====================== SLOTS =========================== //
 
 void Viewport::setClickedId(int x, int y) {
+    makeCurrent();
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_);
     GLfloat pixels[4];
     glReadBuffer(GL_COLOR_ATTACHMENT1);
     glReadPixels(x, y, 1, 1, GL_RED, GL_FLOAT, pixels);
-    std::cout << "mouse position: " << x << ", " << y << std::endl;
-    std::cout << "ID: " << pixels[0] << ", crap: " << pixels[1] << " " << pixels[2] << " " << pixels[3] << std::endl;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     float id = pixels[0];
@@ -410,7 +412,7 @@ void Viewport::setClickedId(int x, int y) {
 
 
 void Viewport::copyVAOData(Primitive *p) {
-    this->makeCurrent();
+    makeCurrent();
     p->copyVAOToCurrentContext();
 }
 

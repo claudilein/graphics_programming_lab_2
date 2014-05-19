@@ -5,6 +5,7 @@
 #include <camera.h>
 #include <primitive.h>
 #include <scenegraph.h>
+#include <QModelIndex>
 
 class Model : public QObject
 {
@@ -25,8 +26,10 @@ public:
 
 signals:
     void copyVAOData(Primitive *p);
+    void selectItem(QModelIndex index);
     void updateStatusBar();
     void updateGL();
+
 
 public slots:
 
@@ -40,6 +43,10 @@ public slots:
     void setTesselation(int t);
     void setObjectInteractionMode();
     void setCameraInteractionMode();
+    void resetCamera();
+    void modelItemClicked(QModelIndex index);
+    void renamePrimitive(QString name);
+    void deleteActivePrimitive();
 
 private:
     static const int NR_CAMERAS = 4;

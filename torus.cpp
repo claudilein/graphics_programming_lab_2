@@ -6,8 +6,8 @@ Torus::Torus(std::string name, int id, int tesselation, float3 color,
     Primitive(0, name, id, tesselation, color),
     innerRadius_(innerRadius),
     outerRadius_(outerRadius),
-    sides_(sides),
-    rings_(rings)
+    sides_(sides + tesselation_),
+    rings_(rings + tesselation_)
 {
 
     int i, j;
@@ -83,7 +83,7 @@ void Torus::draw() {
     bindVAOToShader();
 
     glDrawElements(
-        GL_QUADS,      // mode
+        GL_QUAD_STRIP,      // mode
         indicesList_.size(),    // count
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset

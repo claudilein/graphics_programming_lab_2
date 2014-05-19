@@ -6,7 +6,7 @@ Cylinder::Cylinder(std::string name, int id, int tesselation, float3 color,
     Primitive(0, name, id, tesselation, color),
     radius_(radius),
     height_(height),
-    steps_(4 + tesselation)
+    steps_(4 + tesselation * tesselation)
 
 {
 

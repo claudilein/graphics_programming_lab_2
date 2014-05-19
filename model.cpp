@@ -18,12 +18,13 @@ Model::Model(QObject *parent) :
     interactionMode_ = Model::CAMERA;
 
 
-    cameras_[PERSPECTIVE] = new Camera(0, Camera::PERSPECTIVE, false, QVector3D(2,2,3), QVector3D(0,1,0));
-    cameras_[FRONT] = new Camera(0, Camera::ORTHOGRAPHIC, true, QVector3D(0,0,3), QVector3D(0,1,0));
-    cameras_[LEFT] = new Camera(0, Camera::ORTHOGRAPHIC, true, QVector3D(-3,0,0), QVector3D(0,1,0));
-    cameras_[TOP] = new Camera(0, Camera::ORTHOGRAPHIC, true, QVector3D(0,3,0), QVector3D(0,0,-1));
+    cameras_[PERSPECTIVE] = new Camera(0, Camera::PERSPECTIVE, false, QQuaternion::fromAxisAndAngle(QVector3D(1, -1, 0), 45.0f));
+    cameras_[FRONT] = new Camera(0, Camera::ORTHOGRAPHIC, true, QQuaternion());
+    cameras_[LEFT] = new Camera(0, Camera::ORTHOGRAPHIC, true, QQuaternion::fromAxisAndAngle(QVector3D(0, 1, 0), 90.0f));
+    cameras_[TOP] = new Camera(0, Camera::ORTHOGRAPHIC, true, QQuaternion::fromAxisAndAngle(QVector3D(1, 0, 0), 90.0f));
 
-    //connect(scenegraphModel_, SIGNAL()
+    connect(scenegraphModel_, SIGNAL(itemNameChanged()), this, SIGNAL(updateStatusBar()));
+
 
     active_ = PERSPECTIVE;
 }
@@ -40,6 +41,7 @@ bool Model::isActiveViewport(ViewportType type) {
 void Model::setActive(ViewportType type)
 {
     active_ = type;
+    emit updateGL();
     emit updateGL();
 }
 
@@ -59,6 +61,9 @@ void Model::addCube()
 
     emit copyVAOData(p);
     emit updateGL();
+    emit updateGL();
+
+    setActivePrimitive(p->getID());
 }
 
 void Model::addSphere()
@@ -76,6 +81,8 @@ void Model::addSphere()
 
     emit copyVAOData(p);
     emit updateGL();
+    emit updateGL();
+    setActivePrimitive(p->getID());
 }
 
 void Model::addCylinder()
@@ -93,6 +100,8 @@ void Model::addCylinder()
 
     emit copyVAOData(p);
     emit updateGL();
+    emit updateGL();
+    setActivePrimitive(p->getID());
 }
 void Model::addCone()
 {
@@ -109,6 +118,8 @@ void Model::addCone()
 
     emit copyVAOData(p);
     emit updateGL();
+    emit updateGL();
+    setActivePrimitive(p->getID());
 }
 void Model::addTorus()
 {
@@ -117,7 +128,7 @@ void Model::addTorus()
     name_tmp << name << idCounters_[TORUS];
     name = name_tmp.str();
 
-    Primitive *p = new Torus(name, nrIDs_, tesselation_, Primitive::float3(1, 0, 1), 0.5, 1.5, 10, 10);
+    Primitive *p = new Torus(name, nrIDs_, tesselation_, Primitive::float3(1, 0, 1), 0.3, 0.7, 10, 10);
     idCounters_[TORUS]++;
     nrIDs_++;
 
@@ -125,10 +136,13 @@ void Model::addTorus()
 
     emit copyVAOData(p);
     emit updateGL();
+    emit updateGL();
+    setActivePrimitive(p->getID());
 }
 
 void Model::setActivePrimitive(float ID)
 {
+
     if (ID != 0) {
         for (int i = 0; i < scenegraphModel_->getPrimitiveList()->size(); i++) {
             if (scenegraphModel_->getPrimitiveList()->at(i)->getID() == ID) {
@@ -136,20 +150,26 @@ void Model::setActivePrimitive(float ID)
                 break;
             }
         }
-
-        std::cout << "new active primitive ID: " << activePrimitive_->getID() << std::endl;
     } else {
         activePrimitive_ = NULL;
-        std::cout << "new active primitive ID: 0" << std::endl;
     }
 
+    QModelIndex index = scenegraphModel_->index(ID - 1, 0, QModelIndex());
+
+    emit selectItem(index);
     emit updateStatusBar();
     emit updateGL();
+
 }
 
 void Model::setTesselation(int t)
 {
     tesselation_ = t;
+}
+
+void Model::resetCamera() {
+    cameras_[active_]->reset();
+    emit updateGL();
 }
 
 Primitive* Model::getActivePrimitive()
@@ -179,4 +199,23 @@ void Model::setCameraInteractionMode() {
 
 Model::InteractionType Model::getInteractionMode() {
     return interactionMode_;
+}
+
+
+void Model::modelItemClicked(QModelIndex index) {
+    setActivePrimitive(scenegraphModel_->getPrimitive(index)->getID());
+}
+
+void Model::renamePrimitive(QString name) {
+    activePrimitive_->setName(name.toStdString());
+    emit updateStatusBar();
+}
+
+void Model::deleteActivePrimitive() {
+    if (activePrimitive_ != NULL) {
+        scenegraphModel_->deletePrimitive(activePrimitive_);
+        setActivePrimitive(0);
+        emit updateStatusBar();
+        emit updateGL();
+    }
 }

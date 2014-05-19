@@ -78,10 +78,12 @@ bool Scenegraph::setData(const QModelIndex &index, const QVariant &value, int ro
     if (index.isValid() && role == Qt::EditRole) {
         static_cast<Primitive*>(index.internalPointer())->setName(value.toString().toStdString());
         success = true;
+        emit itemNameChanged();
     }
     return success;
 
 }
+
 
 
 void Scenegraph::addPrimitive(Primitive *p)
@@ -113,3 +115,10 @@ QList<Primitive*>* Scenegraph::getPrimitiveList() {
     return primitives_;
 }
 
+Primitive* Scenegraph::getPrimitive(QModelIndex index) {
+    if (index.isValid()) {
+        return static_cast<Primitive*>(index.internalPointer());
+
+
+    }
+}

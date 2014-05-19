@@ -5,10 +5,10 @@ Sphere::Sphere(std::string name, int id, int tesselation, float3 color,
                float radius, int lats, int longs) :
     Primitive(0, name, id, tesselation, color),
     radius_(radius),
-    lats_(lats),
-    longs_(longs)
+    lats_(lats + tesselation),
+    longs_(longs + tesselation)
 {
-    for (int i = 0; i < lats_-1; i++)
+    for (int i = 0; i < lats_; i++)
     {
         double theta_upper = M_PI * i / static_cast<double>(lats_);
         double theta_lower = M_PI * (i+1) / static_cast<double>(lats_);

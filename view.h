@@ -46,6 +46,7 @@ signals:
     void updateViewports();
 
 public slots:
+    void selectItem(QModelIndex index);
     void updateStatusBar();
 
 
