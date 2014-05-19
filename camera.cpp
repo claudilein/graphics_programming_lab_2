@@ -1,12 +1,8 @@
 #include "camera.h"
 
 Camera::Camera(QObject *parent, ProjectionMode mode, bool lockRotation, QVector3D position, QVector3D up) :
-    QObject(parent)
+    QObject(parent), mode_(mode), lockRotation_(lockRotation)
 {
-    mode_ = mode;
-    lockRotation_ = lockRotation;
-    startPosition_ = position;
-    up_ = up;
     reset();
 }
 
@@ -17,34 +13,28 @@ void Camera::rotate(QQuaternion rotation)
 
 void Camera::translate(QVector2D translation)
 {
-    translation_ = translation_ + translation;
+    QVector3D newTranslation = rotation_.conjugate().rotatedVector(QVector3D(translation, 0));
+    pointOfInterest_ += newTranslation;
 }
 
-void Camera::setPointOfInterest(QVector3D pointOfInterest)
+void Camera::zoom(float zoom)
 {
-    pointOfInterest_ = pointOfInterest;
+    zoom_ += zoom;
 }
+
+void Camera::reset()
+{
+    rotation_ = QQuaternion();
+    zoom_ = -2;
+    pointOfInterest_ = QVector3D();
+}
+
 
 
 void Camera::setProjectionMode(ProjectionMode mode)
 {
     mode_ = mode;
 }
-
-void Camera::zoom(float zoom)
-{
-    zoom_ = zoom;
-}
-
-void Camera::reset()
-{
-    position_ = startPosition_;
-    rotation_ = QQuaternion();
-    zoom_ = -2;
-    translation_ = QVector2D();
-    pointOfInterest_ = QVector3D();
-}
-
 
 Camera::ProjectionMode Camera::getProjectionMode()
 {
@@ -54,28 +44,15 @@ Camera::ProjectionMode Camera::getProjectionMode()
 QMatrix4x4 Camera::getCameraMatrix()
 {
     QMatrix4x4 matrix;
+    matrix.translate(0, 0, zoom_);
     matrix.rotate(rotation_);
-    matrix.translate(translation_);
+    matrix.translate(pointOfInterest_);
     return matrix;
 }
 
-
-QVector3D Camera::getPosition()
+QQuaternion Camera::getRotation()
 {
-    return position_;
+    return rotation_;
 }
 
-QVector3D Camera::getPointOfInterest()
-{
-    return pointOfInterest_;
-}
 
-QVector3D Camera::getUpVector()
-{
-    return up_;
-}
-
-float Camera::getZoom()
-{
-    return zoom_;
-}

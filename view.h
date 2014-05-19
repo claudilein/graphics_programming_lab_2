@@ -40,8 +40,14 @@ signals:
 
     void setTesselation(int t);
 
+    void setObjectMode();
+    void setCameraMode();
+
+    void updateViewports();
+
 public slots:
     void updateStatusBar();
+
 
 private:
 

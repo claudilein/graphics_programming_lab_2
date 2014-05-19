@@ -2,12 +2,14 @@
 #include <viewport.h>
 #include <math.h>
 #include <iostream>
+#include <model.h>
 
-MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *camera) :
+MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *camera, Model *model) :
     QObject(parent)
 {
     viewport_ = viewport;
     camera_ = camera;
+    model_ = model;
     trackballRadius_ = 1.0f;
 
     connect(viewport_, SIGNAL(mousePressEvent(QMouseEvent*)), this, SLOT(mousePressEvent(QMouseEvent*)));
@@ -15,7 +17,6 @@ MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *ca
     connect(viewport_, SIGNAL(wheelEvent(QWheelEvent*)), this, SLOT(wheelEvent(QWheelEvent*)));
     connect(viewport_, SIGNAL(setActivePrimitive(float)), this, SIGNAL(setActivePrimitive(float)));
 
-    connect(this, SIGNAL(updateViewport()), viewport_, SLOT(updateGL()));
     connect(this, SIGNAL(setClickedId(int,int)), viewport_, SLOT(setClickedId(int,int)));
 }
 
@@ -54,7 +55,16 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
 
         float scaleFactor = 0.007; //-camera_->getZoom() * 0.001166;    // this factor was chosen through testing
 //        currentTranslation += QVector2D(dX * scaleFactor, dY * scaleFactor);
-        camera_->translate(QVector2D(dX * scaleFactor, dY * scaleFactor));
+
+        if (model_->getInteractionMode() == Model::CAMERA) {
+            camera_->translate(QVector2D(dX * scaleFactor, dY * scaleFactor));
+
+        } else if (model_->getInteractionMode() == Model::OBJECT) {
+            QVector3D translation =
+                    camera_->getRotation().conjugate().rotatedVector(QVector3D(dX * scaleFactor, dY * scaleFactor, 0));
+            model_->getActivePrimitive()->translate(translation);
+        }
+
         lastTranslationPoint_ = newPoint;
 
     } else if ((event->buttons() & Qt::LeftButton) == Qt::LeftButton && valid) {
@@ -66,24 +76,23 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
         normal = QVector3D::crossProduct(lastRotationPoint_, newPoint);
 
         /* transform the normal with the current rotation */
-        //float currentModelView[16];
-        //glGetFloatv(GL_MODELVIEW_MATRIX, currentModelView);
-        double currentModelView[16];
-        glGetDoublev(GL_MODELVIEW_MATRIX, currentModelView);
-        QMatrix4x4 mv (currentModelView[0], currentModelView[1], currentModelView[2], currentModelView[3],
-                       currentModelView[4], currentModelView[5], currentModelView[6], currentModelView[7],
-                       currentModelView[8], currentModelView[9], currentModelView[10], currentModelView[11],
-                       currentModelView[12], currentModelView[13], currentModelView[14], currentModelView[15]);
-        normal = mv * normal;
+        normal = camera_->getRotation().conjugate().rotatedVector(normal);
 
         /* convert the distance between the two points to a number of degrees for the rotation */
         float degrees = acosf(QVector3D::dotProduct(newPoint, lastRotationPoint_)) * 180 / M_PI;
 
         // create quaternion from the axis and the angle
-        QQuaternion rotation (degrees, normal);
-        rotation.normalize();
+        QQuaternion rotation = QQuaternion::fromAxisAndAngle(normal, degrees);
+        //QQuaternion rotation (degrees, normal);
+        //rotation.normalize();
 
-        camera_->rotate(rotation);
+        if (model_->getInteractionMode() == Model::CAMERA) {
+            camera_->rotate(rotation);
+        } else if (model_->getInteractionMode() == Model::OBJECT) {
+            model_->getActivePrimitive()->rotate(rotation);
+        }
+
+
 
 //        // multiply with previous quaternion to add rotations
 //        rotation = currentRotation * rotation;
@@ -98,7 +107,8 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
 
 void MouseController::wheelEvent(QWheelEvent *event)
 {
-
+    camera_->zoom(event->delta() * 0.002f);
+    emit updateViewport();
 }
 
 
@@ -110,6 +120,8 @@ QVector3D MouseController::mapPointToTrackball(float x, float y) {
      *       is inverted here.
      */
     QPointF newPoint ((2 * x - viewport_->width()) / (float) viewport_->width(), (-1) * (2 * y - viewport_->height()) / (float) viewport_->height());
+    // convert position of object into image space [-1, 1] with MVP
+    // subtract this point from newPoint (or the other direction..)
 
     // treat this point as point on a unit hemisphere -> calculate corresponding z-value and normalize the vector
     float squaredDistanceFromOrigin2D = newPoint.x() * newPoint.x() + newPoint.y() * newPoint.y();
@@ -127,3 +139,4 @@ QVector3D MouseController::mapPointToTrackball(float x, float y) {
 
     return newPoint3D;
 }
+

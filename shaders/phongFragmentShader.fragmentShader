@@ -35,6 +35,8 @@ void main() {
 	// id texture uses the RED channel only!
 	gl_FragData[1] = vec4(id, 0, 0, 0);
 
+	//gl_FragData[0] = vec4(N * 0.5 + vec3(0.5, 0.5, 0.5), 1);
+
 	//gl_FragData[0] = vec4(1,0,0,1);	
 
 	//gl_FragColor = vec4(1,0,0,1);

@@ -15,6 +15,7 @@ Model::Model(QObject *parent) :
     nrIDs_ = 1;
     tesselation_ = 0;
     scenegraphModel_ = new Scenegraph(this);
+    interactionMode_ = Model::CAMERA;
 
 
     cameras_[PERSPECTIVE] = new Camera(0, Camera::PERSPECTIVE, false, QVector3D(2,2,3), QVector3D(0,1,0));
@@ -163,4 +164,19 @@ QList<Primitive*>* Model::getScenegraph()
 
 Scenegraph* Model::getScenegraphModel() {
     return scenegraphModel_;
+}
+
+
+void Model::setObjectInteractionMode() {
+    interactionMode_ = Model::OBJECT;
+    std::cout << "InteractionMode: OBJECT" << std::endl;
+}
+
+void Model::setCameraInteractionMode() {
+    interactionMode_ = Model::CAMERA;
+    std::cout << "InteractionMode: CAMERA" << std::endl;
+}
+
+Model::InteractionType Model::getInteractionMode() {
+    return interactionMode_;
 }

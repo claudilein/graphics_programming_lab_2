@@ -18,6 +18,9 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation)
 
     glGenBuffers(1, &indexBuffer_);
 
+    translation_ = QVector3D();
+    rotation_ = QQuaternion();
+
 }
 
 void Primitive::copyVAOToCurrentContext() {
@@ -26,16 +29,18 @@ void Primitive::copyVAOToCurrentContext() {
     glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glBufferData(GL_ARRAY_BUFFER, vertexNormals_.size() * 3 * sizeof(float3), &vertexNormals_[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexNormals_.size() * sizeof(float3), &vertexNormals_[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glBufferData(GL_ARRAY_BUFFER, vertexColors_.size() * 3 * sizeof(float3), &vertexColors_[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexColors_.size()  * sizeof(float3), &vertexColors_[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
 
 }
+
+
 
 void Primitive::draw() {
 
@@ -48,7 +53,7 @@ void Primitive::translate(QVector3D translation)
 
 void Primitive::rotate(QQuaternion rotation)
 {
-    rotation_ = rotation_ * rotation;
+    rotation_ = rotation * rotation_;
 }
 
 void Primitive::setName(std::string name)
@@ -59,8 +64,8 @@ void Primitive::setName(std::string name)
 QMatrix4x4 Primitive::getModelMatrix()
 {
     QMatrix4x4 modelMatrix;
-    modelMatrix.rotate(rotation_);
     modelMatrix.translate(translation_);
+    modelMatrix.rotate(rotation_);
     return modelMatrix;
 }
 

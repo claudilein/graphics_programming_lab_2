@@ -97,12 +97,12 @@ View::View(QWidget *parent)
     setCameraModeAction->setIcon(QIcon(":/img/camera.png"));
     setCameraModeAction->setCheckable(true);
     setCameraModeAction->setChecked(true);
-    //connect(setCameraModeAction, SIGNAL(triggered()), controller, SLOT(selectMode(CAMERA_MODE)));
+    connect(setCameraModeAction, SIGNAL(triggered()), this, SIGNAL(setCameraMode()));
 
     setObjectManipulationModeAction = new QAction("Ob&ject Manipulation Mode", interactionModeMenu);
     setObjectManipulationModeAction->setIcon(QIcon(":/img/select.png"));
     setObjectManipulationModeAction->setCheckable(true);
-    //connect(setObjectManipulationModeAction, SIGNAL(triggered()), controller, SLOT(selectMode(OBJECT_MANIPULATION_MODE)));
+    connect(setObjectManipulationModeAction, SIGNAL(triggered()), this, SIGNAL(setObjectMode()));
 
     interactionModeGroup->addAction(setCameraModeAction);
     interactionModeGroup->addAction(setObjectManipulationModeAction);
@@ -234,6 +234,11 @@ void View::setModel(Model *model)
     viewportLeft->setCamera(model_->getCamera(Model::LEFT));
     viewportTop->setCamera(model_->getCamera(Model::TOP));
 
+    connect(this, SIGNAL(updateViewports()), viewportPerspective, SLOT(updateGL()));
+    connect(this, SIGNAL(updateViewports()), viewportFront, SLOT(updateGL()));
+    connect(this, SIGNAL(updateViewports()), viewportLeft, SLOT(updateGL()));
+    connect(this, SIGNAL(updateViewports()), viewportTop, SLOT(updateGL()));
+
 
     // ===== OUTLINER ===== //
 
@@ -282,5 +287,4 @@ void View::updateStatusBar()
     outliner->setModel(0);
     outliner->setModel(model_->getScenegraphModel());
 }
-
 

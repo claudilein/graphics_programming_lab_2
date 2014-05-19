@@ -75,6 +75,7 @@ private:
     GLuint offsetXID_;
     GLuint offsetYID_;
     GLuint activeViewportID_;
+    GLuint colorID_;
 
 
     bool checkFramebufferStatus();

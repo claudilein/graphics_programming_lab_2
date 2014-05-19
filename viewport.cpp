@@ -145,8 +145,13 @@ void Viewport::initializeGL()
 
     phongProgram->addShader(phongVertexShader);
     phongProgram->addShader(phongFragmentShader);
-    phongProgram->link();
 
+    //glBindAttribLocation(phongProgram->programId(), 1, "n");
+    //glBindAttribLocation(phongProgram->programId(), 2, "c");
+
+    phongProgram->link();
+    //std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "n") << std::endl;
+    //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "c") << std::endl;
 
     selectionProgram = new QGLShaderProgram(this);
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
@@ -159,10 +164,9 @@ void Viewport::initializeGL()
     selectionProgram->addShader(selectionFragmentShader);
     selectionProgram->link();
 
-    //GLuint mvp;
-    //mvp = glGetUniformLocation(phongProgram, "MVP");
 
     idPhongID_ = glGetUniformLocation(phongProgram->programId(), "id");
+    colorID_ = glGetUniformLocation(phongProgram->programId(), "color");
 
     idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
     colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
@@ -170,6 +174,7 @@ void Viewport::initializeGL()
     offsetXID_ = glGetUniformLocation(selectionProgram->programId(), "offsetX");
     offsetYID_ = glGetUniformLocation(selectionProgram->programId(), "offsetY");
     activeViewportID_ = glGetUniformLocation(selectionProgram->programId(), "active");
+
 
 
 
@@ -192,27 +197,28 @@ void Viewport::paintGL()
 
 
 
-    // get camera configuration
-    QVector3D cameraPosition = camera_->getPosition();
-    QVector3D cameraPOI = camera_->getPointOfInterest();
-    QVector3D cameraUp = camera_->getUpVector();
+
 
     // set modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    gluLookAt(cameraPosition.x(), cameraPosition.y(), cameraPosition.z(),
-              cameraPOI.x(), cameraPOI.y(), cameraPOI.z(),
-              cameraUp.x(), cameraUp.y(), cameraUp.z());
     glMultMatrix(camera_->getCameraMatrix().constData());
 
-
+    grid_->draw();
     QList<Primitive*> *primitives = model_->getScenegraph();
 
     for (int i = 0; i < primitives->size(); i++) {
 
         glUniform1f(idPhongID_, primitives->at(i)->getID());
+
+
+        glPushMatrix();
+        glMultMatrix(primitives->at(i)->getModelMatrix().constData());
+
+
         primitives->at(i)->draw();
+
+        glPopMatrix();
     }
 
 
@@ -383,6 +389,7 @@ Model::ViewportType Viewport::getType() {
 // ====================== SLOTS =========================== //
 
 void Viewport::setClickedId(int x, int y) {
+
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_);
     GLfloat pixels[4];
     glReadBuffer(GL_COLOR_ATTACHMENT1);
@@ -393,7 +400,11 @@ void Viewport::setClickedId(int x, int y) {
 
     float id = pixels[0];
 
-    emit setActivePrimitive(id);
+    // do not select background when in object interaction mode
+    if (model_->getInteractionMode() != Model::OBJECT || id != 0) {
+        emit setActivePrimitive(id);
+    }
+
 }
 
 

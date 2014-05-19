@@ -13,6 +13,7 @@ public:
     explicit Model(QObject *parent = 0);
     enum ViewportType {PERSPECTIVE, FRONT, LEFT, TOP};
     enum PrimitiveType {CUBE, SPHERE, CYLINDER, CONE, TORUS};
+    enum InteractionType {OBJECT, CAMERA};
 
 
     Camera* getCamera(ViewportType type);
@@ -20,6 +21,7 @@ public:
     Primitive* getActivePrimitive();
     QList<Primitive*>* getScenegraph();
     Scenegraph* getScenegraphModel();
+    InteractionType getInteractionMode();
 
 signals:
     void copyVAOData(Primitive *p);
@@ -36,10 +38,13 @@ public slots:
     void addTorus();
     void setActivePrimitive(float ID);
     void setTesselation(int t);
+    void setObjectInteractionMode();
+    void setCameraInteractionMode();
 
 private:
     static const int NR_CAMERAS = 4;
     static const int NR_PRIMITIVES = 5;
+    static const int NR_INTERACTION_TYPES = 2;
     Camera *cameras_[NR_CAMERAS];
     ViewportType active_;
     Primitive* activePrimitive_;
@@ -49,6 +54,8 @@ private:
     std::vector<int> idCounters_;
     int nrIDs_;
     int tesselation_;
+    InteractionType interactionMode_;
+
 
 
 };

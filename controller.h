@@ -17,6 +17,7 @@ public:
     void createMouseControllers();
 
 signals:
+    void updateViewports();
 
 public slots:
     void setSingleViewMode();

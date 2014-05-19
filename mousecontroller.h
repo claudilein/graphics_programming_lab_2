@@ -15,7 +15,8 @@ class MouseController : public QObject
     Q_OBJECT
 
 public:
-    explicit MouseController(QObject *parent = 0, Viewport *viewport = 0, Camera *camera = 0);
+    explicit MouseController(QObject *parent = 0, Viewport *viewport = 0, Camera *camera = 0, Model *model = 0);
+
 
 signals:
     void updateViewport();
@@ -33,6 +34,7 @@ private:
     Viewport *viewport_;
     Camera *camera_;
     float trackballRadius_;
+    Model *model_;
 
     QVector2D lastTranslationPoint_;
     QVector3D lastRotationPoint_;
