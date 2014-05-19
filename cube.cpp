@@ -1,8 +1,8 @@
 #include "cube.h"
 #include <iostream>
 
-Cube::Cube(std::string name, int id, int tesselation) :
-    Primitive(0, name, id, tesselation)
+Cube::Cube(std::string name, int id, int tesselation, float3 color) :
+    Primitive(0, name, id, tesselation, color)
 {
 
     // set cube vertices
@@ -87,10 +87,10 @@ Cube::Cube(std::string name, int id, int tesselation) :
         vertexNormals_.push_back(float3(normal5));
     }
 
-    /*float color[3] = {1, 0, 0};
+    float cubeColor[3] = {1, 0, 0};
     for (int i = 0; i < vertexPositions_.size(); i++) {
-        vertexColors_.push_back(float3(color));
-    }*/
+        vertexColors_.push_back(float3(cubeColor));
+    }
 
 
 
@@ -101,43 +101,7 @@ Cube::Cube(std::string name, int id, int tesselation) :
 
 void Cube::draw() {
 
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glVertexAttribPointer(
-        1,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-
-    /*glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glVertexAttribPointer(
-       2,                  // attribute 2
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );*/
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+    bindVAOToShader();
 
     glDrawElements(
         GL_QUADS,      // mode

@@ -6,7 +6,7 @@
 class Torus : public Primitive
 {
 public:
-    Torus(std::string name, int id, int tesselation,
+    Torus(std::string name, int id, int tesselation, float3 color,
           float innerRadius, float outerRadius, int sides, int rings);
     void draw();
 

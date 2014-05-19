@@ -1,9 +1,9 @@
 #include "torus.h"
 #include <math.h>
 
-Torus::Torus(std::string name, int id, int tesselation,
+Torus::Torus(std::string name, int id, int tesselation, float3 color,
              float innerRadius, float outerRadius, int sides, int rings) :
-    Primitive(0, name, id, tesselation),
+    Primitive(0, name, id, tesselation, color),
     innerRadius_(innerRadius),
     outerRadius_(outerRadius),
     sides_(sides),
@@ -70,51 +70,17 @@ Torus::Torus(std::string name, int id, int tesselation,
         indicesList_.push_back(i);
     }
 
-
+    float torusColor[3] = {1, 0, 1};
+    for (int i = 0; i < vertexPositions_.size(); i++) {
+        vertexColors_.push_back(float3(torusColor));
+    }
 
 
 }
 
 void Torus::draw() {
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
 
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glVertexAttribPointer(
-        2,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    glEnableVertexAttribArray(3);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glVertexAttribPointer(
-        3,                  // attribute 2
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-
-
-
+    bindVAOToShader();
 
     glDrawElements(
         GL_QUADS,      // mode

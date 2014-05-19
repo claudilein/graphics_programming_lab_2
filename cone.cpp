@@ -2,9 +2,9 @@
 #include <math.h>
 #include <iostream>
 
-Cone::Cone(std::string name, int id, int tesselation,
+Cone::Cone(std::string name, int id, int tesselation, float3 color,
            float radius, float height) :
-    Primitive(0, name, id, tesselation),
+    Primitive(0, name, id, tesselation, color),
     radius_(radius),
     height_(height)
 {
@@ -47,7 +47,10 @@ Cone::Cone(std::string name, int id, int tesselation,
         indicesList_.push_back(i);
     }
 
-
+    float coneColor[3] = {1, 1, 0};
+    for (int i = 0; i < vertexPositions_.size(); i++) {
+        vertexColors_.push_back(float3(coneColor));
+    }
 
 
 }
@@ -55,47 +58,7 @@ Cone::Cone(std::string name, int id, int tesselation,
 
 void Cone::draw() {
 
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-
-
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glVertexAttribPointer(
-        2,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-
-    glEnableVertexAttribArray(3);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glVertexAttribPointer(
-        3,                  // attribute 2
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-
+    bindVAOToShader();
 
     glDrawElements(
         GL_TRIANGLES,      // mode
@@ -103,8 +66,5 @@ void Cone::draw() {
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
     );
-
-
-
 
 }

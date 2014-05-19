@@ -6,7 +6,7 @@
 class Cube : public Primitive
 {
 public:
-    Cube(std::string name, int id, int tesselation);
+    Cube(std::string name, int id, int tesselation, float3 color);
     void draw();
 };
 

@@ -23,15 +23,17 @@ public:
     };
     typedef std::vector<float3> attribute;
 
-    explicit Primitive(QObject *parent = 0, std::string name = 0, int id = 0, int tesselation = 0);
+    explicit Primitive(QObject *parent = 0, std::string name = 0, int id = 0, int tesselation = 0, float3 color = 0);
 
     void translate(QVector3D translation);
     void rotate(QQuaternion rotation);
     QMatrix4x4 getModelMatrix();
     virtual void draw();
+    float3* getColor();
     int getID();
     std::string getName();
     void setName(std::string name);
+    void bindVAOToShader();
 
 signals:
 
@@ -40,6 +42,7 @@ public slots:
 
 protected:
     std::string name_;
+    float3 color_;
     int id_;
     int tesselation_;
 
@@ -56,6 +59,8 @@ protected:
 
     QVector3D translation_;
     QQuaternion rotation_;
+
+
 };
 
 #endif // PRIMITIVE_H

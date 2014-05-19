@@ -51,7 +51,7 @@ void Model::addCube()
     name_tmp << name << idCounters_[CUBE];
     name = name_tmp.str();
 
-    Primitive *p = new Cube(name, nrIDs_, tesselation_);
+    Primitive *p = new Cube(name, nrIDs_, tesselation_, Primitive::float3(1, 0, 0));
     idCounters_[CUBE]++;
     nrIDs_++;
 
@@ -68,7 +68,7 @@ void Model::addSphere()
     name_tmp << name << idCounters_[SPHERE];
     name = name_tmp.str();
 
-    Primitive *p = new Sphere(name, nrIDs_, tesselation_, 1, 10, 10);
+    Primitive *p = new Sphere(name, nrIDs_, tesselation_, Primitive::float3(0, 1, 0), 1, 10, 10);
     idCounters_[SPHERE]++;
     nrIDs_++;
 
@@ -85,7 +85,7 @@ void Model::addCylinder()
     name_tmp << name << idCounters_[CYLINDER];
     name = name_tmp.str();
 
-    Primitive *p = new Cylinder(name, nrIDs_, tesselation_, 1, 3);
+    Primitive *p = new Cylinder(name, nrIDs_, tesselation_, Primitive::float3(0, 0, 1), 1, 3);
     idCounters_[CYLINDER]++;
     nrIDs_++;
 
@@ -101,7 +101,7 @@ void Model::addCone()
     name_tmp << name << idCounters_[CONE];
     name = name_tmp.str();
 
-    Primitive *p = new Cone(name, nrIDs_, tesselation_, 1, 3);
+    Primitive *p = new Cone(name, nrIDs_, tesselation_, Primitive::float3(1, 1, 0), 1, 3);
     idCounters_[CONE]++;
     nrIDs_++;
 
@@ -117,7 +117,7 @@ void Model::addTorus()
     name_tmp << name << idCounters_[TORUS];
     name = name_tmp.str();
 
-    Primitive *p = new Torus(name, nrIDs_, tesselation_, 0.5, 1.5, 10, 10);
+    Primitive *p = new Torus(name, nrIDs_, tesselation_, Primitive::float3(1, 0, 1), 0.5, 1.5, 10, 10);
     idCounters_[TORUS]++;
     nrIDs_++;
 

@@ -6,7 +6,7 @@
 class Sphere : public Primitive
 {
 public:
-    Sphere(std::string name, int id, int tesselation,
+    Sphere(std::string name, int id, int tesselation, float3 color,
           float radius, int lats, int longs);
     void draw();
 

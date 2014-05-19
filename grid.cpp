@@ -1,7 +1,8 @@
 #include "grid.h"
+#include <iostream>
 
-Grid::Grid(std::string name, int id, int tesselation) :
-    Primitive(0, name, id, tesselation)
+Grid::Grid(std::string name, int id, int tesselation, float3 color) :
+    Primitive(0, name, id, tesselation, color)
 {
     int size = 20;
     for (int i = -size; i < size; i++) {
@@ -16,20 +17,13 @@ Grid::Grid(std::string name, int id, int tesselation) :
     // set indices list
     for (int i = 0; i < vertexPositions_.size(); i++) {
         indicesList_.push_back(i);
+        vertexNormals_.push_back(float3(0,1,0));
     }
 
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glBufferData(GL_ARRAY_BUFFER, vertexColors_.size() * 3 * sizeof(float3), &vertexColors_[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
-
-
+    float gridColor[3] = {0.72, 0.72, 0.72};
+    for (int i = 0; i < vertexPositions_.size(); i++) {
+        vertexColors_.push_back(float3(gridColor));
+    }
 
 }
 
@@ -37,42 +31,7 @@ Grid::Grid(std::string name, int id, int tesselation) :
 
 void Grid::draw() {
 
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glVertexAttribPointer(
-        2,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    glEnableVertexAttribArray(3);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glVertexAttribPointer(
-        3,                  // attribute 2
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+    bindVAOToShader();
 
     glDrawElements(
         GL_LINES,      // mode

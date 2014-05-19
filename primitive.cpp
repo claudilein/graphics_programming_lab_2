@@ -3,11 +3,12 @@
 #include <QMatrix4x4>
 
 
-Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation) :
+Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation, float3 color) :
     QObject(parent),
     name_(name),
     id_(id),
-    tesselation_(tesselation)
+    tesselation_(tesselation),
+    color_(color)
 {
     glGenVertexArrays(1, &vertexArray_);
     glBindVertexArray(vertexArray_);
@@ -40,10 +41,52 @@ void Primitive::copyVAOToCurrentContext() {
 
 }
 
+void Primitive::bindVAOToShader() {
 
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
+    glVertexAttribPointer(
+        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
+    glVertexAttribPointer(
+        1,                  // attribute 1
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
+    glVertexAttribPointer(
+        2,                  // attribute 2
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
+
+    // Index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+}
 
 void Primitive::draw() {
 
+}
+
+Primitive::float3* Primitive::getColor() {
+    return &color_;
 }
 
 void Primitive::translate(QVector3D translation)

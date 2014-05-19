@@ -146,19 +146,19 @@ void Viewport::initializeGL()
     phongProgram->addShader(phongVertexShader);
     phongProgram->addShader(phongFragmentShader);
 
-    //glBindAttribLocation(phongProgram->programId(), 1, "n");
+    glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
     //glBindAttribLocation(phongProgram->programId(), 2, "c");
 
     phongProgram->link();
-    //std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "n") << std::endl;
+//    std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "n") << std::endl;
     //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "c") << std::endl;
 
     selectionProgram = new QGLShaderProgram(this);
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -175,10 +175,15 @@ void Viewport::initializeGL()
     offsetYID_ = glGetUniformLocation(selectionProgram->programId(), "offsetY");
     activeViewportID_ = glGetUniformLocation(selectionProgram->programId(), "active");
 
+    // attribute buffer 0: vertices
+    glEnableVertexAttribArray(0);
+    // attribute buffer 1: normals
+    glEnableVertexAttribArray(1);
+    // attribute buffer 2: colors
+    glEnableVertexAttribArray(2);
 
-
-
-    grid_ = new Grid("Grid", 0, 0);
+    std::cout << "creating grid " << std::endl;
+    grid_ = new Grid("Grid", 0, 0, Primitive::float3(0.72, 0.72, 0.72));
 
 
 }
@@ -194,27 +199,23 @@ void Viewport::paintGL()
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
-
-
-
     // set modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMultMatrix(camera_->getCameraMatrix().constData());
 
+
+    grid_->copyVAOToCurrentContext();
     grid_->draw();
+
     QList<Primitive*> *primitives = model_->getScenegraph();
 
     for (int i = 0; i < primitives->size(); i++) {
-
         glUniform1f(idPhongID_, primitives->at(i)->getID());
-
+        glUniform3f(colorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
 
         glPushMatrix();
         glMultMatrix(primitives->at(i)->getModelMatrix().constData());
-
 
         primitives->at(i)->draw();
 

@@ -6,7 +6,7 @@
 class Cylinder : public Primitive
 {
 public:
-    Cylinder(std::string name, int id, int tesselation,
+    Cylinder(std::string name, int id, int tesselation, float3 color,
              float radius, float height);
     void draw();
 

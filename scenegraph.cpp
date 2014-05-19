@@ -13,7 +13,6 @@ QModelIndex Scenegraph::index(int row, int column, const QModelIndex &parent) co
     QModelIndex index = QModelIndex();
     if (hasIndex(row, column, parent)) {
         if (row < primitives_->size()) {
-            std::cout << "index (" << row << ", " << column << std::endl;
             index = createIndex(row, column, primitives_->at(row));
         }
     }
@@ -91,7 +90,6 @@ void Scenegraph::addPrimitive(Primitive *p)
 
     int rowIndex = primitives_->size();
     beginInsertRows(QModelIndex(), rowIndex, rowIndex);
-    std::cout << "after begininsertRows" << std::endl;
     primitives_->append(p);
     emit dataChanged(createIndex(rowIndex, 0, p), createIndex(rowIndex, 0, p));
     endInsertRows();
