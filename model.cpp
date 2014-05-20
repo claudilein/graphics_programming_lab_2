@@ -189,12 +189,10 @@ Scenegraph* Model::getScenegraphModel() {
 
 void Model::setObjectInteractionMode() {
     interactionMode_ = Model::OBJECT;
-    std::cout << "InteractionMode: OBJECT" << std::endl;
 }
 
 void Model::setCameraInteractionMode() {
     interactionMode_ = Model::CAMERA;
-    std::cout << "InteractionMode: CAMERA" << std::endl;
 }
 
 Model::InteractionType Model::getInteractionMode() {
@@ -218,4 +216,23 @@ void Model::deleteActivePrimitive() {
         emit updateStatusBar();
         emit updateGL();
     }
+}
+
+void Model::setScaleX(bool on)
+{
+    scaleMask_.setX(on);
+}
+
+void Model::setScaleY(bool on)
+{
+    scaleMask_.setY(on);
+}
+
+void Model::setScaleZ(bool on)
+{
+    scaleMask_.setZ(on);
+}
+
+QVector3D Model::getScaleMask() {
+    return scaleMask_;
 }

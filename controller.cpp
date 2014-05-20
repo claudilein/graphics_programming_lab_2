@@ -31,6 +31,10 @@ void Controller::setView(View *view) {
 
     connect(view_, SIGNAL(setCameraMode()), model_, SLOT(setCameraInteractionMode()));
     connect(view_, SIGNAL(setObjectMode()), model_, SLOT(setObjectInteractionMode()));
+
+    connect(view_, SIGNAL(setScaleX(bool)), model_, SLOT(setScaleX(bool)));
+    connect(view_, SIGNAL(setScaleY(bool)), model_, SLOT(setScaleY(bool)));
+    connect(view_, SIGNAL(setScaleZ(bool)), model_, SLOT(setScaleZ(bool)));
 }
 
 void Controller::createMouseControllers() {
@@ -61,13 +65,10 @@ void Controller::createMouseControllers() {
 
 void Controller::setSingleViewMode()
 {
-
-    std::cout << "setting single view" << std::endl;
     view_->getViewport(Model::PERSPECTIVE)->show();
-    view_->getViewport(Model::FRONT)->setHidden(true);
+    view_->getViewport(Model::FRONT)->hide();
     view_->getViewport(Model::LEFT)->hide();
     view_->getViewport(Model::TOP)->hide();
-    std::cout << "hidden: " << view_->getViewport(Model::FRONT)->isHidden() << std::endl;
 }
 
 void Controller::setDualViewMode()

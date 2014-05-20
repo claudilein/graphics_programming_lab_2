@@ -10,6 +10,8 @@
 #include <QToolButton>
 #include <QTreeView>
 #include <QDockWidget>
+#include <QKeyEvent>
+#include <iostream>
 
 View::View(QWidget *parent)
     : QMainWindow(parent)
@@ -104,6 +106,7 @@ View::View(QWidget *parent)
     setObjectManipulationModeAction->setCheckable(true);
     connect(setObjectManipulationModeAction, SIGNAL(triggered()), this, SIGNAL(setObjectMode()));
 
+
     interactionModeGroup->addAction(setCameraModeAction);
     interactionModeGroup->addAction(setObjectManipulationModeAction);
 
@@ -143,13 +146,13 @@ View::View(QWidget *parent)
     setDualViewModeAction->setShortcut(tr("2"));
     setDualViewModeAction->setIcon(QIcon(":/img/view-dual.png"));
     setDualViewModeAction->setCheckable(true);
-    connect(setSingleViewModeAction, SIGNAL(triggered()), this, SIGNAL(setDualViewMode()));
+    connect(setDualViewModeAction, SIGNAL(triggered()), this, SIGNAL(setDualViewMode()));
 
     setQuadViewModeAction = new QAction("&Quad View", viewModeMenu);
     setQuadViewModeAction->setShortcut(tr("4"));
     setQuadViewModeAction->setIcon(QIcon(":/img/viewports.png"));
     setQuadViewModeAction->setCheckable(true);
-    connect(setSingleViewModeAction, SIGNAL(triggered()), this, SIGNAL(setQuadViewMode()));
+    connect(setQuadViewModeAction, SIGNAL(triggered()), this, SIGNAL(setQuadViewMode()));
 
     viewModeGroup->addAction(setSingleViewModeAction);
     viewModeGroup->addAction(setDualViewModeAction);
@@ -167,6 +170,24 @@ View::View(QWidget *parent)
     menuBar->addMenu(interactionModeMenu);
     menuBar->addMenu(cameraMenu);
     menuBar->addMenu(viewModeMenu);
+
+
+    // === SCALING === //
+
+//    scalingGroup = new QActionGroup(this);
+    scaleXAction = new QAction("X", this);
+    scaleXAction->setCheckable(true);
+    connect(scaleXAction, SIGNAL(toggled(bool)), this, SIGNAL(setScaleX(bool)));
+
+    scaleYAction = new QAction("Y", this);
+    scaleYAction->setCheckable(true);
+    connect(scaleYAction, SIGNAL(toggled(bool)), this, SIGNAL(setScaleY(bool)));
+
+    scaleZAction = new QAction("Z", this);
+    scaleZAction->setCheckable(true);
+    connect(scaleZAction, SIGNAL(toggled(bool)), this, SIGNAL(setScaleZ(bool)));
+
+
 
     // ===== TOOL BAR ===== //
 
@@ -187,8 +208,10 @@ View::View(QWidget *parent)
     toolBar->addSeparator();
     toolBar->addWidget(tesselationSlider);
 
-
-
+    toolBar->addSeparator();
+    toolBar->addAction(scaleXAction);
+    toolBar->addAction(scaleYAction);
+    toolBar->addAction(scaleZAction);
 
 
 
@@ -295,4 +318,23 @@ void View::updateStatusBar() {
 void View::selectItem(QModelIndex index) {
     outliner->setCurrentIndex(index);
 }
+
+
+void View::keyPressEvent(QKeyEvent *event) {
+    if (event->modifiers() & Qt::CTRL) {
+        if (model_->getInteractionMode() == Model::OBJECT) emit setCameraMode();
+        else if (model_->getInteractionMode() == Model::CAMERA) emit setObjectMode();
+    }
+}
+
+
+void View::keyReleaseEvent(QKeyEvent *event) {
+    if ((event->modifiers() & Qt::CTRL) == 0) {
+        if (model_->getInteractionMode() == Model::OBJECT) emit setCameraMode();
+        else if (model_->getInteractionMode() == Model::CAMERA) emit setObjectMode();
+    }
+}
+
+
+
 

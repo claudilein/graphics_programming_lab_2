@@ -23,6 +23,7 @@ public:
     QList<Primitive*>* getScenegraph();
     Scenegraph* getScenegraphModel();
     InteractionType getInteractionMode();
+    QVector3D getScaleMask();
 
 signals:
     void copyVAOData(Primitive *p);
@@ -47,6 +48,9 @@ public slots:
     void modelItemClicked(QModelIndex index);
     void renamePrimitive(QString name);
     void deleteActivePrimitive();
+    void setScaleX(bool on);
+    void setScaleY(bool on);
+    void setScaleZ(bool on);
 
 private:
     static const int NR_CAMERAS = 4;
@@ -62,6 +66,9 @@ private:
     int nrIDs_;
     int tesselation_;
     InteractionType interactionMode_;
+
+    // (1, 1, 1) if all dimensions should be scaled
+    QVector3D scaleMask_;
 
 
 

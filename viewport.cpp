@@ -364,6 +364,19 @@ void Viewport::paintGL()
 
 void Viewport::resizeGL(int width, int height)
 {
+
+    glBindTexture(GL_TEXTURE_2D, colorTexture_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_FLOAT, 0);
+
+    glBindTexture(GL_TEXTURE_2D, idTexture_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthTexture_);
+    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width, height);
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
+
+
     glViewport(0, 0, width, height);
 
     // set projection matrix
@@ -382,6 +395,7 @@ void Viewport::resizeGL(int width, int height)
 
 void Viewport::setCamera(Camera *camera) {
     camera_ = camera;
+    connect(camera_, SIGNAL(zoomChanged(float)), this, SLOT(updateProjectionMatrix(float)));
 }
 
 // ====================== GETTERS ========================= //
@@ -410,10 +424,25 @@ void Viewport::setClickedId(int x, int y) {
 
 }
 
-
 void Viewport::copyVAOData(Primitive *p) {
     makeCurrent();
     p->copyVAOToCurrentContext();
+}
+
+void Viewport::updateProjectionMatrix(float zoom) {
+    if (camera_->getProjectionMode() == Camera::ORTHOGRAPHIC) {
+
+        makeCurrent();
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        float aspectRatio = 0;
+        if (height() != 0) aspectRatio = (float) width() / height();
+        float goodZoomFactor = zoom / 10;
+
+        glOrtho(- aspectRatio * (1 - goodZoomFactor), aspectRatio * (1 - goodZoomFactor), -1 + goodZoomFactor, 1 - goodZoomFactor, 0.01, 10.0);
+        //glOrtho(-m_ratio*(1-m_zoomAmount/3), m_ratio*(1-m_zoomAmount/3), -1+m_zoomAmount/3, 1-m_zoomAmount/3, -5, 32);
+    }
 }
 
 

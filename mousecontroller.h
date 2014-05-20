@@ -38,6 +38,7 @@ private:
 
     QVector2D lastTranslationPoint_;
     QVector3D lastRotationPoint_;
+    QVector2D lastScalingPoint_;
 
     QVector3D mapPointToTrackball(float x, float y);
 

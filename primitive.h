@@ -27,6 +27,8 @@ public:
 
     void translate(QVector3D translation);
     void rotate(QQuaternion rotation);
+    void scale(QVector3D scalingFactor);
+
     QMatrix4x4 getModelMatrix();
     virtual void draw();
     float3* getColor();
@@ -59,6 +61,7 @@ protected:
 
     QVector3D translation_;
     QQuaternion rotation_;
+    QVector3D scalingFactor_;
 
 
 };

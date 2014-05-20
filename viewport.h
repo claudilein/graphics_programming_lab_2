@@ -36,6 +36,7 @@ signals:
 public slots:
     void setClickedId(int x, int y);
     void copyVAOData(Primitive *p);
+    void updateProjectionMatrix(float zoom);
 
 protected:
     void initializeGL();

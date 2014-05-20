@@ -31,6 +31,8 @@ void MouseController::mousePressEvent(QMouseEvent *event)
     } else if (event->button() == Qt::LeftButton) {
         lastRotationPoint_ = mapPointToTrackball(event->x(), event->y());
         emit setClickedId(event->x(), viewport_->height() - event->y());
+    } else if (event->button() == Qt::MiddleButton) {
+        lastScalingPoint_ = QVector2D(event->x(), event->y());
     }
 
     emit setViewportActive(viewport_->getType());
@@ -94,11 +96,22 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
 
 
 
-//        // multiply with previous quaternion to add rotations
-//        rotation = currentRotation * rotation;
-//        currentRotation = rotation;
-
         lastRotationPoint_ = newPoint;
+    } else if ((event->buttons() & Qt::MiddleButton) == Qt::MiddleButton) {
+
+        QVector2D newPoint = QVector2D(event->x(), event->y());
+        QVector2D difference = newPoint - lastScalingPoint_;
+
+        float scalingFactor = 0;
+        if (difference.x() > 0) scalingFactor = difference.length();
+        else scalingFactor = -1 * difference.length();
+
+        QVector3D scalingVector = model_->getScaleMask() * QVector3D(scalingFactor / 10,
+                                                                   scalingFactor / 10,
+                                                                   scalingFactor / 10);
+
+        model_->getActivePrimitive()->scale(scalingVector);
+        lastScalingPoint_ = newPoint;
     }
 
     emit updateViewport();

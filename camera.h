@@ -16,6 +16,7 @@ public:
     QQuaternion getRotation();
 
 signals:
+    void zoomChanged(float zoom);
 
 public slots:
 
