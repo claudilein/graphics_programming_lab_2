@@ -36,6 +36,7 @@ signals:
 public slots:
     void setClickedId(int x, int y);
     void copyVAOData(Primitive *p);
+    void updateProjectionMatrix(float zoom);
 
 protected:
     void initializeGL();
@@ -76,6 +77,8 @@ private:
     GLuint offsetYID_;
     GLuint activeViewportID_;
     GLuint colorID_;
+
+    float light0Position_[4];
 
 
     bool checkFramebufferStatus();

@@ -45,10 +45,19 @@ signals:
 
     void updateViewports();
 
+
+    void setScaleX(bool on);
+    void setScaleY(bool on);
+    void setScaleZ(bool on);
+
+
 public slots:
+    void selectItem(QModelIndex index);
     void updateStatusBar();
 
 
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 private:
 
     Model *model_;
@@ -107,6 +116,12 @@ private:
     // === OUTLINER === //
     QTreeView *outliner;
     QDockWidget *dockWidget;
+
+    // === SCALING === //
+    QActionGroup *scalingGroup;
+    QAction *scaleXAction;
+    QAction *scaleYAction;
+    QAction *scaleZAction;
 
 
 };

@@ -1,14 +1,16 @@
 #include "camera.h"
+#include <iostream>
 
-Camera::Camera(QObject *parent, ProjectionMode mode, bool lockRotation, QVector3D position, QVector3D up) :
-    QObject(parent), mode_(mode), lockRotation_(lockRotation)
+Camera::Camera(QObject *parent, ProjectionMode mode, bool lockRotation, QQuaternion rotation) :
+    QObject(parent), mode_(mode), lockRotation_(lockRotation), initialRotation_(rotation)
 {
     reset();
 }
 
 void Camera::rotate(QQuaternion rotation)
 {
-    rotation_ = rotation_ * rotation;
+    if (!lockRotation_)
+        rotation_ = rotation_ * rotation;
 }
 
 void Camera::translate(QVector2D translation)
@@ -24,12 +26,10 @@ void Camera::zoom(float zoom)
 
 void Camera::reset()
 {
-    rotation_ = QQuaternion();
-    zoom_ = -2;
+    rotation_ = initialRotation_;
+    zoom_ = -3;
     pointOfInterest_ = QVector3D();
 }
-
-
 
 void Camera::setProjectionMode(ProjectionMode mode)
 {
@@ -44,11 +44,16 @@ Camera::ProjectionMode Camera::getProjectionMode()
 QMatrix4x4 Camera::getCameraMatrix()
 {
     QMatrix4x4 matrix;
-    matrix.translate(0, 0, zoom_);
+    if (mode_ == PERSPECTIVE) matrix.translate(0, 0, zoom_);
+    else if (mode_ == ORTHOGRAPHIC) {
+        matrix.translate(0,0,-3);
+        emit zoomChanged(zoom_);
+    }
     matrix.rotate(rotation_);
     matrix.translate(pointOfInterest_);
     return matrix;
 }
+
 
 QQuaternion Camera::getRotation()
 {

@@ -9,7 +9,7 @@ Cone::Cone(std::string name, int id, int tesselation, float3 color,
     height_(height)
 {
 
-    int steps = 4 + tesselation_;
+    int steps = 4 + tesselation_ * tesselation_;
     for (int i = 0; i < steps; i++) {
         double phi_left = 2 * M_PI * i / static_cast<double>(steps);
         double phi_right = 2 * M_PI * (i + 1) / static_cast<double>(steps);

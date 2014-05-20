@@ -21,6 +21,7 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
 
     translation_ = QVector3D();
     rotation_ = QQuaternion();
+    scalingFactor_ = QVector3D(1,1,1);
 
 }
 
@@ -99,6 +100,14 @@ void Primitive::rotate(QQuaternion rotation)
     rotation_ = rotation * rotation_;
 }
 
+void Primitive::scale(QVector3D scalingFactor)
+{
+    scalingFactor_ += scalingFactor;
+    if (scalingFactor_.x() <= 0.1) scalingFactor_.setX(0.1);
+    if (scalingFactor_.y() <= 0.1) scalingFactor_.setY(0.1);
+    if (scalingFactor_.z() <= 0.1) scalingFactor_.setZ(0.1);
+}
+
 void Primitive::setName(std::string name)
 {
     name_ = name;
@@ -109,6 +118,7 @@ QMatrix4x4 Primitive::getModelMatrix()
     QMatrix4x4 modelMatrix;
     modelMatrix.translate(translation_);
     modelMatrix.rotate(rotation_);
+    modelMatrix.scale(scalingFactor_);
     return modelMatrix;
 }
 

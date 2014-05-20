@@ -7,6 +7,7 @@ varying vec3 viewRay;
 
 uniform vec3 color;
 attribute vec3 normal_in;
+attribute vec3 color_in;
 
 
 void main() {
