@@ -21,6 +21,12 @@ public:
         float y_;
         float z_;
     };
+
+    struct RBTNode {
+        QQuaternion rotation;
+        QVector3D translation;
+    };
+
     typedef std::vector<float3> attribute;
 
     explicit Primitive(QObject *parent = 0, std::string name = 0, int id = 0, int tesselation = 0, float3 color = 0);
@@ -58,6 +64,7 @@ protected:
     GLuint vertexBufferNormals_;
     GLuint vertexBufferColors_;
     GLuint indexBuffer_;
+    float ambientColor_[4];
 
     QVector3D translation_;
     QQuaternion rotation_;

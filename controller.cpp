@@ -69,6 +69,7 @@ void Controller::setSingleViewMode()
     view_->getViewport(Model::FRONT)->hide();
     view_->getViewport(Model::LEFT)->hide();
     view_->getViewport(Model::TOP)->hide();
+    model_->setActive(Model::PERSPECTIVE);
 }
 
 void Controller::setDualViewMode()
@@ -77,6 +78,9 @@ void Controller::setDualViewMode()
     view_->getViewport(Model::FRONT)->show();
     view_->getViewport(Model::LEFT)->hide();
     view_->getViewport(Model::TOP)->hide();
+    if (model_->isActiveViewport(Model::LEFT) || model_->isActiveViewport(Model::TOP)) {
+        model_->setActive(Model::FRONT);
+    }
 }
 
 void Controller::setQuadViewMode()

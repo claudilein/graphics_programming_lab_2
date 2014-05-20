@@ -149,14 +149,16 @@ void Model::setActivePrimitive(float ID)
                 activePrimitive_ = scenegraphModel_->getPrimitiveList()->at(i);
                 break;
             }
+
         }
+
+        QModelIndex index = scenegraphModel_->index(scenegraphModel_->getPrimitiveList()->indexOf(activePrimitive_), 0, QModelIndex());
+        emit selectItem(index);
+
     } else {
         activePrimitive_ = NULL;
     }
 
-    QModelIndex index = scenegraphModel_->index(ID - 1, 0, QModelIndex());
-
-    emit selectItem(index);
     emit updateStatusBar();
     emit updateGL();
 
@@ -211,8 +213,10 @@ void Model::renamePrimitive(QString name) {
 
 void Model::deleteActivePrimitive() {
     if (activePrimitive_ != NULL) {
+        //scenegraphModel_->getPrimitiveList()->indexOf(activePrimitive_);
         scenegraphModel_->deletePrimitive(activePrimitive_);
         setActivePrimitive(0);
+        emit selectItem(QModelIndex());
         emit updateStatusBar();
         emit updateGL();
     }

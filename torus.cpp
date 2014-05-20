@@ -66,16 +66,17 @@ Torus::Torus(std::string name, int id, int tesselation, float3 color,
     }
 
     // set indices list
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         indicesList_.push_back(i);
     }
 
     float torusColor[3] = {1, 0, 1};
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         vertexColors_.push_back(float3(torusColor));
     }
 
-
+    ambientColor_[0] = 0.2;
+    ambientColor_[2] = 0.2;
 }
 
 void Torus::draw() {

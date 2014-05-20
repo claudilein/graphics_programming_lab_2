@@ -36,7 +36,10 @@ signals:
 public slots:
     void setClickedId(int x, int y);
     void copyVAOData(Primitive *p);
-    void updateProjectionMatrix(float zoom);
+    void updateProjectionMatrix();
+    void showGrid(bool on);
+    void setGridSize(int i);
+    void setStepSize(int i);
 
 protected:
     void initializeGL();
@@ -54,6 +57,11 @@ private:
     QGLShaderProgram *selectionProgram;
     QGLShader *selectionVertexShader;
     QGLShader *selectionFragmentShader;
+
+    // shader that colors the grid (no shading, no selection)
+    QGLShaderProgram *gridProgram;
+    QGLShader *gridVertexShader;
+    QGLShader *gridFragmentShader;
 
     // vertices of cube
     std::vector<std::vector<float> > originalVertices;
@@ -76,12 +84,14 @@ private:
     GLuint offsetXID_;
     GLuint offsetYID_;
     GLuint activeViewportID_;
-    GLuint colorID_;
+    GLuint phongColorID_;
+    GLuint gridColorID_;
 
     float light0Position_[4];
 
 
     bool checkFramebufferStatus();
+    bool showGrid_;
 
     Cube *cube_;
     Torus *torus_;

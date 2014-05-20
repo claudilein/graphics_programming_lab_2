@@ -52,13 +52,16 @@ Cone::Cone(std::string name, int id, int tesselation, float3 color,
         vertexColors_.push_back(float3(coneColor));
     }
 
+    ambientColor_[0] = 0.2;
+    ambientColor_[1] = 0.2;
 
 }
 
 
 void Cone::draw() {
 
-    bindVAOToShader();
+    bindVAOToShader();    
+
 
     glDrawElements(
         GL_TRIANGLES,      // mode

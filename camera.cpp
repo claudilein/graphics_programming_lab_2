@@ -22,13 +22,15 @@ void Camera::translate(QVector2D translation)
 void Camera::zoom(float zoom)
 {
     zoom_ += zoom;
+    emit zoomChanged();
 }
 
 void Camera::reset()
 {
     rotation_ = initialRotation_;
-    zoom_ = -3;
+    zoom_ = -5;
     pointOfInterest_ = QVector3D();
+    emit zoomChanged();
 }
 
 void Camera::setProjectionMode(ProjectionMode mode)
@@ -46,8 +48,7 @@ QMatrix4x4 Camera::getCameraMatrix()
     QMatrix4x4 matrix;
     if (mode_ == PERSPECTIVE) matrix.translate(0, 0, zoom_);
     else if (mode_ == ORTHOGRAPHIC) {
-        matrix.translate(0,0,-3);
-        emit zoomChanged(zoom_);
+        matrix.translate(0,0,-5);
     }
     matrix.rotate(rotation_);
     matrix.translate(pointOfInterest_);
@@ -60,4 +61,7 @@ QQuaternion Camera::getRotation()
     return rotation_;
 }
 
+float Camera::getZoom() {
+    return zoom_;
+}
 

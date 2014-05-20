@@ -12,6 +12,7 @@
 #include <QDockWidget>
 #include <QKeyEvent>
 #include <iostream>
+#include <QMessageBox>
 
 View::View(QWidget *parent)
     : QMainWindow(parent)
@@ -78,8 +79,6 @@ View::View(QWidget *parent)
     deleteSelectedObjectAction = new QAction("&Delete selected object", objectMenu);
     deleteSelectedObjectAction->setShortcut(tr("Delete"));
 
-    renameSelectedObjectAction = new QAction("Rename se&lected object", objectMenu);
-    //connect(renameSelectedObjectAction, SIGNAL(triggered()), controller, SLOT(renameSelectedObject()));
 
     objectMenu->addAction(createCubeAction);
     objectMenu->addAction(createSphereAction);
@@ -87,7 +86,6 @@ View::View(QWidget *parent)
     objectMenu->addAction(createConeAction);
     objectMenu->addAction(createTorusAction);
     objectMenu->addAction(deleteSelectedObjectAction);
-    objectMenu->addAction(renameSelectedObjectAction);
 
 
     // == INTERACTION MODE MENU == //
@@ -163,6 +161,15 @@ View::View(QWidget *parent)
     viewModeMenu->addAction(setQuadViewModeAction);
 
 
+    // == ABOUT MENU == //
+
+    aboutMenu = new QMenu("&About");
+
+    aboutAction = new QAction("&About", menuBar);
+    connect(aboutAction, SIGNAL(triggered()), this, SLOT(showAboutBox()));
+
+    aboutMenu->addAction(aboutAction);
+
     // ===== MENU BAR ===== //
 
     menuBar->addMenu(fileMenu);
@@ -170,6 +177,7 @@ View::View(QWidget *parent)
     menuBar->addMenu(interactionModeMenu);
     menuBar->addMenu(cameraMenu);
     menuBar->addMenu(viewModeMenu);
+    menuBar->addMenu(aboutMenu);
 
 
     // === SCALING === //
@@ -187,6 +195,26 @@ View::View(QWidget *parent)
     scaleZAction->setCheckable(true);
     connect(scaleZAction, SIGNAL(toggled(bool)), this, SIGNAL(setScaleZ(bool)));
 
+    // GRID //
+
+    showGrid = new QAction("Grid", this);
+    showGrid->setIcon(QIcon(":/img/grid.png"));
+    showGrid->setCheckable(true);
+    showGrid->setChecked(true);
+
+    gridSizeSlider = new QSlider(toolBar);
+    gridSizeSlider->setOrientation(Qt::Horizontal);
+    gridSizeSlider->setFixedWidth(80);
+    gridSizeSlider->setRange(10, 50);
+    gridSizeSlider->setToolTip(QString("grid size"));
+    connect(gridSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setGridSize(int)));
+
+    stepSizeSlider = new QSlider(toolBar);
+    stepSizeSlider->setOrientation(Qt::Horizontal);
+    stepSizeSlider->setFixedWidth(80);
+    stepSizeSlider->setRange(1, 50);
+    stepSizeSlider->setToolTip(QString("step size"));
+    connect(stepSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setStepSize(int)));
 
 
     // ===== TOOL BAR ===== //
@@ -213,6 +241,12 @@ View::View(QWidget *parent)
     toolBar->addAction(scaleYAction);
     toolBar->addAction(scaleZAction);
 
+    toolBar->addSeparator();
+    toolBar->addAction(showGrid);
+    toolBar->addWidget(gridSizeSlider);
+    toolBar->addWidget(stepSizeSlider);
+
+
 
 
 
@@ -223,6 +257,14 @@ View::View(QWidget *parent)
 View::~View()
 {
 
+}
+
+void View::showAboutBox()
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("About ModelingTool!");
+    msgBox.setText("Written by Claudia Pfreundt!");
+    msgBox.exec();
 }
 
 void View::setModel(Model *model)
@@ -236,6 +278,9 @@ void View::setModel(Model *model)
     viewportLeft = new Viewport(this, Model::LEFT, model_);
     viewportTop = new Viewport(this, Model::TOP, model_);
 
+
+
+
     splitterHorizontalTop = new QSplitter(this);
     splitterHorizontalTop->addWidget(viewportPerspective);
     splitterHorizontalTop->addWidget(viewportFront);
@@ -248,8 +293,18 @@ void View::setModel(Model *model)
     splitterVertical->setOrientation(Qt::Vertical);
     splitterVertical->addWidget(splitterHorizontalTop);
     splitterVertical->addWidget(splitterHorizontalBottom);
-
+    QList<int> sizes;
+    sizes.append(400);
+    sizes.append(400);
+    sizes.append(400);
+    sizes.append(400);
+    splitterVertical->setSizes(sizes);
     setCentralWidget(splitterVertical);
+
+
+    viewportFront->hide();
+    viewportLeft->hide();
+    viewportTop->hide();
 
 
     viewportPerspective->setCamera(model_->getCamera(Model::PERSPECTIVE));
@@ -262,6 +317,20 @@ void View::setModel(Model *model)
     connect(this, SIGNAL(updateViewports()), viewportLeft, SLOT(updateGL()));
     connect(this, SIGNAL(updateViewports()), viewportTop, SLOT(updateGL()));
 
+    connect(showGrid, SIGNAL(toggled(bool)), viewportPerspective, SLOT(showGrid(bool)));
+    connect(showGrid, SIGNAL(toggled(bool)), viewportFront, SLOT(showGrid(bool)));
+    connect(showGrid, SIGNAL(toggled(bool)), viewportLeft, SLOT(showGrid(bool)));
+    connect(showGrid, SIGNAL(toggled(bool)), viewportTop, SLOT(showGrid(bool)));
+
+    connect(this, SIGNAL(setGridSize(int)), viewportPerspective, SLOT(setGridSize(int)));
+    connect(this, SIGNAL(setGridSize(int)), viewportFront, SLOT(setGridSize(int)));
+    connect(this, SIGNAL(setGridSize(int)), viewportLeft, SLOT(setGridSize(int)));
+    connect(this, SIGNAL(setGridSize(int)), viewportTop, SLOT(setGridSize(int)));
+
+    connect(this, SIGNAL(setStepSize(int)), viewportPerspective, SLOT(setStepSize(int)));
+    connect(this, SIGNAL(setStepSize(int)), viewportFront, SLOT(setStepSize(int)));
+    connect(this, SIGNAL(setStepSize(int)), viewportLeft, SLOT(setStepSize(int)));
+    connect(this, SIGNAL(setStepSize(int)), viewportTop, SLOT(setStepSize(int)));
 
     // ===== OUTLINER ===== //
 
@@ -311,7 +380,7 @@ void View::updateStatusBar() {
     if (model_->getActivePrimitive() != NULL) {
         activePrimitiveLabel->setText(QString::fromStdString(model_->getActivePrimitive()->getName()));
     } else {
-        activePrimitiveLabel->setText(QString("Background"));
+        activePrimitiveLabel->setText(QString("<None>"));
     }
 }
 

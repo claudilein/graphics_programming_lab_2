@@ -48,15 +48,16 @@ Sphere::Sphere(std::string name, int id, int tesselation, float3 color,
 
 
     // set indices list
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         indicesList_.push_back(i);
     }
 
     float sphereColor[3] = {0, 1, 0};
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         vertexColors_.push_back(float3(sphereColor));
     }
 
+    ambientColor_[1] = 0.2;
 
 }
 

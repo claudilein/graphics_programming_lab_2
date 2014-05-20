@@ -22,6 +22,7 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     translation_ = QVector3D();
     rotation_ = QQuaternion();
     scalingFactor_ = QVector3D(1,1,1);
+    ambientColor_[0] = 0; ambientColor_[1] = 0; ambientColor_[2] = 0; ambientColor_[3] = 1;
 
 }
 
@@ -80,6 +81,9 @@ void Primitive::bindVAOToShader() {
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+
+    // ambient color
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambientColor_);
 }
 
 void Primitive::draw() {
