@@ -157,8 +157,8 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
