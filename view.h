@@ -50,12 +50,14 @@ signals:
     void setScaleY(bool on);
     void setScaleZ(bool on);
 
+    void setGridSize(int i);
+    void setStepSize(int i);
+
 
 public slots:
+    void showAboutBox();
     void selectItem(QModelIndex index);
     void updateStatusBar();
-
-
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 private:
@@ -83,7 +85,6 @@ private:
     QAction *createConeAction;
     QAction *createTorusAction;
     QAction *deleteSelectedObjectAction;
-    QAction *renameSelectedObjectAction;
 
     // == INTERACTION MODE MENU == //
     QMenu *interactionModeMenu;
@@ -103,6 +104,10 @@ private:
     QAction *setDualViewModeAction;
     QAction *setQuadViewModeAction;
 
+    // == ABOUT MENU == //
+    QMenu *aboutMenu;
+    QAction *aboutAction;
+
     // == VIEWPORTS == //
     Viewport *viewportPerspective;
     Viewport *viewportFront;
@@ -112,6 +117,7 @@ private:
     QSplitter *splitterHorizontalTop;
     QSplitter *splitterHorizontalBottom;
     QSplitter *splitterVertical;
+
 
     // === OUTLINER === //
     QTreeView *outliner;
@@ -123,6 +129,11 @@ private:
     QAction *scaleYAction;
     QAction *scaleZAction;
 
+    // === GRID SLIDER === //
+
+    QAction *showGrid;
+    QSlider *gridSizeSlider;
+    QSlider *stepSizeSlider;
 
 };
 

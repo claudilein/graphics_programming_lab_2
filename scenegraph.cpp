@@ -118,7 +118,5 @@ QList<Primitive*>* Scenegraph::getPrimitiveList() {
 Primitive* Scenegraph::getPrimitive(QModelIndex index) {
     if (index.isValid()) {
         return static_cast<Primitive*>(index.internalPointer());
-
-
     }
 }

@@ -21,6 +21,8 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     type_ = type;
     model_ = model;
 
+    showGrid_ = true;
+
 
     // set up default Camera
     camera_ = new Camera();
@@ -34,7 +36,7 @@ QSize Viewport::minimumSizeHint() const
 
 QSize Viewport::sizeHint() const
 {
-    return QSize(400, 400);
+    return QSize(800, 800);
 }
 
 void Viewport::initializeGL()
@@ -164,9 +166,20 @@ void Viewport::initializeGL()
     selectionProgram->addShader(selectionFragmentShader);
     selectionProgram->link();
 
+    gridProgram = new QGLShaderProgram(this);
+    gridVertexShader = new QGLShader(QGLShader::Vertex, this);
+    gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
+
+    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridFragmentShader.fragmentShader");
+
+    gridProgram->addShader(gridVertexShader);
+    gridProgram->addShader(gridFragmentShader);
+    gridProgram->link();
+
 
     idPhongID_ = glGetUniformLocation(phongProgram->programId(), "id");
-    colorID_ = glGetUniformLocation(phongProgram->programId(), "color");
+    phongColorID_ = glGetUniformLocation(phongProgram->programId(), "color");
 
     idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
     colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
@@ -174,6 +187,8 @@ void Viewport::initializeGL()
     offsetXID_ = glGetUniformLocation(selectionProgram->programId(), "offsetX");
     offsetYID_ = glGetUniformLocation(selectionProgram->programId(), "offsetY");
     activeViewportID_ = glGetUniformLocation(selectionProgram->programId(), "active");
+
+    gridColorID_ = glGetUniformLocation(gridProgram->programId(), "color");
 
     // attribute buffer 0: vertices
     glEnableVertexAttribArray(0);
@@ -183,8 +198,7 @@ void Viewport::initializeGL()
     glEnableVertexAttribArray(2);
 
     grid_ = new Grid("Grid", 0, 0, Primitive::float3(0.72, 0.72, 0.72));
-
-
+    grid_->copyVAOToCurrentContext();
 }
 
 void Viewport::paintGL()
@@ -193,29 +207,36 @@ void Viewport::paintGL()
     GLuint attachments[2] = { GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT };
     glDrawBuffers(2,  attachments);
 
-    phongProgram->bind();
-
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
     // set modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMultMatrix(camera_->getCameraMatrix().constData());
 
+    glDisable(GL_DEPTH_TEST);
+
+    if (showGrid_) {
+        gridProgram->bind();
+        glUniform3f(gridColorID_, grid_->getColor()->x_, grid_->getColor()->y_, grid_->getColor()->z_);
+        std::cout << "before grid" << std::endl;
+        grid_->draw();
+        std::cout << "after grid" << std::endl;
+        gridProgram->release();
+    }
+
+    glEnable(GL_DEPTH_TEST);
+
+    phongProgram->bind();
+
     glLightfv(GL_LIGHT0, GL_POSITION, light0Position_);
-
-
-
-    grid_->copyVAOToCurrentContext();
-    grid_->draw();
 
     QList<Primitive*> *primitives = model_->getScenegraph();
 
     for (int i = 0; i < primitives->size(); i++) {
         glUniform1f(idPhongID_, primitives->at(i)->getID());
-        glUniform3f(colorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+        glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
 
         glPushMatrix();
         glMultMatrix(primitives->at(i)->getModelMatrix().constData());
@@ -227,6 +248,7 @@ void Viewport::paintGL()
 
 
     phongProgram->release();
+
 
     selectionProgram->bind();
 
@@ -357,9 +379,12 @@ void Viewport::paintGL()
     );
 
     selectionProgram->release();
+
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+
 }
 
 void Viewport::resizeGL(int width, int height)
@@ -384,9 +409,9 @@ void Viewport::resizeGL(int width, int height)
     glLoadIdentity();
 
     if (camera_->getProjectionMode() == Camera::PERSPECTIVE) {
-        if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 10.0d);
+        if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 20.0d);
     } else if (camera_->getProjectionMode() == Camera::ORTHOGRAPHIC) {
-        if (height != 0) glOrtho(- (float) width/height, (float) width/height, -1, 1, 0.01, 10.0);
+        updateProjectionMatrix();
     }
 }
 
@@ -395,7 +420,7 @@ void Viewport::resizeGL(int width, int height)
 
 void Viewport::setCamera(Camera *camera) {
     camera_ = camera;
-    connect(camera_, SIGNAL(zoomChanged(float)), this, SLOT(updateProjectionMatrix(float)));
+    connect(camera_, SIGNAL(zoomChanged()), this, SLOT(updateProjectionMatrix()));
 }
 
 // ====================== GETTERS ========================= //
@@ -429,19 +454,20 @@ void Viewport::copyVAOData(Primitive *p) {
     p->copyVAOToCurrentContext();
 }
 
-void Viewport::updateProjectionMatrix(float zoom) {
+void Viewport::updateProjectionMatrix() {
+
     if (camera_->getProjectionMode() == Camera::ORTHOGRAPHIC) {
 
         makeCurrent();
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
+        float zoom = camera_->getZoom();
         float aspectRatio = 0;
         if (height() != 0) aspectRatio = (float) width() / height();
         float goodZoomFactor = zoom / 10;
 
-        glOrtho(- aspectRatio * (1 - goodZoomFactor), aspectRatio * (1 - goodZoomFactor), -1 + goodZoomFactor, 1 - goodZoomFactor, 0.01, 10.0);
-        //glOrtho(-m_ratio*(1-m_zoomAmount/3), m_ratio*(1-m_zoomAmount/3), -1+m_zoomAmount/3, 1-m_zoomAmount/3, -5, 32);
+        glOrtho(- aspectRatio * (1 - goodZoomFactor), aspectRatio * (1 - goodZoomFactor), -1 + goodZoomFactor, 1 - goodZoomFactor, 0.01, 20.0);
     }
 }
 
@@ -475,4 +501,17 @@ bool Viewport::checkFramebufferStatus() {
             return false;
     }
     return false;
+}
+
+void Viewport::showGrid(bool on) {
+    showGrid_ = on;
+    updateGL();
+}
+
+void Viewport::setGridSize(int i) {
+    grid_->setGridSize(i);
+}
+
+void Viewport::setStepSize(int i) {
+    grid_->setStepSize(i);
 }

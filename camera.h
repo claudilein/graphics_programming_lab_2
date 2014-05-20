@@ -14,9 +14,10 @@ public:
     explicit Camera(QObject *parent = 0, ProjectionMode mode = PERSPECTIVE, bool lockRotation = false,
                     QQuaternion rotation = QQuaternion());
     QQuaternion getRotation();
+    float getZoom();
 
 signals:
-    void zoomChanged(float zoom);
+    void zoomChanged();
 
 public slots:
 
