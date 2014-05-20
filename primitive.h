@@ -23,6 +23,8 @@ public:
     };
 
     struct RBTNode {
+        RBTNode(QQuaternion q, QVector3D v) : rotation(q), translation(v) {}
+        RBTNode() {}
         QQuaternion rotation;
         QVector3D translation;
     };
@@ -41,12 +43,12 @@ public:
     int getID();
     std::string getName();
     void setName(std::string name);
-    void bindVAOToShader();
+    virtual void bindVAOToShader();
 
 signals:
 
 public slots:
-    void copyVAOToCurrentContext();
+    virtual void copyVAOToCurrentContext();
 
 protected:
     std::string name_;
@@ -69,6 +71,8 @@ protected:
     QVector3D translation_;
     QQuaternion rotation_;
     QVector3D scalingFactor_;
+
+    RBTNode rbtNode_;
 
 
 };

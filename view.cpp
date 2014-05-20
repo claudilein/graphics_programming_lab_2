@@ -205,14 +205,14 @@ View::View(QWidget *parent)
     gridSizeSlider = new QSlider(toolBar);
     gridSizeSlider->setOrientation(Qt::Horizontal);
     gridSizeSlider->setFixedWidth(80);
-    gridSizeSlider->setRange(10, 50);
+    gridSizeSlider->setRange(5, 20);
     gridSizeSlider->setToolTip(QString("grid size"));
     connect(gridSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setGridSize(int)));
 
     stepSizeSlider = new QSlider(toolBar);
     stepSizeSlider->setOrientation(Qt::Horizontal);
     stepSizeSlider->setFixedWidth(80);
-    stepSizeSlider->setRange(1, 50);
+    stepSizeSlider->setRange(1, 20);
     stepSizeSlider->setToolTip(QString("step size"));
     connect(stepSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setStepSize(int)));
 

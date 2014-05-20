@@ -22,6 +22,8 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     model_ = model;
 
     showGrid_ = true;
+    gridSize = 5;
+    stepSize = 1;
 
 
     // set up default Camera
@@ -170,8 +172,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);
@@ -192,13 +194,16 @@ void Viewport::initializeGL()
 
     // attribute buffer 0: vertices
     glEnableVertexAttribArray(0);
-    // attribute buffer 1: normals
+    // attribute buffer 1: normals / (texture coordinates for quad)
     glEnableVertexAttribArray(1);
     // attribute buffer 2: colors
     glEnableVertexAttribArray(2);
 
-    grid_ = new Grid("Grid", 0, 0, Primitive::float3(0.72, 0.72, 0.72));
+    grid_ = new Grid(Primitive::float3(0.72, 0.72, 0.72), gridSize, stepSize);
     grid_->copyVAOToCurrentContext();
+
+    quad_ = new Quad();
+    quad_->copyVAOToCurrentContext();
 }
 
 void Viewport::paintGL()
@@ -217,14 +222,14 @@ void Viewport::paintGL()
 
     glDisable(GL_DEPTH_TEST);
 
+
     if (showGrid_) {
         gridProgram->bind();
         glUniform3f(gridColorID_, grid_->getColor()->x_, grid_->getColor()->y_, grid_->getColor()->z_);
-        std::cout << "before grid" << std::endl;
         grid_->draw();
-        std::cout << "after grid" << std::endl;
         gridProgram->release();
     }
+
 
     glEnable(GL_DEPTH_TEST);
 
@@ -248,103 +253,10 @@ void Viewport::paintGL()
 
 
     phongProgram->release();
-
-
     selectionProgram->bind();
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    GLuint vertexArray;
-    GLuint vertexBufferPositions;
-    GLuint vertexBufferTextureCoords;
-    GLuint indexBuffer;
-
-    glGenVertexArrays(1, &vertexArray);
-    glBindVertexArray(vertexArray);
-
-    glGenBuffers(1, &vertexBufferPositions);
-    glGenBuffers(1, &vertexBufferTextureCoords);
-
-    glGenBuffers(1, &indexBuffer);
-
-    std::vector<float> vertexPositions;
-    vertexPositions.push_back(1);
-    vertexPositions.push_back(1);
-    vertexPositions.push_back(0);
-
-    vertexPositions.push_back(-1);
-    vertexPositions.push_back(1);
-    vertexPositions.push_back(0);
-
-    vertexPositions.push_back(-1);
-    vertexPositions.push_back(-1);
-    vertexPositions.push_back(0);
-
-    vertexPositions.push_back(1);
-    vertexPositions.push_back(-1);
-    vertexPositions.push_back(0);
-
-    std::vector<float> vertexTextureCoords;
-    vertexTextureCoords.push_back(1);
-    vertexTextureCoords.push_back(1);
-    vertexTextureCoords.push_back(0);
-
-    vertexTextureCoords.push_back(0);
-    vertexTextureCoords.push_back(1);
-    vertexTextureCoords.push_back(0);
-
-    vertexTextureCoords.push_back(0);
-    vertexTextureCoords.push_back(0);
-    vertexTextureCoords.push_back(0);
-
-    vertexTextureCoords.push_back(1);
-    vertexTextureCoords.push_back(0);
-    vertexTextureCoords.push_back(0);
-
-    std::vector<int> indicesList;
-    indicesList.push_back(0);
-    indicesList.push_back(1);
-    indicesList.push_back(2);
-    indicesList.push_back(3);
-
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions);
-    glBufferData(GL_ARRAY_BUFFER, vertexPositions.size() * sizeof(float), &vertexPositions[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoords);
-    glBufferData(GL_ARRAY_BUFFER, vertexTextureCoords.size() *  sizeof(float), &vertexTextureCoords[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList.size() * sizeof(uint), &indicesList[0], GL_STATIC_DRAW);
-
-
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoords);
-    glVertexAttribPointer(
-        1,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, colorTexture_);
@@ -369,14 +281,7 @@ void Viewport::paintGL()
     glUniform1f(offsetYID_, 1.0f / height());
     glUniform1i(activeViewportID_, viewportActive);
 
-
-
-    glDrawElements(
-        GL_QUADS,      // mode
-        indicesList.size(),    // count
-        GL_UNSIGNED_INT,       // type
-        (void*)0           // element array buffer offset
-    );
+    quad_->draw();
 
     selectionProgram->release();
 
@@ -505,13 +410,20 @@ bool Viewport::checkFramebufferStatus() {
 
 void Viewport::showGrid(bool on) {
     showGrid_ = on;
+
     updateGL();
 }
 
 void Viewport::setGridSize(int i) {
+    makeCurrent();
     grid_->setGridSize(i);
+    updateGL();
+
 }
 
 void Viewport::setStepSize(int i) {
+    makeCurrent();
     grid_->setStepSize(i);
+    updateGL();
+
 }

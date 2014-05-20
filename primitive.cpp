@@ -24,6 +24,8 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     scalingFactor_ = QVector3D(1,1,1);
     ambientColor_[0] = 0; ambientColor_[1] = 0; ambientColor_[2] = 0; ambientColor_[3] = 1;
 
+    //rbtNode_ = new RBTNode(QQuaternion(), QVector3D(1,1,1));
+
 }
 
 void Primitive::copyVAOToCurrentContext() {
@@ -97,11 +99,13 @@ Primitive::float3* Primitive::getColor() {
 void Primitive::translate(QVector3D translation)
 {
     translation_ += translation;
+    rbtNode_.translation = rbtNode_.translation;
 }
 
 void Primitive::rotate(QQuaternion rotation)
 {
     rotation_ = rotation * rotation_;
+    rbtNode_.rotation = rbtNode_.rotation * rotation;
 }
 
 void Primitive::scale(QVector3D scalingFactor)
@@ -120,9 +124,13 @@ void Primitive::setName(std::string name)
 QMatrix4x4 Primitive::getModelMatrix()
 {
     QMatrix4x4 modelMatrix;
-    modelMatrix.translate(translation_);
-    modelMatrix.rotate(rotation_);
+    //modelMatrix.translate(translation_);
+    //modelMatrix.rotate(rotation_);
+
+    modelMatrix.translate(rbtNode_.translation);
+    modelMatrix.rotate(rbtNode_.rotation);
     modelMatrix.scale(scalingFactor_);
+
     return modelMatrix;
 }
 

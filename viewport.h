@@ -13,6 +13,7 @@
 #include <cone.h>
 #include <cylinder.h>
 #include <grid.h>
+#include <quad.h>
 
 class Viewport : public QGLWidget
 {
@@ -99,6 +100,10 @@ private:
     Cone *cone_;
     Cylinder *cylinder_;
     Grid *grid_;
+    Quad *quad_;
+
+    int gridSize;
+    int stepSize;
 
 
 };

@@ -6,7 +6,7 @@
 class Grid : public Primitive
 {
 public:
-    Grid(std::string name, int id, int tesselation, float3 color);
+    Grid(float3 color, int gridSize, int stepSize);
     void draw();
     void setGridSize(int i);
     void setStepSize(int i);
