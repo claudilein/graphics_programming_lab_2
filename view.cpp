@@ -13,6 +13,7 @@
 #include <QKeyEvent>
 #include <iostream>
 #include <QMessageBox>
+#include <QFileDialog>
 
 View::View(QWidget *parent)
     : QMainWindow(parent)
@@ -76,6 +77,9 @@ View::View(QWidget *parent)
     createTorusAction->setIcon(QIcon(":/img/torus.png"));
     connect(createTorusAction, SIGNAL(triggered()), this, SIGNAL(createTorus()));
 
+    createVolumeAction = new QAction("Create &Volume", objectMenu);
+    connect(createVolumeAction, SIGNAL(triggered()), this, SLOT(readFile()));
+
     deleteSelectedObjectAction = new QAction("&Delete selected object", objectMenu);
     deleteSelectedObjectAction->setShortcut(tr("Delete"));
 
@@ -85,6 +89,7 @@ View::View(QWidget *parent)
     objectMenu->addAction(createCylinderAction);
     objectMenu->addAction(createConeAction);
     objectMenu->addAction(createTorusAction);
+    objectMenu->addAction(createVolumeAction);
     objectMenu->addAction(deleteSelectedObjectAction);
 
 
@@ -364,6 +369,12 @@ void View::setModel(Model *model)
     connect(deleteSelectedObjectAction, SIGNAL(triggered()), model_, SLOT(deleteActivePrimitive()));
 }
 
+
+void View::readFile() {
+    QString fileName;
+    fileName = QFileDialog::getOpenFileName(this,
+        tr("Upload Volumetric Data"), "../", tr("Raw Files (*.raw)"));
+}
 
 Viewport* View::getViewport(Model::ViewportType type)
 {

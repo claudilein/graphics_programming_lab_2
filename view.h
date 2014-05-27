@@ -60,6 +60,7 @@ public slots:
     void updateStatusBar();
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
+    void readFile();
 private:
 
     Model *model_;
@@ -84,6 +85,7 @@ private:
     QAction *createCylinderAction;
     QAction *createConeAction;
     QAction *createTorusAction;
+    QAction *createVolumeAction;
     QAction *deleteSelectedObjectAction;
 
     // == INTERACTION MODE MENU == //

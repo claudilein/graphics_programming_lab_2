@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     cylinder.cpp \
     grid.cpp \
     scenegraph.cpp \
-    quad.cpp
+    quad.cpp \
+    volume.cpp
 
 HEADERS  += view.h \
     controller.h \
@@ -45,7 +46,8 @@ HEADERS  += view.h \
     cylinder.h \
     grid.h \
     scenegraph.h \
-    quad.h
+    quad.h \
+    volume.h
 
 RESOURCES += \
     resources.qrc
