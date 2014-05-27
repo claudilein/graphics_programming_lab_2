@@ -47,7 +47,7 @@ void Primitive::copyVAOToCurrentContext() {
 
 void Primitive::bindVAOToShader() {
 
-
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
     glVertexAttribPointer(
         0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
@@ -58,7 +58,7 @@ void Primitive::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
-
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
     glVertexAttribPointer(
         1,                  // attribute 1
@@ -69,7 +69,7 @@ void Primitive::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
-
+    glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
     glVertexAttribPointer(
         2,                  // attribute 2
@@ -124,11 +124,11 @@ void Primitive::setName(std::string name)
 QMatrix4x4 Primitive::getModelMatrix()
 {
     QMatrix4x4 modelMatrix;
-    //modelMatrix.translate(translation_);
-    //modelMatrix.rotate(rotation_);
+    modelMatrix.translate(translation_);
+    modelMatrix.rotate(rotation_);
 
-    modelMatrix.translate(rbtNode_.translation);
-    modelMatrix.rotate(rbtNode_.rotation);
+    //modelMatrix.translate(rbtNode_.translation);
+    //modelMatrix.rotate(rbtNode_.rotation);
     modelMatrix.scale(scalingFactor_);
 
     return modelMatrix;

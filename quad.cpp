@@ -48,7 +48,7 @@ void Quad::copyVAOToCurrentContext()
 
 void Quad::bindVAOToShader() {
 
-
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
     glVertexAttribPointer(
         0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
@@ -59,6 +59,7 @@ void Quad::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
     glVertexAttribPointer(
         1,                  // attribute 1
