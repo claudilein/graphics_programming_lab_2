@@ -4,6 +4,7 @@
 #include <cone.h>
 #include <cylinder.h>
 #include <torus.h>
+#include <volume.h>
 #include <iostream>
 #include <sstream>
 
@@ -130,6 +131,26 @@ void Model::addTorus()
 
     Primitive *p = new Torus(name, nrIDs_, tesselation_, Primitive::float3(1, 0, 1), 0.3, 0.7, 10, 10);
     idCounters_[TORUS]++;
+    nrIDs_++;
+
+    scenegraphModel_->addPrimitive(p);
+
+    emit copyVAOData(p);
+    emit updateGL();
+    emit updateGL();
+    setActivePrimitive(p->getID());
+}
+
+void Model::addVolume(QString fileName) {
+    std::string name = "Volume ";
+    std::stringstream name_tmp;
+    name_tmp << name << idCounters_[VOLUME];
+    name = name_tmp.str();
+
+    Primitive *p = new Volume(name, nrIDs_, tesselation_, Primitive::float3(0, 0, 0));
+    static_cast<Volume*>(p)->parseFile(fileName);
+
+    idCounters_[VOLUME]++;
     nrIDs_++;
 
     scenegraphModel_->addPrimitive(p);

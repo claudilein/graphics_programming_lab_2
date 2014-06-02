@@ -33,6 +33,7 @@ signals:
     void createCylinder();
     void createCone();
     void createTorus();
+    void createVolume(QString fileName);
 
     void setSingleViewMode();
     void setDualViewMode();

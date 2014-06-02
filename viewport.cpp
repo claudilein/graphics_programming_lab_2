@@ -161,8 +161,8 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -172,8 +172,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);

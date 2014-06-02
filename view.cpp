@@ -374,6 +374,7 @@ void View::readFile() {
     QString fileName;
     fileName = QFileDialog::getOpenFileName(this,
         tr("Upload Volumetric Data"), "../", tr("Raw Files (*.raw)"));
+    emit createVolume(fileName);
 }
 
 Viewport* View::getViewport(Model::ViewportType type)

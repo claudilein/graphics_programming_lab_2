@@ -13,7 +13,7 @@ class Model : public QObject
 public:
     explicit Model(QObject *parent = 0);
     enum ViewportType {PERSPECTIVE, FRONT, LEFT, TOP};
-    enum PrimitiveType {CUBE, SPHERE, CYLINDER, CONE, TORUS};
+    enum PrimitiveType {CUBE, SPHERE, CYLINDER, CONE, TORUS, VOLUME};
     enum InteractionType {OBJECT, CAMERA};
 
 
@@ -40,6 +40,7 @@ public slots:
     void addCylinder();
     void addCone();
     void addTorus();
+    void addVolume(QString fileName);
     void setActivePrimitive(float ID);
     void setTesselation(int t);
     void setObjectInteractionMode();
@@ -54,7 +55,7 @@ public slots:
 
 private:
     static const int NR_CAMERAS = 4;
-    static const int NR_PRIMITIVES = 5;
+    static const int NR_PRIMITIVES = 6;
     static const int NR_INTERACTION_TYPES = 2;
     Camera *cameras_[NR_CAMERAS];
     ViewportType active_;

@@ -7,6 +7,7 @@ class Volume : public Primitive
 {
 public:
     Volume(std::string name, int id, int tesselation, float3 color);
+    void parseFile(QString fileName);
     //void draw();
 };
 

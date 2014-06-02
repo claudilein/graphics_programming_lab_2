@@ -32,7 +32,6 @@ Quad::Quad() :
 void Quad::copyVAOToCurrentContext()
 {
 
-    std::cout << "copy vao to context" << std::endl;
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
     glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
