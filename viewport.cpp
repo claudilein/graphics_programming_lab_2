@@ -54,6 +54,9 @@ void Viewport::initializeGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_COLOR_MATERIAL);
 
+    // enable 3D textures
+    glEnable(GL_TEXTURE_3D);
+
     // init shading model to flat shading
     glShadeModel(GL_FLAT);
 
