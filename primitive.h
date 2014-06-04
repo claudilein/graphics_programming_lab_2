@@ -41,6 +41,7 @@ public:
     virtual void draw();
     float3* getColor();
     int getID();
+    bool isVolume();
     std::string getName();
     void setName(std::string name);
     virtual void bindVAOToShader();
@@ -73,6 +74,7 @@ protected:
     QVector3D scalingFactor_;
 
     RBTNode rbtNode_;
+    bool isVolume_;
 
 
 };

@@ -22,8 +22,8 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     model_ = model;
 
     showGrid_ = true;
-    gridSize = 5;
-    stepSize = 1;
+    gridSize_ = 5;
+    stepSize_ = 1;
 
 
     // set up default Camera
@@ -142,6 +142,7 @@ void Viewport::initializeGL()
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // compile and link shaders
+    // PHONG SHADER
     phongProgram = new QGLShaderProgram(this);
 
     phongVertexShader = new QGLShader(QGLShader::Vertex, this);
@@ -152,13 +153,9 @@ void Viewport::initializeGL()
 
     phongProgram->addShader(phongVertexShader);
     phongProgram->addShader(phongFragmentShader);
-
-    glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
-    //glBindAttribLocation(phongProgram->programId(), 2, "color_in");
-
     phongProgram->link();
-//    std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "normal_in") << std::endl;
-    //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "color_in") << std::endl;
+
+    // SELECTION SHADER
 
     selectionProgram = new QGLShaderProgram(this);
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
@@ -171,6 +168,8 @@ void Viewport::initializeGL()
     selectionProgram->addShader(selectionFragmentShader);
     selectionProgram->link();
 
+    // GRID SHADER
+
     gridProgram = new QGLShaderProgram(this);
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
@@ -182,18 +181,42 @@ void Viewport::initializeGL()
     gridProgram->addShader(gridFragmentShader);
     gridProgram->link();
 
+    // VOLUME SHADER
 
-    idPhongID_ = glGetUniformLocation(phongProgram->programId(), "id");
+    volumeProgram = new QGLShaderProgram(this);
+    volumeVertexShader = new QGLShader(QGLShader::Vertex, this);
+    volumeFragmentShader = new QGLShader(QGLShader::Fragment, this);
+
+    volumeVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/volumeVertexShader.vertexShader");
+    volumeFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/volumeFragmentShader.fragmentShader");
+
+    volumeProgram->addShader(volumeVertexShader);
+    volumeProgram->addShader(volumeFragmentShader);
+    volumeProgram->link();
+
+    // distribute uniform IDs
+
+    phongIdID_ = glGetUniformLocation(phongProgram->programId(), "id");
     phongColorID_ = glGetUniformLocation(phongProgram->programId(), "color");
 
     idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
     colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
-    idSelectionID_ = glGetUniformLocation(selectionProgram->programId(), "id");
+    selectionIdID_ = glGetUniformLocation(selectionProgram->programId(), "id");
     offsetXID_ = glGetUniformLocation(selectionProgram->programId(), "offsetX");
     offsetYID_ = glGetUniformLocation(selectionProgram->programId(), "offsetY");
     activeViewportID_ = glGetUniformLocation(selectionProgram->programId(), "active");
 
     gridColorID_ = glGetUniformLocation(gridProgram->programId(), "color");
+
+    volumeIdID_ = glGetUniformLocation(volumeProgram->programId(), "id");
+    volumeTextureID_ = glGetUniformLocation(volumeProgram->programId(), "volumeTexture");
+
+
+    glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
+    //glBindAttribLocation(phongProgram->programId(), 2, "color_in");
+
+    //std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "normal_in") << std::endl;
+    //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "color_in") << std::endl;
 
     // attribute buffer 0: vertices
     glEnableVertexAttribArray(0);
@@ -202,7 +225,7 @@ void Viewport::initializeGL()
     // attribute buffer 2: colors
     glEnableVertexAttribArray(2);
 
-    grid_ = new Grid(Primitive::float3(0.72, 0.72, 0.72), gridSize, stepSize);
+    grid_ = new Grid(Primitive::float3(0.72, 0.72, 0.72), gridSize_, stepSize_);
     grid_->copyVAOToCurrentContext();
 
     quad_ = new Quad();
@@ -223,18 +246,19 @@ void Viewport::paintGL()
     glLoadIdentity();
     glMultMatrix(camera_->getCameraMatrix().constData());
 
-    glDisable(GL_DEPTH_TEST);
 
 
     if (showGrid_) {
+        glDisable(GL_DEPTH_TEST);
         gridProgram->bind();
         glUniform3f(gridColorID_, grid_->getColor()->x_, grid_->getColor()->y_, grid_->getColor()->z_);
         grid_->draw();
         gridProgram->release();
+        glEnable(GL_DEPTH_TEST);
     }
 
 
-    glEnable(GL_DEPTH_TEST);
+    // DRAW PRIMITIVES
 
     phongProgram->bind();
 
@@ -242,20 +266,48 @@ void Viewport::paintGL()
 
     QList<Primitive*> *primitives = model_->getScenegraph();
 
+    // draw all primitives that are not a volume
     for (int i = 0; i < primitives->size(); i++) {
-        glUniform1f(idPhongID_, primitives->at(i)->getID());
-        glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+        if (!primitives->at(i)->isVolume()) {
+            std::cout << "drawing primitive " << primitives->at(i)->getName() << std::endl;
+            glUniform1f(phongIdID_, primitives->at(i)->getID());
+            glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
 
-        glPushMatrix();
-        glMultMatrix(primitives->at(i)->getModelMatrix().constData());
+            glPushMatrix();
+            glMultMatrix(primitives->at(i)->getModelMatrix().constData());
 
-        primitives->at(i)->draw();
+            primitives->at(i)->draw();
 
-        glPopMatrix();
+            glPopMatrix();
+        }
     }
 
 
+    // DRAW VOLUMES
+
     phongProgram->release();
+    volumeProgram->bind();
+
+    for (int i = 0; i < primitives->size(); i++) {
+        if (primitives->at(i)->isVolume()) {
+            std::cout << "drawing volume " << primitives->at(i)->getName() << std::endl;
+            glUniform1f(volumeIdID_, primitives->at(i)->getID());
+            // volume texture will be in GL_TEXTURE1. It is bound in the volume's draw method.
+            glUniform1i(volumeTextureID_, 1);
+
+            glPushMatrix();
+            glMultMatrix(primitives->at(i)->getModelMatrix().constData());
+
+            primitives->at(i)->draw();
+
+            glPopMatrix();
+        }
+    }
+
+
+    // HIGHLIGHT SELECTED OBJECT
+
+    volumeProgram->release();
     selectionProgram->bind();
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -279,7 +331,7 @@ void Viewport::paintGL()
 
     bool viewportActive = model_->isActiveViewport(type_);
 
-    glUniform1f(idSelectionID_, id);
+    glUniform1f(selectionIdID_, id);
     glUniform1f(offsetXID_, 1.0f / width());
     glUniform1f(offsetYID_, 1.0f / height());
     glUniform1i(activeViewportID_, viewportActive);

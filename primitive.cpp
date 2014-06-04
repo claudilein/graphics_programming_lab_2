@@ -8,7 +8,8 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     name_(name),
     id_(id),
     tesselation_(tesselation),
-    color_(color)
+    color_(color),
+    isVolume_(false)
 {
     glGenVertexArrays(1, &vertexArray_);
     glBindVertexArray(vertexArray_);
@@ -138,6 +139,10 @@ QMatrix4x4 Primitive::getModelMatrix()
 int Primitive::getID()
 {
     return id_;
+}
+
+bool Primitive::isVolume() {
+    return isVolume_;
 }
 
 std::string Primitive::getName()

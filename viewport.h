@@ -64,6 +64,11 @@ private:
     QGLShader *gridVertexShader;
     QGLShader *gridFragmentShader;
 
+    // shader that colors the volumes
+    QGLShaderProgram *volumeProgram;
+    QGLShader *volumeVertexShader;
+    QGLShader *volumeFragmentShader;
+
     // vertices of cube
     std::vector<std::vector<float> > originalVertices;
 
@@ -78,20 +83,24 @@ private:
     GLuint idTexture_;
     GLuint depthTexture_;
 
-    GLuint idPhongID_;
-    GLuint idSelectionID_;
+    // shader inputs
+    GLuint phongIdID_;
+    GLuint phongColorID_;
+
+    GLuint selectionIdID_;
     GLuint idTextureID_;
     GLuint colorTextureID_;
     GLuint offsetXID_;
     GLuint offsetYID_;
     GLuint activeViewportID_;
-    GLuint phongColorID_;
+
     GLuint gridColorID_;
+
+    GLuint volumeIdID_;
+    GLuint volumeTextureID_;
 
     float light0Position_[4];
 
-
-    bool checkFramebufferStatus();
     bool showGrid_;
 
     Cube *cube_;
@@ -102,10 +111,10 @@ private:
     Grid *grid_;
     Quad *quad_;
 
-    int gridSize;
-    int stepSize;
+    int gridSize_;
+    int stepSize_;
 
-
+    bool checkFramebufferStatus();
 };
 
 #endif // VIEWPORT_H
