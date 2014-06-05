@@ -123,8 +123,23 @@ void Volume::parseFile(QString fileName) {
 //        uchar transferredData[sizeOfTexture * 4];
 //        transfer(data_, &transferredData[0], sizeOfTexture);
 
+        cout << "before allocating testData" << endl;
+        float *testData = (float*) malloc(sizeOfTexture * sizeof(float));
+
+
+        cout << "after allocating testData" << endl;
+        for (uint i = 0; i < sizeOfTexture; i++) {
+            testData[i] = (uint) data_[i] / 256.0f;
+//            cout << "testData[" << i << "]: " << testData[i] << endl;
+        }
+        cout << "before texture binding" << endl;
+
         glBindTexture(GL_TEXTURE_3D, volumeTexture_);
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_R8UI, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_UNSIGNED_INT, data_);
+        //glTexImage3D(GL_TEXTURE_3D, 0, GL_R8UI, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_UNSIGNED_INT, data_);
+        cout << "before data transfer" << endl;
+        //glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE8, resolution_[0], resolution_[1], resolution_[2], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data_);
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_FLOAT, testData);
+        cout << "before texture unbinding" << endl;
         glBindTexture(GL_TEXTURE_3D, 0);
 
         cout << "entered data into texture" << endl;
@@ -257,7 +272,9 @@ void Volume::bindVAOToShader() {
 
 void Volume::draw() {
 
+
     bindVAOToShader();
+
 
     glDrawElements(
         GL_QUADS,      // mode

@@ -269,7 +269,6 @@ void Viewport::paintGL()
     // draw all primitives that are not a volume
     for (int i = 0; i < primitives->size(); i++) {
         if (!primitives->at(i)->isVolume()) {
-            std::cout << "drawing primitive " << primitives->at(i)->getName() << std::endl;
             glUniform1f(phongIdID_, primitives->at(i)->getID());
             glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
 
@@ -290,7 +289,6 @@ void Viewport::paintGL()
 
     for (int i = 0; i < primitives->size(); i++) {
         if (primitives->at(i)->isVolume()) {
-            std::cout << "drawing volume " << primitives->at(i)->getName() << std::endl;
             glUniform1f(volumeIdID_, primitives->at(i)->getID());
             // volume texture will be in GL_TEXTURE1. It is bound in the volume's draw method.
             glUniform1i(volumeTextureID_, 1);
