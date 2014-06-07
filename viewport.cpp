@@ -11,6 +11,7 @@
 #include <cylinder.h>
 #include <grid.h>
 #include <primitive.h>
+#include <volume.h>
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
@@ -22,6 +23,8 @@ Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
     model_ = model;
 
     showGrid_ = true;
+    mip_ = false;
+
     gridSize_ = 5;
     stepSize_ = 1;
 
@@ -55,7 +58,7 @@ void Viewport::initializeGL()
     glEnable(GL_COLOR_MATERIAL);
 
     // enable 3D textures
-    glEnable(GL_TEXTURE_3D);
+    glEnable(GL_TEXTURE_3D_EXT);
 
     // init shading model to flat shading
     glShadeModel(GL_FLAT);
@@ -70,10 +73,20 @@ void Viewport::initializeGL()
     light0Position_[2] = 3.5f;
     light0Position_[3] = 1.0f;
 
-    float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
+    // color lightsource
+    GLfloat light0Ambient[4] = {0.1f, 0.1f, 0.1f, 1.0f};
+    GLfloat light0Diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+    GLfloat light0Specular[4] = {0.6f, 0.6f, 0.6f, 1.0f};
+
+    // Assign created components to GL_LIGHT0
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light0Ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0Diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light0Specular);
+
+    //float specularReflection[4] = {1.0, 1.0, 1.0, 1.0};
     int shininess = 120.0f;
 
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
+    //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specularReflection);
     glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
 
 
@@ -161,8 +174,8 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -174,8 +187,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);
@@ -187,8 +200,8 @@ void Viewport::initializeGL()
     volumeVertexShader = new QGLShader(QGLShader::Vertex, this);
     volumeFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    volumeVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/volumeVertexShader.vertexShader");
-    volumeFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 2/ModelingTool/shaders/volumeFragmentShader.fragmentShader");
+    volumeVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/volumeVertexShader.vertexShader");
+    volumeFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/volumeFragmentShader.fragmentShader");
 
     volumeProgram->addShader(volumeVertexShader);
     volumeProgram->addShader(volumeFragmentShader);
@@ -210,6 +223,9 @@ void Viewport::initializeGL()
 
     volumeIdID_ = glGetUniformLocation(volumeProgram->programId(), "id");
     volumeTextureID_ = glGetUniformLocation(volumeProgram->programId(), "volumeTexture");
+    transferTextureID_ = glGetUniformLocation(volumeProgram->programId(), "transferTexture");
+    aspectRatioID_ = glGetUniformLocation(volumeProgram->programId(), "aspectRatio");
+    mipID_ = glGetUniformLocation(volumeProgram->programId(), "mip");
 
 
     glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
@@ -289,9 +305,14 @@ void Viewport::paintGL()
 
     for (int i = 0; i < primitives->size(); i++) {
         if (primitives->at(i)->isVolume()) {
+            Volume* volume = static_cast<Volume*>(primitives->at(i));
             glUniform1f(volumeIdID_, primitives->at(i)->getID());
+            glUniform1i(mipID_, mip_);
             // volume texture will be in GL_TEXTURE1. It is bound in the volume's draw method.
             glUniform1i(volumeTextureID_, 1);
+            // transfer texture will be in GL_TEXTURE2. It is bound in the volume's draw method.
+            glUniform1i(transferTextureID_, 2);
+            glUniform3f(aspectRatioID_, volume->getAspectRatio().x_, volume->getAspectRatio().y_, volume->getAspectRatio().z_);
 
             glPushMatrix();
             glMultMatrix(primitives->at(i)->getModelMatrix().constData());
@@ -463,6 +484,12 @@ bool Viewport::checkFramebufferStatus() {
 
 void Viewport::showGrid(bool on) {
     showGrid_ = on;
+
+    updateGL();
+}
+
+void Viewport::setMip(bool on) {
+    mip_ = on;
 
     updateGL();
 }

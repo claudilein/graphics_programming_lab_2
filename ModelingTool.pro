@@ -30,7 +30,9 @@ SOURCES += main.cpp\
     grid.cpp \
     scenegraph.cpp \
     quad.cpp \
-    volume.cpp
+    volume.cpp \
+    transferfunctionwidget.cpp \
+    transferfunctioneditor.cpp
 
 HEADERS  += view.h \
     controller.h \
@@ -47,7 +49,9 @@ HEADERS  += view.h \
     grid.h \
     scenegraph.h \
     quad.h \
-    volume.h
+    volume.h \
+    transferfunctionwidget.h \
+    transferfunctioneditor.h
 
 RESOURCES += \
     resources.qrc

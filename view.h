@@ -14,6 +14,11 @@
 #include <QLabel>
 #include <QTreeView>
 #include <QDockWidget>
+#include <transferfunctionwidget.h>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QCheckBox>
+#include <transferfunctioneditor.h>
 
 class View : public QMainWindow
 {
@@ -124,7 +129,12 @@ private:
 
     // === OUTLINER === //
     QTreeView *outliner;
-    QDockWidget *dockWidget;
+    QDockWidget *outlinerWidget;
+
+    // === TRANSFER FUNCTION === //
+    QDockWidget *transferFunctionDockWidget;
+    TransferFunctionEditor *transferFunctionEditor;
+
 
     // === SCALING === //
     QActionGroup *scalingGroup;
@@ -137,6 +147,11 @@ private:
     QAction *showGrid;
     QSlider *gridSizeSlider;
     QSlider *stepSizeSlider;
+
+    // === MAXIMUM INTENSITY PROJECTION FOR VOLUMES === //
+
+    QAction *mipAction;
+
 
 };
 

@@ -15,6 +15,7 @@ class Primitive : public QObject
 public:
 
     struct float3 {
+        float3() { x_ = 0.0f; y_ = 0.0f; z_ = 0.0f; }
         float3(float x, float y, float z) : x_(x), y_(y), z_(z) {}
         float3(float* vec) { x_ = vec[0]; y_ = vec[1]; z_ = vec[2]; }
         float x_;

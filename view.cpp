@@ -221,6 +221,12 @@ View::View(QWidget *parent)
     stepSizeSlider->setToolTip(QString("step size"));
     connect(stepSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setStepSize(int)));
 
+    // === MAXIMUM INTENSITY PROJECTION FOR VOLUMES === //
+
+    mipAction = new QAction("MIP", this);
+    mipAction->setCheckable(true);
+    mipAction->setChecked(false);
+
 
     // ===== TOOL BAR ===== //
 
@@ -251,7 +257,8 @@ View::View(QWidget *parent)
     toolBar->addWidget(gridSizeSlider);
     toolBar->addWidget(stepSizeSlider);
 
-
+    toolBar->addSeparator();
+    toolBar->addAction(mipAction);
 
 
 
@@ -337,20 +344,34 @@ void View::setModel(Model *model)
     connect(this, SIGNAL(setStepSize(int)), viewportLeft, SLOT(setStepSize(int)));
     connect(this, SIGNAL(setStepSize(int)), viewportTop, SLOT(setStepSize(int)));
 
+    connect(mipAction, SIGNAL(toggled(bool)), viewportPerspective, SLOT(setMip(bool)));
+    connect(mipAction, SIGNAL(toggled(bool)), viewportFront, SLOT(setMip(bool)));
+    connect(mipAction, SIGNAL(toggled(bool)), viewportLeft, SLOT(setMip(bool)));
+    connect(mipAction, SIGNAL(toggled(bool)), viewportTop, SLOT(setMip(bool)));
+
     // ===== OUTLINER ===== //
 
-    dockWidget = new QDockWidget("Outliner: ", this);
-    dockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+    outlinerWidget = new QDockWidget("Outliner: ", this);
+    outlinerWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, outlinerWidget);
 
-    outliner = new QTreeView(dockWidget);
+    outliner = new QTreeView(outlinerWidget);
     outliner->setModel(model_->getScenegraphModel());
 
-    dockWidget->setWidget(outliner);
-
-
-
+    outlinerWidget->setWidget(outliner);
     connect(outliner, SIGNAL(clicked(QModelIndex)), model_, SLOT(modelItemClicked(QModelIndex)));
+
+    // === TRANSFER FUNCTION WIDGET === //
+
+    transferFunctionDockWidget = new QDockWidget("Transfer Function Editor: ", this);
+    transferFunctionDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, transferFunctionDockWidget);
+
+    transferFunctionEditor = new TransferFunctionEditor(transferFunctionDockWidget, model_);
+    transferFunctionDockWidget->setWidget(transferFunctionEditor);
+
+
+    // CONNECT SIGNALS AND SLOTS
 
 
     connect(model_, SIGNAL(updateGL()), viewportPerspective, SLOT(updateGL()));

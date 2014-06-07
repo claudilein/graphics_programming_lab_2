@@ -8,18 +8,33 @@ varying vec3 texCoord;
 varying vec3 positionCameraCoordinates;
 
 uniform sampler3D volumeTexture;
+uniform sampler1D transferTexture;
 uniform float id;
+uniform vec3 aspectRatio;
+uniform bool mip;
 
 
-vec4 getColor(vec3 position, vec3 texCoords) {
 
-	float scalar = texture3D(volumeTexture, texCoords).x;	// range [0,255] -> [0,1]
-	vec4 color = vec4(scalar, scalar, scalar, scalar);
-
-	return color;
+vec4 getColor(vec3 position, vec3 V, vec3 texCoords) {
 
 
-	/*float LdotN = dot(L, N);
+	float scalar = texture3D(volumeTexture, texCoords).x;	// range [0,255] 
+	vec4 color = texture1D(transferTexture, scalar);
+
+	float stepWidth = 0.001;
+	vec3 gradient = vec3(texture3D(volumeTexture, vec3(texCoords.s + stepWidth, texCoords.tp)).x
+		 	   - texture3D(volumeTexture, vec3(texCoords.s - stepWidth, texCoords.tp)).x,
+			     texture3D(volumeTexture, vec3(texCoords.s, texCoords.t + stepWidth, texCoords.p)).x
+		 	   - texture3D(volumeTexture, vec3(texCoords.s, texCoords.t - stepWidth, texCoords.p)).x,
+			     texture3D(volumeTexture, vec3(texCoords.st, texCoords.p + stepWidth)).x
+		 	   - texture3D(volumeTexture, vec3(texCoords.st, texCoords.p - stepWidth)).x);
+	vec3 N = normalize(gl_NormalMatrix * gradient);
+	vec3 L = normalize(gl_LightSource[0].position.xyz - position);
+
+	float LdotN = dot(L, N);
+
+	// ambient term
+	vec4 ambientColor = color * gl_LightSource[0].ambient;
 
 	// only calculate lighting if light source is not behind the surface
 	if (LdotN >= 0) {
@@ -30,21 +45,17 @@ vec4 getColor(vec3 position, vec3 texCoords) {
 		vec4 diffuseColor = color * LdotN * gl_LightSource[0].diffuse;
 
 		// specular = ks * <R,V>^n * ls
-		//vec4 specularColor = gl_FrontMaterial.specular * pow(RdotV, gl_FrontMaterial.shininess) * gl_LightSource[0].specular;
+		vec4 specularColor = color * pow(RdotV, gl_FrontMaterial.shininess) * gl_LightSource[0].specular;
 
-		//gl_FragData[0] = diffuseColor + specularColor + vec4(gl_Color.x / 5, gl_Color.y / 5, gl_Color.z / 5, 1);
-		//float scalar = texture3D(volumeTexture, texCoord) / 255.0f;	// range [0,255]
-		//gl_FragData[0] = (scalar, scalar, scalar, scalar);
+		return (ambientColor + diffuseColor + specularColor);
 
 	} else {
-		//gl_FragData[0] = vec4(gl_Color.x / 5, gl_Color.y / 5, gl_Color.z / 5, 1);
-		gl_FragData[0] = vec4(0,1,0,1);
-	}*/
+
+		return ambientColor;
+	}
 }
 
 void main() {
-	//vec3 N = normalize(normal);
-	vec3 L = normalize(lightRay);
 	vec3 V = normalize(viewRay);
 	vec3 M = normalize(marchingRay);
 
@@ -53,9 +64,11 @@ void main() {
 	vec3 texCoords = texCoord;
 	
 
-	float steps = 256.0f;
+	float steps = 32.0f;
 	M /= steps;
-	
+
+	//M_ModelCoordinates /= aspectRatio;
+	//M_ModelCoordinates = normalize(M_ModelCoordinates);
 	M_ModelCoordinates /= steps;
 
 	vec4 currentColor;
@@ -69,23 +82,49 @@ void main() {
 	else { gl_FragData[0] = vec4(0,0,1,1); }*/
 	//gl_FragData[0] = vec4(x,x,x,1);
 
-	for (int i = 0; i < steps; i++) {
+	bool opaque = false;
+	float max = 0.0f;
+
+	for (int i = 0; (i < steps) && (opaque == false) && (aggregatedColor.a < 0.98); i++) {
+		
+		if ((texCoords.x < 1.0f) && (texCoords.y < 1.0f) && (texCoords.z < 1.0f) &&
+		    (texCoords.x > 0.0f) && (texCoords.y > 0.0f) && (texCoords.z > 0.0f)){
+
+
+
+			if (mip) {
+				float scalar = texture3D(volumeTexture, texCoords).x;
+				if (scalar > max) { max = scalar; }
+			} else {
+				currentColor = getColor(position, V, texCoords);
+				aggregatedColor += (1 - aggregatedColor.a) * currentColor * currentColor.a;
+			}
+
+
+			/*if (aggregatedColor.a + currentColor.a <= 1) {
+				aggregatedColor += currentColor.a * currentColor;
+			} else if (aggregatedColor.a < 1) {
+				aggregatedColor += (1 - aggregatedColor.a) * currentColor;
+				opaque = true;
+			} else {
+				opaque = true;
+			}*/
+		}
+
 		position += M;
 		texCoords += M_ModelCoordinates;
+
+	//gl_FragData[0] = vec4(texCoords.y, texCoords.y, texCoords.y, 1);
 		
-		currentColor = getColor(position, texCoords);
-		if (aggregatedColor.a + currentColor.a <= 1) {
-			aggregatedColor += currentColor.a * currentColor;
-		} else if (aggregatedColor.a < 1) {
-			aggregatedColor += (1 - aggregatedColor.a) * currentColor;
-			break;
-		} else {
-			break;
-		}
 	}
 
+	if (mip) {
+		gl_FragData[0] = vec4(max, max, max, max);
+	} else {
+		gl_FragData[0] = aggregatedColor;
+	}
 
-	gl_FragData[0] = aggregatedColor;
+	//gl_FragData[0] = getColor(position, texCoords);
 
 	// id texture uses the RED channel only!
 	gl_FragData[1] = vec4(id, 0, 0, 0);

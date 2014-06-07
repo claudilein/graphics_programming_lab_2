@@ -41,6 +41,7 @@ public slots:
     void showGrid(bool on);
     void setGridSize(int i);
     void setStepSize(int i);
+    void setMip(bool on);
 
 protected:
     void initializeGL();
@@ -98,10 +99,14 @@ private:
 
     GLuint volumeIdID_;
     GLuint volumeTextureID_;
+    GLuint transferTextureID_;
+    GLuint aspectRatioID_;
+    GLuint mipID_;
 
     float light0Position_[4];
 
     bool showGrid_;
+    bool mip_;
 
     Cube *cube_;
     Torus *torus_;
