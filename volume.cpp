@@ -60,7 +60,9 @@ Volume::Volume(std::string name, int id, int tesselation, float3 color) :
     vertexTextureCoordinates_.push_back(float3(position5));
     vertexTextureCoordinates_.push_back(float3(position6));
 
-
+    for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
+        histogram_[i] = 0;
+    }
 
 }
 
@@ -72,7 +74,6 @@ void Volume::parseFile(QString fileName) {
     if (file.open(QFile::ReadOnly)) {
         // up to 64 - 1 = 63 ASCII characteres can be read in this line. One is reserved for the \0 termination.
         QByteArray line = file.readLine(64);
-        cout << "size: " << line.size() << endl;
 
         QList<QByteArray> numbers = line.split(' ');
 
@@ -109,7 +110,7 @@ void Volume::parseFile(QString fileName) {
         uint sizeOfTexture = resolution_[0] * resolution_[1] * resolution_[2];
 
         cout << "before allocating floatData" << endl;
-        floatData_ = (float*) malloc(sizeOfTexture * sizeof(float));
+        floatData_ = (uchar*) malloc(sizeOfTexture * sizeof(uchar));
         cout << "after allocating floatData" << endl;
 
         // read 16 bits for tooth texture
@@ -128,7 +129,7 @@ void Volume::parseFile(QString fileName) {
                 scalarValue += (uchar) currentByte;
 
                 // copy into float array
-                floatData_[i] = (uint) scalarValue / 32768.0f; // == 2^16
+                //floatData_[i] = (uint) scalarValue / 32768.0f; // == 2^16
             }
         // read 8 bits for other textures
         } else {
@@ -137,16 +138,25 @@ void Volume::parseFile(QString fileName) {
             for (uint i = 0; i < sizeOfTexture && !file.atEnd(); i++) {
                 if (!file.getChar(&scalarValue)) cout << "getChar() failed at pos " << i << endl;
                 temp = (uchar) scalarValue;
-                floatData_[i] = (float) temp / 256.0f;    // == 2^8
-                floatData_[i] = 0.5f;
+                floatData_[i] = temp;
+                int valueInt = temp;
+                histogram_[temp]++;
             }
         }
+
 
 
         cout << "upload of file " << fileName.toStdString() << " done" << endl;
         file.close();
 
-
+        // normalize histogram
+        int maxHist = 0;
+        for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
+            if (histogram_[i] > maxHist) maxHist = histogram_[i];
+        }
+        for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
+            histogram_[i] = histogram_[i] * 256 / maxHist ;
+        }
 
 
 
@@ -249,7 +259,8 @@ void Volume::copyVAOToCurrentContext() {
     glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_FLOAT, floatData_);
+    //glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_FLOAT, floatData_);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE, resolution_[0], resolution_[1], resolution_[2], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, floatData_);
     glBindTexture(GL_TEXTURE_3D, 0);
 
     glGenTextures(1, &transferTexture_);
@@ -266,7 +277,6 @@ void Volume::copyVAOToCurrentContext() {
 
 void Volume::bindVAOToShader() {
 
-    std::cout << "bind vertexBufferPositions" << std::endl;
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
@@ -279,7 +289,6 @@ void Volume::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
-    std::cout << "bind vertexBufferTextureCoordinates" << std::endl;
 
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
@@ -294,7 +303,6 @@ void Volume::bindVAOToShader() {
 
     glDisableVertexAttribArray(2);
 
-    std::cout << "bind indexBuffer" << std::endl;
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
@@ -302,15 +310,10 @@ void Volume::bindVAOToShader() {
 
 
     // bind volume and transfer textures
-    std::cout << "active texture 1" << std::endl;
     glActiveTexture(GL_TEXTURE1);
-    std::cout << "bind volume texture" << std::endl;
     glBindTexture(GL_TEXTURE_3D, volumeTexture_);
-    std::cout << "active texture 2" << std::endl;
     glActiveTexture(GL_TEXTURE2);
-    std::cout << "bind transfer texture" << std::endl;
     glBindTexture(GL_TEXTURE_1D, transferTexture_);
-    std::cout << "active texture 0" << std::endl;
     glActiveTexture(GL_TEXTURE0);
 
 
@@ -330,7 +333,6 @@ void Volume::draw() {
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
     );
-    std::cout << "after drawing" << std::endl;
 
 }
 
@@ -403,6 +405,10 @@ Volume::transferScalar* Volume::getTransferFunction() {
 
 int* Volume::getHistogram() {
     return histogram_;
+}
+
+int Volume::getMaxResolution() {
+    return MAX_SCALAR_VALUE_;
 }
 
 Volume::~Volume() {

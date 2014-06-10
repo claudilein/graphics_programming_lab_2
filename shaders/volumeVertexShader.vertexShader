@@ -1,20 +1,22 @@
 #version 120
 
-varying vec3 lightRay;		// vertex to light
-varying vec3 viewRay;		// vertex to camera
-varying vec3 marchingRay;	// camera to vertex
+varying vec3 viewRay;		// vertex to camera vector
+varying vec3 marchingRayObjectCoordinates;	// camera to vertex direction
 varying vec3 texCoord;
 varying vec3 positionCameraCoordinates;
 
 attribute vec3 tex;
+uniform vec3 aspectRatio;
 
 
 void main() {
 
-	lightRay = gl_LightSource[0].position.xyz - vec3(gl_ModelViewMatrix * gl_Vertex);
-	viewRay = (- gl_ModelViewMatrix * gl_Vertex).xyz;
-	marchingRay = - viewRay;
 	positionCameraCoordinates = vec3(gl_ModelViewMatrix * gl_Vertex);
+
+	viewRay = vec3(- gl_ModelViewMatrix * gl_Vertex);
+	marchingRayObjectCoordinates = (gl_ModelViewMatrixInverse * vec4(positionCameraCoordinates, 0)).xyz;
+	marchingRayObjectCoordinates /= aspectRatio;
+	//marchingRay = - viewRay;
 
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 	texCoord = tex;

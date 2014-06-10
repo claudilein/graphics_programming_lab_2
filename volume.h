@@ -39,6 +39,7 @@ public:
 
     Primitive::float3 getAspectRatio();
     transferScalar* getTransferFunction();
+    int getMaxResolution();
     int* getHistogram();
 
     void bindVAOToShader();
@@ -56,7 +57,7 @@ private:
     GLuint volumeTexture_;
     GLuint transferTexture_;
 
-    float* floatData_;
+    uchar* floatData_;
 
     GLuint vertexBufferTextureCoordinates_;
     attribute vertexTextureCoordinates_;

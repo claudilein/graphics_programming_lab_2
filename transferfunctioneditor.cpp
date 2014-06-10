@@ -4,6 +4,7 @@
 #include <QFile>
 #include <iostream>
 #include <sstream>
+#include <math.h>
 
 TransferFunctionEditor::TransferFunctionEditor(QWidget *parent, Model *model) :
     QWidget(parent),
@@ -96,7 +97,14 @@ void TransferFunctionEditor::loadTransferFunction() {
 
 void TransferFunctionEditor::saveTransferFunction() {
     if (volume_ != NULL) {
-        QString fileName;
+        Volume::transferScalar* function = volume_->getTransferFunction();
+        for (int i = 0; i < 256; i++) {
+            std::cout << "RGBA(" << function[i].r_ << ", " << function[i].g_ << ", "
+                      << function[i].b_ << ", " << function[i].a_ << ")" << std::endl;
+
+        }
+
+        /*QString fileName;
         fileName = QFileDialog::getSaveFileName(this, tr("Save Transfer Function"), "../", tr("Tf files (*.tf"));
         QFile file(fileName);
 
@@ -113,7 +121,7 @@ void TransferFunctionEditor::saveTransferFunction() {
             file.close();
         } else {
             std::cout << "File " << fileName.toStdString() << "could not be saved." << std::endl;
-        }
+        }*/
     }
 }
 
@@ -126,6 +134,110 @@ void TransferFunctionEditor::resetTransferFunction() {
 }
 
 void TransferFunctionEditor::smoothTransferFunction() {
+    if (volume_ != NULL) {
+
+        Volume::transferScalar* function = volume_->getTransferFunction();
+        for (int i = 0; i < 256; i++) {
+            std::cout << "RGBA(" << function[i].r_ << ", " << function[i].g_ << ", "
+                      << function[i].b_ << ", " << function[i].a_ << ")" << std::endl;
+        }
+
+        // create gaussian curve
+        int neighbourhoodSize = 31;
+        int halfNeighbourhoodSize = floor(neighbourhoodSize / 2);
+        float sigma = 3.0f;
+        float gaussian[neighbourhoodSize];
+
+        for (int i = 0; i < neighbourhoodSize; i++) {
+            gaussian[i] = (1 / (sigma * sqrt(2 * M_PI))) * (exp(-0.5f * ((i - halfNeighbourhoodSize) * (i - halfNeighbourhoodSize)) / (sigma * sigma)));
+            std::cout << "gaussian[" << i << "]: " << gaussian[i] << std::endl;
+        }
+
+        // smooth every step in the function with the gaussian
+
+        Volume::transferScalar newFunction[volume_->getMaxResolution()] ;
+
+
+
+        for (int i = 0; i < volume_->getMaxResolution(); i++) {
+            float r = 0.0f;
+            float g = 0.0f;
+            float b = 0.0f;
+            float a = 0.0f;
+
+            for (int j = 0; j < neighbourhoodSize; j++) {
+                int functionIndex = i - halfNeighbourhoodSize + j;
+
+                // clamp index to function
+                if (functionIndex < 0) functionIndex = 0;
+                if (functionIndex > volume_->getMaxResolution() - 1) functionIndex = volume_->getMaxResolution() - 1;
+
+                // compute weighted average over neighbourhood
+                r += gaussian[j] * function[functionIndex].r_;
+                g += gaussian[j] * function[functionIndex].g_;
+                b += gaussian[j] * function[functionIndex].b_;
+                a += gaussian[j] * function[functionIndex].a_;
+
+            }
+            newFunction[i] = Volume::transferScalar((int) r, (int) g, (int) b, (int) a);
+        }
+
+
+        volume_->setTransferFunction(newFunction);
+        transferFunctionDrawWidget->repaint();
+        emit functionChanged(volume_);
+
+    }
+
+
+    /*
+
+        QList<QVector4D> tempTransfer;
+        // compute the gaussian kernel
+
+        float sigma = 3.0f;
+        int neighborhood = 10 * sigma + 0.5f;
+        float* weights = new float[neighborhood+1];
+        for (int i = 0; i < neighborhood + 1; i++)
+        {
+            weights[i] = 1/sqrtf(2*M_PI*sigma*sigma) * exp(-(i*i)/(2*sigma*sigma));
+        }
+
+        for (int i = 0; i < 256; i++)
+        {
+            QVector4D oldData = m_currentData->getTransferFunction()->getData(i);
+            QVector4D newData = QVector4D(0.0, 0.0, 0.0, 0.0);
+
+            for (int j = -neighborhood; j<= neighborhood; j++)
+            {
+                int index = abs(j);
+                //sanity check
+                if (i+j < 0 || i+j > 255)
+                {
+                    // out of bonds, use the old value
+                    newData += oldData * weights[index];
+                } else {
+                    newData += m_currentData->getTransferFunction()->getData(i+j) * weights[index];
+                }
+            }
+            tempTransfer.push_back(newData);
+        }
+
+        for (int i = 0; i < tempTransfer.size(); i++)
+        {
+
+            QVector4D oldValue = m_currentData->getTransferFunction()->getData(i);
+            m_currentData->getTransferFunction()->setData(i, determineColors(oldValue, tempTransfer[i]));
+        }
+
+        emit(updateTransferfunction());
+        delete[] weights;
+        repaint();
+    }
+
+    */
+
+
 
 }
 

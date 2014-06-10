@@ -1,27 +1,123 @@
 #version 120
 
 // all rays are given in camera coordinates
-varying vec3 lightRay;
 varying vec3 viewRay;
-varying vec3 marchingRay;
+varying vec3 marchingRayObjectCoordinates;
 varying vec3 texCoord;
 varying vec3 positionCameraCoordinates;
 
 uniform sampler3D volumeTexture;
 uniform sampler1D transferTexture;
 uniform float id;
-uniform vec3 aspectRatio;
 uniform bool mip;
-
-
+uniform int maxResolution;
 
 vec4 getColor(vec3 position, vec3 V, vec3 texCoords) {
 
+	float scalar = texture3D(volumeTexture, texCoords).x;
+//	vec4 color = texture1D(transferTexture, scalar);
+	vec4 color = texture1D(transferTexture, scalar + 0.5f/256.0f);
+
+//	float stepWidth = 0.000003906 * maxResolution;
+	float stepWidth = 0.0004 * maxResolution;
+	vec3 gradient = vec3(texture3D(volumeTexture, vec3(texCoords.s - stepWidth, texCoords.tp)).x
+		 	   - texture3D(volumeTexture, vec3(texCoords.s + stepWidth, texCoords.tp)).x,
+			     texture3D(volumeTexture, vec3(texCoords.s, texCoords.t - stepWidth, texCoords.p)).x
+		 	   - texture3D(volumeTexture, vec3(texCoords.s, texCoords.t + stepWidth, texCoords.p)).x,
+			     texture3D(volumeTexture, vec3(texCoords.st, texCoords.p - stepWidth)).x
+		 	   - texture3D(volumeTexture, vec3(texCoords.st, texCoords.p + stepWidth)).x);
+
+	vec3 N = normalize(gl_NormalMatrix * gradient);
+	vec3 L = normalize(gl_LightSource[0].position.xyz - position);
+
+	float LdotN = dot(L, N);
+
+	// ambient term
+	vec4 ambientColor = color * gl_LightSource[0].ambient;
+	vec4 returnColor = vec4(0, 0, 0, 0);
+
+	// only calculate lighting if light source is not behind the surface
+	if (LdotN >= 0) {
+		vec3 R = 2 * LdotN * N - L;
+		float RdotV = max(0, dot(R,V));
+
+		// diffuse = kd * <L,N> * ld
+		vec4 diffuseColor = color * LdotN * gl_LightSource[0].diffuse;
+
+		// specular = ks * <R,V>^n * ls
+		vec4 specularColor = color * pow(RdotV, 128) * gl_LightSource[0].specular;
+
+		returnColor = ambientColor + diffuseColor + specularColor;
+
+	} else {
+
+		returnColor = ambientColor;
+	}
+	returnColor.a = texture1D(transferTexture, scalar + 0.5/256.0).a;
+	return returnColor;
+}
+
+
+
+void main() {
+	vec3 V_CC = normalize(viewRay);
+	vec3 M_OC = normalize(marchingRayObjectCoordinates) / maxResolution;
+	vec3 M_CC = normalize(vec3(gl_ModelViewMatrix * vec4(M_OC, 0))) / maxResolution;
+
+	vec3 voxelPosition = vec3(positionCameraCoordinates);
+	vec3 voxelCoord = vec3(texCoord);
+	
+	vec4 currentColor = vec4(0.0f , 0.0f , 0.0f , 0.0f );
+	vec4 aggregatedColor = vec4(0.0f , 0.0f , 0.0f , 0.0f );	
+
+	float max = 0.0f;
+	//vec3 L = normalize(gl_LightSource[0].position.xyz - voxelPosition);
+
+
+	while ((voxelCoord.x <= 1.0f) && (voxelCoord.y <= 1.0f) && (voxelCoord.z <= 1.0f) &&
+	       (voxelCoord.x >= 0.0f) && (voxelCoord.y >= 0.0f) && (voxelCoord.z >= 0.0f) &&
+	       (aggregatedColor.a < 1.0f)) {
+
+		if (mip) {
+			float scalar = texture3D(volumeTexture, voxelCoord).x;
+			if (scalar > max) { max = scalar; }
+		} else {
+			currentColor = getColor(voxelPosition, V_CC, voxelCoord);
+			//currentColor = getColor(voxelCoord);
+			aggregatedColor += (1.0f - aggregatedColor.a) * currentColor * currentColor.a;
+		}
+		
+		voxelPosition += M_CC;
+		voxelCoord += M_OC;		
+	}
+
+
+	if (mip) {
+		gl_FragData[0] = vec4(max, max, max, max);
+	} else {
+		gl_FragData[0] = aggregatedColor;
+	}
+
+	// id texture uses the RED channel only!
+	gl_FragData[1] = vec4(id, 0, 0, 0);
+
+	/*if (yes) {
+	gl_FragData[0] = vec4(1,0,0,1);
+	} else {
+	gl_FragData[0] = vec4(0,1,0,1);
+	}*/
+
+}
+
+/*
+vec4 getColor(vec3 position, vec3 V, vec3 texCoords, int steps) {
+
 
 	float scalar = texture3D(volumeTexture, texCoords).x;	
+	return vec4(scalar, scalar, scalar, scalar);
 	vec4 color = texture1D(transferTexture, scalar + 0.5f / 256.0f);
 
-	float stepWidth = 0.001;
+	float stepWidth = 0.000003906 * steps;
 	vec3 gradient = vec3(texture3D(volumeTexture, vec3(texCoords.s + stepWidth, texCoords.tp)).x
 		 	   - texture3D(volumeTexture, vec3(texCoords.s - stepWidth, texCoords.tp)).x,
 			     texture3D(volumeTexture, vec3(texCoords.s, texCoords.t + stepWidth, texCoords.p)).x
@@ -64,8 +160,8 @@ void main() {
 	vec3 coord = vec3(texCoord);
 	
 
-	int steps = 32;
-	float steps_f = 32.0f;
+	int steps = 128;
+	float steps_f = 128.0f;
 	M /=  steps_f;
 
 	//M_ModelCoordinates /= aspectRatio;
@@ -79,9 +175,6 @@ void main() {
 	float max = 0.0f;
 
 
-	float scalar = texture3D(volumeTexture, coord).x;	
-	vec4 color = texture1D(transferTexture, scalar + 0.5f / 256.0f);
-	gl_FragData[0] = vec4(scalar, scalar, scalar, scalar);
 
 	for (int i = 0; (i < steps) && (opaque == false) && (aggregatedColor.a < 0.98); i++) {
 
@@ -95,7 +188,7 @@ void main() {
 				float scalar = texture3D(volumeTexture, coord).x;
 				if (scalar > max) { max = scalar; }
 			} else {
-				currentColor = getColor(position, V, coord);
+				currentColor = getColor(position, V, coord, steps);
 				aggregatedColor += (1.0f - aggregatedColor.a) * currentColor * currentColor.a;
 			}
 
@@ -109,11 +202,11 @@ void main() {
 	}
 
 
-	/*if (mip) {
+	if (mip) {
 		gl_FragData[0] = vec4(max, max, max, max);
 	} else {
 		gl_FragData[0] = aggregatedColor;
-	}*/
+	}
 
 	//gl_FragData[0] = getColor(position, coord);
 
@@ -124,4 +217,4 @@ void main() {
 
 
 }
-
+*/

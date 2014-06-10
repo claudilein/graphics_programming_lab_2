@@ -105,6 +105,7 @@ private:
     GLuint transferTextureID_;
     GLuint aspectRatioID_;
     GLuint mipID_;
+    GLuint maxResolutionID_;
 
     float light0Position_[4];
 

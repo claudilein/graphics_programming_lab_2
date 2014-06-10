@@ -9,6 +9,7 @@ TransferFunctionWidget::TransferFunctionWidget(QWidget *parent) :
     greenPath_ = new QPainterPath();
     bluePath_ = new QPainterPath();
     alphaPath_ = new QPainterPath();
+    histogramPath_ = new QPainterPath();
     volume_ = NULL;
 }
 
@@ -26,13 +27,22 @@ void TransferFunctionWidget::paintEvent(QPaintEvent *e) {
     // draw rectangle as outer bounds
     painter->setBrush(QBrush(QColor(255, 255, 255)));
     painter->drawRect(QRect(0, 0, 255, 255));
+    painter->setBrush(QBrush(QColor(0,0,0,0)));
 
     redPath_ = new QPainterPath();
     greenPath_ = new QPainterPath();
     bluePath_ = new QPainterPath();
     alphaPath_ = new QPainterPath();
+    histogramPath_ = new QPainterPath();
 
     if (volume_ != NULL) {
+        // draw histogram
+        int* histogram = volume_->getHistogram();
+        for (int i = 0; i < volume_->getMaxResolution(); i++) {
+            histogramPath_->moveTo(i, this->height() - 1);
+            histogramPath_->lineTo(i, this->height() - 1 - histogram[i]);
+        }
+
         // draw path for each component (R,G,B,A)
         Volume::transferScalar* transferFunction = volume_->getTransferFunction();
 
@@ -41,14 +51,19 @@ void TransferFunctionWidget::paintEvent(QPaintEvent *e) {
         bluePath_->moveTo(0, this->height() - 1 - transferFunction[0].b_);
         alphaPath_->moveTo(0, this->height() - 1 - transferFunction[0].a_);
 
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < volume_->getMaxResolution(); i++) {
             redPath_->lineTo(i, this->height() - 1 - transferFunction[i].r_);
             greenPath_->lineTo(i, this->height() - 1 - transferFunction[i].g_);
             bluePath_->lineTo(i, this->height() - 1 - transferFunction[i].b_);
             alphaPath_->lineTo(i, this->height() - 1 - transferFunction[i].a_);
         }
 
-        QColor color = QColor(255, 0, 0);
+
+        QColor color = QColor(100, 100, 100);
+        painter->setPen(color);
+        painter->drawPath(*histogramPath_);
+
+        color.setRgb(255, 0, 0);
         painter->setPen(color);
         painter->drawPath(*redPath_);
 

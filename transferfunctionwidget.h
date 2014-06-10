@@ -30,6 +30,7 @@ private:
     QPainterPath *bluePath_;
     QPainterPath *greenPath_;
     QPainterPath *alphaPath_;
+    QPainterPath *histogramPath_;
 
 };
 
