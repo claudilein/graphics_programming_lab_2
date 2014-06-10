@@ -128,8 +128,12 @@ void Volume::parseFile(QString fileName) {
                 if (!file.getChar(&currentByte)) cout << "getChar() failed at pos " << i << endl;
                 scalarValue += (uchar) currentByte;
 
+                uchar temp = (uchar) ((float) scalarValue / 65536.0f * 256.0f);
+                //uchar temp = (uchar) scalarValue;
+//                std::cout << "tmp: " << (uint) temp << std::endl;
                 // copy into float array
-                //floatData_[i] = (uint) scalarValue / 32768.0f; // == 2^16
+                floatData_[i] =  temp; // == 2^16
+                histogram_[temp]++;
             }
         // read 8 bits for other textures
         } else {
@@ -151,11 +155,16 @@ void Volume::parseFile(QString fileName) {
 
         // normalize histogram
         int maxHist = 0;
+        uint maxData = 0;
         for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
+            if (floatData_[i] > maxData) maxData = (uint) floatData_[i];
             if (histogram_[i] > maxHist) maxHist = histogram_[i];
         }
+        std::cout << "max: " << (uint) maxData<< std::endl;
+
         for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
             histogram_[i] = histogram_[i] * 256 / maxHist ;
+            std::cout << "histogram[" << i << "]: " << histogram_[i] << std::endl;
         }
 
 
@@ -250,7 +259,7 @@ void Volume::copyVAOToCurrentContext() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
 
-
+    std::cout << "before entering data into texture" << std::endl;
 
     glGenTextures(1, &volumeTexture_);
     glBindTexture(GL_TEXTURE_3D, volumeTexture_);
@@ -262,6 +271,8 @@ void Volume::copyVAOToCurrentContext() {
     //glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_FLOAT, floatData_);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE, resolution_[0], resolution_[1], resolution_[2], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, floatData_);
     glBindTexture(GL_TEXTURE_3D, 0);
+
+    std::cout << "after entering data into texture" << std::endl;
 
     glGenTextures(1, &transferTexture_);
     glBindTexture(GL_TEXTURE_1D, transferTexture_);

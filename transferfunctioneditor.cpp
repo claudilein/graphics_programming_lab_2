@@ -96,15 +96,7 @@ void TransferFunctionEditor::loadTransferFunction() {
 }
 
 void TransferFunctionEditor::saveTransferFunction() {
-    if (volume_ != NULL) {
-        Volume::transferScalar* function = volume_->getTransferFunction();
-        for (int i = 0; i < 256; i++) {
-            std::cout << "RGBA(" << function[i].r_ << ", " << function[i].g_ << ", "
-                      << function[i].b_ << ", " << function[i].a_ << ")" << std::endl;
-
-        }
-
-        /*QString fileName;
+    if (volume_ != NULL) {QString fileName;
         fileName = QFileDialog::getSaveFileName(this, tr("Save Transfer Function"), "../", tr("Tf files (*.tf"));
         QFile file(fileName);
 
@@ -121,7 +113,7 @@ void TransferFunctionEditor::saveTransferFunction() {
             file.close();
         } else {
             std::cout << "File " << fileName.toStdString() << "could not be saved." << std::endl;
-        }*/
+        }
     }
 }
 
