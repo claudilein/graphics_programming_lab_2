@@ -14,6 +14,7 @@
 #include <cylinder.h>
 #include <grid.h>
 #include <quad.h>
+#include <volume.h>
 
 class Viewport : public QGLWidget
 {
@@ -37,6 +38,8 @@ signals:
 public slots:
     void setClickedId(int x, int y);
     void copyVAOData(Primitive *p);
+    void copyVolumeData(Volume *volume);
+    void copyVolumeData();
     void updateProjectionMatrix();
     void showGrid(bool on);
     void setGridSize(int i);

@@ -234,12 +234,6 @@ void Viewport::initializeGL()
     //std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "normal_in") << std::endl;
     //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "color_in") << std::endl;
 
-    // attribute buffer 0: vertices
-    glEnableVertexAttribArray(0);
-    // attribute buffer 1: normals / (texture coordinates for quad)
-    glEnableVertexAttribArray(1);
-    // attribute buffer 2: colors
-    glEnableVertexAttribArray(2);
 
     grid_ = new Grid(Primitive::float3(0.72, 0.72, 0.72), gridSize_, stepSize_);
     grid_->copyVAOToCurrentContext();
@@ -265,6 +259,8 @@ void Viewport::paintGL()
 
 
     if (showGrid_) {
+        std::cout << "drawing grid" << std::endl;
+
         glDisable(GL_DEPTH_TEST);
         gridProgram->bind();
         glUniform3f(gridColorID_, grid_->getColor()->x_, grid_->getColor()->y_, grid_->getColor()->z_);
@@ -291,6 +287,7 @@ void Viewport::paintGL()
             glPushMatrix();
             glMultMatrix(primitives->at(i)->getModelMatrix().constData());
 
+            std::cout << "drawing primitive " << primitives->at(i)->getName() << std::endl;
             primitives->at(i)->draw();
 
             glPopMatrix();
@@ -317,8 +314,10 @@ void Viewport::paintGL()
             glPushMatrix();
             glMultMatrix(primitives->at(i)->getModelMatrix().constData());
 
+            std::cout << "drawing volume " << primitives->at(i)->getName() << std::endl;
             primitives->at(i)->draw();
 
+            std::cout << "pop matrix" << std::endl;
             glPopMatrix();
         }
     }
@@ -326,15 +325,22 @@ void Viewport::paintGL()
 
     // HIGHLIGHT SELECTED OBJECT
 
+    std::cout << "release/bind shaders" << std::endl;
     volumeProgram->release();
     selectionProgram->bind();
+
+    std::cout << "bind default framebuffer" << std::endl;
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    std::cout << "bind texture 1" << std::endl;
+
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, colorTexture_);
     glUniform1i(colorTextureID_, 1);
+
+    std::cout << "bind texture 2" << std::endl;
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, idTexture_);
@@ -342,19 +348,26 @@ void Viewport::paintGL()
 
     float id;
 
+
+    std::cout << "get active primitive id" << std::endl;
     if (model_->getActivePrimitive() != NULL) {
         id = model_->getActivePrimitive()->getID();
     } else {
         id = 0;
     }
 
+    std::cout << "get active viewport" << std::endl;
+
     bool viewportActive = model_->isActiveViewport(type_);
+
+    std::cout << "set uniforms" << std::endl;
 
     glUniform1f(selectionIdID_, id);
     glUniform1f(offsetXID_, 1.0f / width());
     glUniform1f(offsetYID_, 1.0f / height());
     glUniform1i(activeViewportID_, viewportActive);
 
+    std::cout << "drawing quad" << std::endl;
     quad_->draw();
 
     selectionProgram->release();
@@ -431,6 +444,24 @@ void Viewport::setClickedId(int x, int y) {
 void Viewport::copyVAOData(Primitive *p) {
     makeCurrent();
     p->copyVAOToCurrentContext();
+}
+
+void Viewport::copyVolumeData(Volume *volume) {
+    if (volume != NULL) {
+        makeCurrent();
+        volume->uploadTransferFunction();
+    }
+    updateGL();
+
+}
+
+void Viewport::copyVolumeData() {
+    QList<Primitive*> *primitives = model_->getScenegraph();
+    for (int i = 0; i < primitives->size() && primitives->at(i)->isVolume(); i++) {
+        makeCurrent();
+        static_cast<Volume*>(primitives->at(i))->uploadTransferFunction();
+    }
+    updateGL();
 }
 
 void Viewport::updateProjectionMatrix() {

@@ -158,7 +158,7 @@ void Model::addVolume(QString fileName) {
     emit copyVAOData(p);
     emit updateGL();
     emit updateGL();
-//    setActivePrimitive(p->getID());
+    setActivePrimitive(p->getID());
 }
 
 void Model::setActivePrimitive(float ID)
@@ -182,6 +182,7 @@ void Model::setActivePrimitive(float ID)
 
     emit updateStatusBar();
     emit updateGL();
+    emit activePrimitiveChanged();
 
 }
 

@@ -30,6 +30,7 @@ signals:
     void selectItem(QModelIndex index);
     void updateStatusBar();
     void updateGL();
+    void activePrimitiveChanged();
 
 
 public slots:

@@ -31,8 +31,11 @@ public:
     };
 
     void parseFile(QString fileName);
+
     void setTransferFunction(int index, changeTransferScalar change, transferScalar scalar);
+    void setTransferFunction(transferScalar *scalar);
     void resetTransferFunction(changeTransferScalar change);
+    void uploadTransferFunction();
 
     Primitive::float3 getAspectRatio();
     transferScalar* getTransferFunction();
@@ -52,6 +55,8 @@ private:
 
     GLuint volumeTexture_;
     GLuint transferTexture_;
+
+    float* floatData_;
 
     GLuint vertexBufferTextureCoordinates_;
     attribute vertexTextureCoordinates_;

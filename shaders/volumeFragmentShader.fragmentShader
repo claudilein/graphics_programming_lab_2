@@ -18,8 +18,8 @@ uniform bool mip;
 vec4 getColor(vec3 position, vec3 V, vec3 texCoords) {
 
 
-	float scalar = texture3D(volumeTexture, texCoords).x;	// range [0,255] 
-	vec4 color = texture1D(transferTexture, scalar);
+	float scalar = texture3D(volumeTexture, texCoords).x;	
+	vec4 color = texture1D(transferTexture, scalar + 0.5f / 256.0f);
 
 	float stepWidth = 0.001;
 	vec3 gradient = vec3(texture3D(volumeTexture, vec3(texCoords.s + stepWidth, texCoords.tp)).x
@@ -61,73 +61,66 @@ void main() {
 
 	vec3 M_ModelCoordinates = vec3(gl_ModelViewMatrixInverse * vec4(M, 0));
 	vec3 position = positionCameraCoordinates;
-	vec3 texCoords = texCoord;
+	vec3 coord = vec3(texCoord);
 	
 
-	float steps = 32.0f;
-	M /= steps;
+	int steps = 32;
+	float steps_f = 32.0f;
+	M /=  steps_f;
 
 	//M_ModelCoordinates /= aspectRatio;
 	//M_ModelCoordinates = normalize(M_ModelCoordinates);
-	M_ModelCoordinates /= steps;
+	M_ModelCoordinates /=  steps_f;
 
-	vec4 currentColor;
+	vec4 currentColor = vec4(0,0,0,0);
 	vec4 aggregatedColor = vec4(0, 0, 0, 0);	
-
-	// float i?
-
-	//float x = texture3D(volumeTexture, texCoords).x;
-	/*if (x > 1.0f) {	gl_FragData[0] = vec4(1,0,0,1); }
-	else if (x < 0.01f) { gl_FragData[0] = vec4(0,1,0,1); }
-	else { gl_FragData[0] = vec4(0,0,1,1); }*/
-	//gl_FragData[0] = vec4(x,x,x,1);
 
 	bool opaque = false;
 	float max = 0.0f;
 
+
+	float scalar = texture3D(volumeTexture, coord).x;	
+	vec4 color = texture1D(transferTexture, scalar + 0.5f / 256.0f);
+	gl_FragData[0] = vec4(scalar, scalar, scalar, scalar);
+
 	for (int i = 0; (i < steps) && (opaque == false) && (aggregatedColor.a < 0.98); i++) {
+
 		
-		if ((texCoords.x < 1.0f) && (texCoords.y < 1.0f) && (texCoords.z < 1.0f) &&
-		    (texCoords.x > 0.0f) && (texCoords.y > 0.0f) && (texCoords.z > 0.0f)){
+		if ((coord.x < 1.0f) && (coord.y < 1.0f) && (coord.z < 1.0f) &&
+		    (coord.x > 0.0f) && (coord.y > 0.0f) && (coord.z > 0.0f)){
 
 
 
 			if (mip) {
-				float scalar = texture3D(volumeTexture, texCoords).x;
+				float scalar = texture3D(volumeTexture, coord).x;
 				if (scalar > max) { max = scalar; }
 			} else {
-				currentColor = getColor(position, V, texCoords);
-				aggregatedColor += (1 - aggregatedColor.a) * currentColor * currentColor.a;
+				currentColor = getColor(position, V, coord);
+				aggregatedColor += (1.0f - aggregatedColor.a) * currentColor * currentColor.a;
 			}
 
 
-			/*if (aggregatedColor.a + currentColor.a <= 1) {
-				aggregatedColor += currentColor.a * currentColor;
-			} else if (aggregatedColor.a < 1) {
-				aggregatedColor += (1 - aggregatedColor.a) * currentColor;
-				opaque = true;
-			} else {
-				opaque = true;
-			}*/
 		}
 
 		position += M;
-		texCoords += M_ModelCoordinates;
+		coord += M_ModelCoordinates;
 
-	//gl_FragData[0] = vec4(texCoords.y, texCoords.y, texCoords.y, 1);
 		
 	}
 
-	if (mip) {
+
+	/*if (mip) {
 		gl_FragData[0] = vec4(max, max, max, max);
 	} else {
 		gl_FragData[0] = aggregatedColor;
-	}
+	}*/
 
-	//gl_FragData[0] = getColor(position, texCoords);
+	//gl_FragData[0] = getColor(position, coord);
 
 	// id texture uses the RED channel only!
 	gl_FragData[1] = vec4(id, 0, 0, 0);
+
+
 
 
 }

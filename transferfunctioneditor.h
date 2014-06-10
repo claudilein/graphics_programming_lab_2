@@ -8,6 +8,7 @@
 #include <QGridLayout>
 #include <QCheckBox>
 #include <model.h>
+#include <QMouseEvent>
 
 class TransferFunctionEditor : public QWidget
 {
@@ -16,6 +17,8 @@ public:
     explicit TransferFunctionEditor(QWidget *parent = 0, Model *model = 0);
 
 signals:
+    void volumeChanged(Volume* volume);
+    void functionChanged(Volume* volume);
 
 public slots:
     void loadTransferFunction();
@@ -28,9 +31,13 @@ public slots:
     void setGreen(bool on);
     void setAlpha(bool on);
 
+    void update();
+    void updateTransferFunction(int index, int value);
+
 private:
 
     Model *model_;
+    Volume *volume_;
 
     QGridLayout *gridLayout;
     TransferFunctionWidget *transferFunctionDrawWidget;

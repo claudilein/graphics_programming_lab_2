@@ -12,22 +12,6 @@ Volume::Volume(std::string name, int id, int tesselation, float3 color) :
 {
     isVolume_ = true;
 
-    glGenTextures(1, &volumeTexture_);
-    glBindTexture(GL_TEXTURE_3D_EXT, volumeTexture_);
-    glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glBindTexture(GL_TEXTURE_3D_EXT, 0);
-
-    glGenTextures(1, &transferTexture_);
-    glBindTexture(GL_TEXTURE_1D, transferTexture_);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glBindTexture(GL_TEXTURE_1D, 0);
-
 
     // set texture coordinates for the cuboid
 
@@ -77,11 +61,10 @@ Volume::Volume(std::string name, int id, int tesselation, float3 color) :
     vertexTextureCoordinates_.push_back(float3(position6));
 
 
-    resetTransferFunction(changeTransferScalar());
+
 }
 
-Volume::~Volume() {
-}
+
 
 void Volume::parseFile(QString fileName) {
     QFile file(fileName);
@@ -126,7 +109,7 @@ void Volume::parseFile(QString fileName) {
         uint sizeOfTexture = resolution_[0] * resolution_[1] * resolution_[2];
 
         cout << "before allocating floatData" << endl;
-        float *floatData = (float*) malloc(sizeOfTexture * sizeof(float));
+        floatData_ = (float*) malloc(sizeOfTexture * sizeof(float));
         cout << "after allocating floatData" << endl;
 
         // read 16 bits for tooth texture
@@ -145,7 +128,7 @@ void Volume::parseFile(QString fileName) {
                 scalarValue += (uchar) currentByte;
 
                 // copy into float array
-                floatData[i] = (uint) scalarValue / 32768.0f; // == 2^16
+                floatData_[i] = (uint) scalarValue / 32768.0f; // == 2^16
             }
         // read 8 bits for other textures
         } else {
@@ -154,7 +137,8 @@ void Volume::parseFile(QString fileName) {
             for (uint i = 0; i < sizeOfTexture && !file.atEnd(); i++) {
                 if (!file.getChar(&scalarValue)) cout << "getChar() failed at pos " << i << endl;
                 temp = (uchar) scalarValue;
-                floatData[i] = (uint) temp / 256.0f;    // == 2^8
+                floatData_[i] = (float) temp / 256.0f;    // == 2^8
+                floatData_[i] = 0.5f;
             }
         }
 
@@ -163,36 +147,8 @@ void Volume::parseFile(QString fileName) {
         file.close();
 
 
-        GLint *maxTexSize = (GLint*) malloc(sizeof(GLint) * 1);
-        glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, maxTexSize);
-        cout << "max3DTexSize: " << maxTexSize[0] << endl;
 
-        glBindTexture(GL_TEXTURE_3D_EXT, volumeTexture_);
-        //glTexImage3D(GL_TEXTURE_3D_EXT, 0, GL_R8UI, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_UNSIGNED_INT, data_);
-        cout << "before data transfer" << endl;
-        //glTexImage3D(GL_TEXTURE_3D_EXT, 0, GL_LUMINANCE8, resolution_[0], resolution_[1], resolution_[2], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data_);
 
-        glTexImage3D(GL_TEXTURE_3D_EXT, 0, GL_R32F, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_FLOAT, floatData);
-
-        cout << "before texture unbinding" << endl;
-        glBindTexture(GL_TEXTURE_3D_EXT, 0);
-
-        switch(glGetError())
-        {
-        case GL_NO_ERROR:
-            cout << "Texture3D_teximg: ok" << endl;
-            break;
-        case GL_INVALID_ENUM:
-            cout << "Texture3D_teximg: invalid enum" << endl;
-            break;
-        case GL_INVALID_VALUE:
-            cout << "Texture3D_teximg: invalid value" << endl;
-            break;
-        case GL_INVALID_OPERATION:
-            cout << "Texture3D_teximg: invalid operation" << endl;
-            break;
-        }
-        cout << "entered data into texture" << endl;
 
         // normalize dimensions
         int width = resolution_[0] * aspectRatio_.x_;
@@ -209,7 +165,6 @@ void Volume::parseFile(QString fileName) {
                      normalizedAspectRatio_.y_,
                      normalizedAspectRatio_.z_);
 
-        free(floatData);
         
     } else {
         std::cout << "File " << fileName.toStdString() << " could not be opened." << std::endl;
@@ -285,9 +240,33 @@ void Volume::copyVAOToCurrentContext() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
 
+
+
+    glGenTextures(1, &volumeTexture_);
+    glBindTexture(GL_TEXTURE_3D, volumeTexture_);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, resolution_[0], resolution_[1], resolution_[2], 0, GL_RED, GL_FLOAT, floatData_);
+    glBindTexture(GL_TEXTURE_3D, 0);
+
+    glGenTextures(1, &transferTexture_);
+    glBindTexture(GL_TEXTURE_1D, transferTexture_);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glBindTexture(GL_TEXTURE_1D, 0);
+
+    resetTransferFunction(changeTransferScalar());
+
 }
 
 void Volume::bindVAOToShader() {
+
+    std::cout << "bind vertexBufferPositions" << std::endl;
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
@@ -300,6 +279,8 @@ void Volume::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
+    std::cout << "bind vertexBufferTextureCoordinates" << std::endl;
+
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
     glVertexAttribPointer(
@@ -311,15 +292,27 @@ void Volume::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
+    glDisableVertexAttribArray(2);
+
+    std::cout << "bind indexBuffer" << std::endl;
+
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
 
+
+
     // bind volume and transfer textures
+    std::cout << "active texture 1" << std::endl;
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_3D_EXT, volumeTexture_);
+    std::cout << "bind volume texture" << std::endl;
+    glBindTexture(GL_TEXTURE_3D, volumeTexture_);
+    std::cout << "active texture 2" << std::endl;
     glActiveTexture(GL_TEXTURE2);
+    std::cout << "bind transfer texture" << std::endl;
     glBindTexture(GL_TEXTURE_1D, transferTexture_);
+    std::cout << "active texture 0" << std::endl;
     glActiveTexture(GL_TEXTURE0);
+
 
 }
 
@@ -337,23 +330,32 @@ void Volume::draw() {
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
     );
+    std::cout << "after drawing" << std::endl;
 
 }
 
 void Volume::setTransferFunction(int index, changeTransferScalar change, transferScalar scalar) {
     if (index < MAX_SCALAR_VALUE_) {
+        std::cout << "setting red: " << change.r_ << ", blue: " << change.b_ << ", green: " << change.g_ << ", alpha: " << change.a_ << std::endl;
         if (change.r_) transferFunction_[index].r_ = scalar.r_;
         if (change.g_) transferFunction_[index].g_ = scalar.g_;
         if (change.b_) transferFunction_[index].b_ = scalar.b_;
         if (change.a_) transferFunction_[index].a_ = scalar.a_;
 
-        glBindTexture(GL_TEXTURE_1D, transferTexture_);
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_R32F, MAX_SCALAR_VALUE_, 0, GL_RED, GL_FLOAT, transferFunction_);
-        glBindTexture(GL_TEXTURE_1D, 0);
+        uploadTransferFunction();
 
     } else {
         cout << "setTransferFunction: index " << index << " exceeds MAX_SCALAR_VALUE of transfer function" << endl;
     }
+}
+
+void Volume::setTransferFunction(transferScalar *function) {
+
+    for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
+        transferFunction_[i] = function[i];
+    }
+
+    uploadTransferFunction();
 }
 
 void Volume::resetTransferFunction(changeTransferScalar change) {
@@ -370,6 +372,10 @@ void Volume::resetTransferFunction(changeTransferScalar change) {
         for (int i = 0; i < MAX_SCALAR_VALUE_; i++)   transferFunction_[i].a_ = i;
     }
 
+    uploadTransferFunction();
+}
+
+void Volume::uploadTransferFunction() {
     uchar* temp = (uchar*) malloc(sizeof(uchar) * MAX_SCALAR_VALUE_ * 4);
     for (int i = 0; i < MAX_SCALAR_VALUE_; i++) {
         temp[i * 4 + 0] = (uchar) transferFunction_[i].r_;
@@ -378,9 +384,13 @@ void Volume::resetTransferFunction(changeTransferScalar change) {
         temp[i * 4 + 3] = (uchar) transferFunction_[i].a_;
     }
 
+
     glBindTexture(GL_TEXTURE_1D, transferTexture_);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, MAX_SCALAR_VALUE_, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp);
     glBindTexture(GL_TEXTURE_1D, 0);
+
+
+    free(temp);
 }
 
 Primitive::float3 Volume::getAspectRatio() {
@@ -393,4 +403,8 @@ Volume::transferScalar* Volume::getTransferFunction() {
 
 int* Volume::getHistogram() {
     return histogram_;
+}
+
+Volume::~Volume() {
+    free(floatData_);
 }

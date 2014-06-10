@@ -353,6 +353,7 @@ void View::setModel(Model *model)
 
     outlinerWidget = new QDockWidget("Outliner: ", this);
     outlinerWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    outlinerWidget->setFixedWidth(270);
     addDockWidget(Qt::RightDockWidgetArea, outlinerWidget);
 
     outliner = new QTreeView(outlinerWidget);
@@ -365,10 +366,17 @@ void View::setModel(Model *model)
 
     transferFunctionDockWidget = new QDockWidget("Transfer Function Editor: ", this);
     transferFunctionDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    transferFunctionDockWidget->setFixedWidth(270);
     addDockWidget(Qt::RightDockWidgetArea, transferFunctionDockWidget);
 
     transferFunctionEditor = new TransferFunctionEditor(transferFunctionDockWidget, model_);
     transferFunctionDockWidget->setWidget(transferFunctionEditor);
+
+    connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportPerspective, SLOT(copyVolumeData(Volume*)));
+    connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportFront, SLOT(copyVolumeData(Volume*)));
+    connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportLeft, SLOT(copyVolumeData(Volume*)));
+    connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportTop, SLOT(copyVolumeData(Volume*)));
+
 
 
     // CONNECT SIGNALS AND SLOTS
@@ -396,6 +404,12 @@ void View::readFile() {
     fileName = QFileDialog::getOpenFileName(this,
         tr("Upload Volumetric Data"), "../", tr("Raw Files (*.raw)"));
     emit createVolume(fileName);
+
+    viewportPerspective->copyVolumeData();
+    viewportFront->copyVolumeData();
+    viewportLeft->copyVolumeData();
+    viewportTop->copyVolumeData();
+
 }
 
 Viewport* View::getViewport(Model::ViewportType type)

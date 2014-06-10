@@ -69,6 +69,8 @@ void Quad::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
+    glDisableVertexAttribArray(2);
+
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
 
