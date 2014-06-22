@@ -5,6 +5,7 @@
 #include <cylinder.h>
 #include <torus.h>
 #include <volume.h>
+#include <terrain.h>
 #include <iostream>
 #include <sstream>
 
@@ -159,6 +160,26 @@ void Model::addVolume(QString fileName) {
     emit updateGL();
     emit updateGL();
     setActivePrimitive(p->getID());
+}
+
+void Model::addTerrain(QString fileName) {
+    std::string name = "Terrain ";
+    std::stringstream name_tmp;
+    name_tmp << name << idCounters_[TERRAIN];
+    name = name_tmp.str();
+
+    Primitive *p = new Terrain(name, nrIDs_, tesselation_, Primitive::float3(0, 0, 0));
+    //static_cast<Volume*>(p)->parseFile(fileName);
+
+    idCounters_[TERRAIN]++;
+    nrIDs_++;
+
+    scenegraphModel_->addPrimitive(p);
+
+    emit copyVAOData(p);
+    emit updateGL();
+    emit updateGL();
+
 }
 
 void Model::setActivePrimitive(float ID)

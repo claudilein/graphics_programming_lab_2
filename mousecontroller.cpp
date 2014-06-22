@@ -64,7 +64,10 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
         } else if (model_->getInteractionMode() == Model::OBJECT) {
             QVector3D translation =
                     camera_->getRotation().conjugate().rotatedVector(QVector3D(dX * scaleFactor, dY * scaleFactor, 0));
-            model_->getActivePrimitive()->translate(translation);
+            if (model_->getActivePrimitive() != NULL) {
+                model_->getActivePrimitive()->translate(translation);
+            }
+
         }
 
         lastTranslationPoint_ = newPoint;
@@ -91,7 +94,9 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
         if (model_->getInteractionMode() == Model::CAMERA) {
             camera_->rotate(rotation);
         } else if (model_->getInteractionMode() == Model::OBJECT) {
-            model_->getActivePrimitive()->rotate(rotation);
+            if (model_->getActivePrimitive() != NULL) {
+                model_->getActivePrimitive()->rotate(rotation);
+            }
         }
 
 
@@ -110,7 +115,9 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
                                                                    scalingFactor / 10,
                                                                    scalingFactor / 10);
 
-        model_->getActivePrimitive()->scale(scalingVector);
+        if (model_->getActivePrimitive() != NULL) {
+            model_->getActivePrimitive()->scale(scalingVector);
+        }
         lastScalingPoint_ = newPoint;
     }
 

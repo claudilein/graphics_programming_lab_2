@@ -23,6 +23,7 @@ void Controller::setView(View *view) {
     connect(view_, SIGNAL(createCone()), model_, SLOT(addCone()));
     connect(view_, SIGNAL(createTorus()), model_, SLOT(addTorus()));
     connect(view_, SIGNAL(createVolume(QString)), model_, SLOT(addVolume(QString)));
+    connect(view_, SIGNAL(createTerrain(QString)), model_, SLOT(addTerrain(QString)));
 
     connect(view_, SIGNAL(setSingleViewMode()), this, SLOT(setSingleViewMode()));
     connect(view_, SIGNAL(setDualViewMode()), this, SLOT(setDualViewMode()));

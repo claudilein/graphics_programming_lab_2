@@ -9,7 +9,8 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     id_(id),
     tesselation_(tesselation),
     color_(color),
-    isVolume_(false)
+    isVolume_(false),
+    isTerrain_(false)
 {
     glGenVertexArrays(1, &vertexArray_);
     glBindVertexArray(vertexArray_);
@@ -143,6 +144,11 @@ int Primitive::getID()
 
 bool Primitive::isVolume() {
     return isVolume_;
+}
+
+
+bool Primitive::isTerrain() {
+    return isTerrain_;
 }
 
 std::string Primitive::getName()

@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     view.show();
 
     model.addCube();
-    model.addVolume(QString("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/volumetric_data/MRI-head.raw"));
+    //model.addVolume(QString("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/volumetric_data/MRI-head.raw"));
 
     return a.exec();
 }

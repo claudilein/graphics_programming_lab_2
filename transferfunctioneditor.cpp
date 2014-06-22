@@ -234,13 +234,17 @@ void TransferFunctionEditor::smoothTransferFunction() {
 }
 
 void TransferFunctionEditor::update() {
-    if (model_->getActivePrimitive()->isVolume()) {
-        volume_ = static_cast<Volume*>(model_->getActivePrimitive());
-        emit volumeChanged(volume_);
-        this->show();
-    } else {
-        volume_ = NULL;
-        //this->hide();
+
+    if (model_->getActivePrimitive() != NULL) {
+        if (model_->getActivePrimitive()->isVolume()) {
+            volume_ = static_cast<Volume*>(model_->getActivePrimitive());
+            emit volumeChanged(volume_);
+            this->show();
+
+        } else {
+            volume_ = NULL;
+            //this->hide();
+        }
     }
 
 }

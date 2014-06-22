@@ -174,8 +174,8 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -187,8 +187,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);
@@ -200,8 +200,8 @@ void Viewport::initializeGL()
     volumeVertexShader = new QGLShader(QGLShader::Vertex, this);
     volumeFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    volumeVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/volumeVertexShader.vertexShader");
-    volumeFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/shaders/volumeFragmentShader.fragmentShader");
+    volumeVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeVertexShader.vertexShader");
+    volumeFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeFragmentShader.fragmentShader");
 
 
     volumeProgram->addShader(volumeVertexShader);
@@ -281,7 +281,7 @@ void Viewport::paintGL()
 
     // draw all primitives that are not a volume
     for (int i = 0; i < primitives->size(); i++) {
-        if (!primitives->at(i)->isVolume()) {
+        if (!primitives->at(i)->isVolume() && !primitives->at(i)->isTerrain()) {
             glUniform1f(phongIdID_, primitives->at(i)->getID());
             glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
 
@@ -321,12 +321,33 @@ void Viewport::paintGL()
         }
     }
 
+    // DRAW TERRAINS
+
+    //volumeProgram->release();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    for (int i = 0; i < primitives->size(); i++) {
+        if (primitives->at(i)->isTerrain()) {
+
+            glUniform1f(phongIdID_, primitives->at(i)->getID());
+            glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+
+            glPushMatrix();
+            glMultMatrix(primitives->at(i)->getModelMatrix().constData());
+
+            primitives->at(i)->draw();
+
+            glPopMatrix();
+        }
+    }
+
+
 
     // HIGHLIGHT SELECTED OBJECT
 
     volumeProgram->release();
     selectionProgram->bind();
-
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -424,6 +445,7 @@ void Viewport::setClickedId(int x, int y) {
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     float id = pixels[0];
+
 
     // do not select background when in object interaction mode
     if (model_->getInteractionMode() != Model::OBJECT || id != 0) {

@@ -78,7 +78,10 @@ View::View(QWidget *parent)
     connect(createTorusAction, SIGNAL(triggered()), this, SIGNAL(createTorus()));
 
     createVolumeAction = new QAction("Create &Volume", objectMenu);
-    connect(createVolumeAction, SIGNAL(triggered()), this, SLOT(readFile()));
+    connect(createVolumeAction, SIGNAL(triggered()), this, SLOT(readVolumeFile()));
+
+    createTerrainAction = new QAction("Create &Terrain", objectMenu);
+    connect(createTerrainAction, SIGNAL(triggered()), this, SLOT(readTerrainFile()));
 
     deleteSelectedObjectAction = new QAction("&Delete selected object", objectMenu);
     deleteSelectedObjectAction->setShortcut(tr("Delete"));
@@ -90,6 +93,7 @@ View::View(QWidget *parent)
     objectMenu->addAction(createConeAction);
     objectMenu->addAction(createTorusAction);
     objectMenu->addAction(createVolumeAction);
+    objectMenu->addAction(createTerrainAction);
     objectMenu->addAction(deleteSelectedObjectAction);
 
 
@@ -226,6 +230,22 @@ View::View(QWidget *parent)
     mipAction = new QAction("MIP", this);
     mipAction->setCheckable(true);
     mipAction->setChecked(false);
+
+    // === TERRAIN SLIDERS === //
+
+    // TODO
+
+    horizontalScaleSlider = new QSlider(toolBar);
+    horizontalScaleSlider->setOrientation(Qt::Horizontal);
+    horizontalScaleSlider->setFixedWidth(80);
+    horizontalScaleSlider->setRange(25, 40);
+    connect(gridSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setGridSize(int)));
+
+    verticalScaleSlider = new QSlider(toolBar);
+    verticalScaleSlider->setOrientation(Qt::Vertical);
+    verticalScaleSlider->setFixedWidth(80);
+    verticalScaleSlider->setRange(25, 40);
+    connect(gridSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setGridSize(int)));
 
 
     // ===== TOOL BAR ===== //
@@ -399,7 +419,7 @@ void View::setModel(Model *model)
 }
 
 
-void View::readFile() {
+void View::readVolumeFile() {
     QString fileName;
     fileName = QFileDialog::getOpenFileName(this,
         tr("Upload Volumetric Data"), "../", tr("Raw Files (*.raw)"));
@@ -410,6 +430,19 @@ void View::readFile() {
     viewportLeft->copyVolumeData();
     viewportTop->copyVolumeData();
 
+}
+
+void View::readTerrainFile() {
+    QString fileName;
+    fileName = QFileDialog::getOpenFileName(this,
+        tr("Upload Height Map"), "../", tr("Pgm Files (*.pgm)"));
+    emit createTerrain(fileName);
+/*
+    viewportPerspective->copyVolumeData();
+    viewportFront->copyVolumeData();
+    viewportLeft->copyVolumeData();
+    viewportTop->copyVolumeData();
+*/
 }
 
 Viewport* View::getViewport(Model::ViewportType type)

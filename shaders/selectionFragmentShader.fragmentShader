@@ -50,4 +50,5 @@ void main() {
 		if (texCoord.x < offsetX * 5 || texCoord.y < offsetY * 5 || texCoord.x > 1 - offsetX * 5 || texCoord.y > 1 - offsetY * 5) 
 			gl_FragColor = vec4(1, 1, 0, 1);
 	}
+
 }

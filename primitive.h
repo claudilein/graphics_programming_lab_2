@@ -43,7 +43,9 @@ public:
     float3* getColor();
     int getID();
     bool isVolume();
+    bool isTerrain();
     std::string getName();
+
     void setName(std::string name);
     virtual void bindVAOToShader();
 
@@ -76,6 +78,7 @@ protected:
 
     RBTNode rbtNode_;
     bool isVolume_;
+    bool isTerrain_;
 
 
 };

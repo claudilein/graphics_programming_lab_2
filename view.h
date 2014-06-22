@@ -39,6 +39,7 @@ signals:
     void createCone();
     void createTorus();
     void createVolume(QString fileName);
+    void createTerrain(QString fileName);
 
     void setSingleViewMode();
     void setDualViewMode();
@@ -66,7 +67,8 @@ public slots:
     void updateStatusBar();
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
-    void readFile();
+    void readVolumeFile();
+    void readTerrainFile();
 private:
 
     Model *model_;
@@ -92,6 +94,7 @@ private:
     QAction *createConeAction;
     QAction *createTorusAction;
     QAction *createVolumeAction;
+    QAction *createTerrainAction;
     QAction *deleteSelectedObjectAction;
 
     // == INTERACTION MODE MENU == //
@@ -151,6 +154,11 @@ private:
     // === MAXIMUM INTENSITY PROJECTION FOR VOLUMES === //
 
     QAction *mipAction;
+
+    // === TERRAIN SLIDER === //
+
+    QSlider *horizontalScaleSlider;
+    QSlider *verticalScaleSlider;
 
 
 };

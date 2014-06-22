@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     quad.cpp \
     volume.cpp \
     transferfunctionwidget.cpp \
-    transferfunctioneditor.cpp
+    transferfunctioneditor.cpp \
+    terrain.cpp
 
 HEADERS  += view.h \
     controller.h \
@@ -51,7 +52,8 @@ HEADERS  += view.h \
     quad.h \
     volume.h \
     transferfunctionwidget.h \
-    transferfunctioneditor.h
+    transferfunctioneditor.h \
+    terrain.h
 
 RESOURCES += \
     resources.qrc
