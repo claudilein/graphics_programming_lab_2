@@ -5,6 +5,8 @@
 #include <QGLWidget>
 #include <QGLShader>
 #include <QGLShaderProgram>
+#include <QOpenGLShader>
+#include <QOpenGLShaderProgram>
 #include <camera.h>
 #include <model.h>
 #include <cube.h>
@@ -20,7 +22,7 @@ class Viewport : public QGLWidget
 {
     Q_OBJECT
 public:
-    explicit Viewport(QWidget *parent = 0, Model::ViewportType type = Model::PERSPECTIVE, Model *model = 0);
+    explicit Viewport(QWidget *parent = 0, QGLFormat format = QGLFormat(), Model::ViewportType type = Model::PERSPECTIVE, Model *model = 0);
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
@@ -52,6 +54,8 @@ protected:
     void resizeGL(int width, int height);
 
 private:
+    static const double NEAR_PLANE = 0.01d;
+    static const double FAR_PLANE = 20.0d;
 
     // shader that uses phong shading on the object
     QGLShaderProgram *phongProgram;
@@ -72,6 +76,13 @@ private:
     QGLShaderProgram *volumeProgram;
     QGLShader *volumeVertexShader;
     QGLShader *volumeFragmentShader;
+
+    // shader that colors the terrains
+    QOpenGLShaderProgram *terrainProgram;
+    QOpenGLShader *terrainVertexShader;
+    QOpenGLShader *terrainTesselationControlShader;
+    QOpenGLShader *terrainTesselationEvaluationShader;
+    QOpenGLShader *terrainFragmentShader;
 
     // vertices of cube
     std::vector<std::vector<float> > originalVertices;
@@ -106,6 +117,10 @@ private:
     GLuint aspectRatioID_;
     GLuint mipID_;
     GLuint maxResolutionID_;
+
+    GLuint terrainIdID_;
+    GLuint modelMatrixID_;
+    GLuint projectionMatrixID_;
 
     float light0Position_[4];
 

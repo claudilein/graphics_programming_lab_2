@@ -233,19 +233,20 @@ View::View(QWidget *parent)
 
     // === TERRAIN SLIDERS === //
 
-    // TODO
 
     horizontalScaleSlider = new QSlider(toolBar);
     horizontalScaleSlider->setOrientation(Qt::Horizontal);
     horizontalScaleSlider->setFixedWidth(80);
-    horizontalScaleSlider->setRange(25, 40);
-    connect(gridSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setGridSize(int)));
+    horizontalScaleSlider->setRange(5, 40);
+    horizontalScaleSlider->setValue(25);
+    connect(horizontalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setHorizontalScale(int)));
 
     verticalScaleSlider = new QSlider(toolBar);
-    verticalScaleSlider->setOrientation(Qt::Vertical);
+    verticalScaleSlider->setOrientation(Qt::Horizontal);
     verticalScaleSlider->setFixedWidth(80);
-    verticalScaleSlider->setRange(25, 40);
-    connect(gridSizeSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setGridSize(int)));
+    verticalScaleSlider->setRange(5, 40);
+    verticalScaleSlider->setValue(25);
+    connect(verticalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setVerticalScale(int)));
 
 
     // ===== TOOL BAR ===== //
@@ -280,7 +281,9 @@ View::View(QWidget *parent)
     toolBar->addSeparator();
     toolBar->addAction(mipAction);
 
-
+    toolBar->addSeparator();
+    toolBar->addWidget(horizontalScaleSlider);
+    toolBar->addWidget(verticalScaleSlider);
 
 
 
@@ -305,12 +308,16 @@ void View::setModel(Model *model)
 
     // ===== VIEWPORTS ===== //
 
-    viewportPerspective = new Viewport(this, Model::PERSPECTIVE, model_);
-    viewportFront = new Viewport(this, Model::FRONT, model_);
-    viewportLeft = new Viewport(this, Model::LEFT, model_);
-    viewportTop = new Viewport(this, Model::TOP, model_);
+    QGLFormat qglFormat;
+    qglFormat.setVersion(4,0);
+    qglFormat.setProfile(QGLFormat::CompatibilityProfile);
 
+    viewportPerspective = new Viewport(this, qglFormat, Model::PERSPECTIVE, model_);
+    viewportFront = new Viewport(this, qglFormat, Model::FRONT, model_);
+    viewportLeft = new Viewport(this, qglFormat, Model::LEFT, model_);
+    viewportTop = new Viewport(this, qglFormat, Model::TOP, model_);
 
+    std::cout << "OpenGL Version: " << viewportFront->format().majorVersion() << "." << viewportFront->format().minorVersion() << std::endl;
 
 
     splitterHorizontalTop = new QSplitter(this);
@@ -388,14 +395,26 @@ void View::setModel(Model *model)
     transferFunctionDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
     transferFunctionDockWidget->setFixedWidth(270);
     addDockWidget(Qt::RightDockWidgetArea, transferFunctionDockWidget);
+    scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    transferFunctionDockWidget->setWidget(scrollArea);
 
     transferFunctionEditor = new TransferFunctionEditor(transferFunctionDockWidget, model_);
-    transferFunctionDockWidget->setWidget(transferFunctionEditor);
+    //transferFunctionDockWidget->setWidget(transferFunctionEditor);
+    scrollArea->setWidget(transferFunctionEditor);
 
     connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportPerspective, SLOT(copyVolumeData(Volume*)));
     connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportFront, SLOT(copyVolumeData(Volume*)));
     connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportLeft, SLOT(copyVolumeData(Volume*)));
     connect(transferFunctionEditor, SIGNAL(functionChanged(Volume*)), viewportTop, SLOT(copyVolumeData(Volume*)));
+
+    // === TERRAIN MATERIAL EDITOR WIDGET === //
+
+    terrainMaterialEditor = new TerrainMaterialEditor(this);
+    connect(terrainMaterialEditor, SIGNAL(materialSelected(QString)), model_, SLOT(materialSelected(QString)));
+    connect(terrainMaterialEditor, SIGNAL(rangeChanged(int,int,int)), model_, SLOT(rangeChanged(int,int,int)));
+    //transferFunctionDockWidget->setWidget(terrainMaterialEditor);
+    scrollArea->setWidget(terrainMaterialEditor);
 
 
 
@@ -416,6 +435,7 @@ void View::setModel(Model *model)
     connect(model_, SIGNAL(selectItem(QModelIndex)), this, SLOT(selectItem(QModelIndex)));
     connect(model_, SIGNAL(updateStatusBar()), this, SLOT(updateStatusBar()));
     connect(deleteSelectedObjectAction, SIGNAL(triggered()), model_, SLOT(deleteActivePrimitive()));
+
 }
 
 
@@ -473,6 +493,8 @@ void View::keyPressEvent(QKeyEvent *event) {
     if (event->modifiers() & Qt::CTRL) {
         if (model_->getInteractionMode() == Model::OBJECT) emit setCameraMode();
         else if (model_->getInteractionMode() == Model::CAMERA) emit setObjectMode();
+    } else {
+        emit keyPressed(event);
     }
 }
 
@@ -481,6 +503,8 @@ void View::keyReleaseEvent(QKeyEvent *event) {
     if ((event->modifiers() & Qt::CTRL) == 0) {
         if (model_->getInteractionMode() == Model::OBJECT) emit setCameraMode();
         else if (model_->getInteractionMode() == Model::CAMERA) emit setObjectMode();
+    } else {
+        emit keyReleased(event);
     }
 }
 

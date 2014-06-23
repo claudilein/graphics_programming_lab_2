@@ -37,6 +37,12 @@ void Controller::setView(View *view) {
     connect(view_, SIGNAL(setScaleX(bool)), model_, SLOT(setScaleX(bool)));
     connect(view_, SIGNAL(setScaleY(bool)), model_, SLOT(setScaleY(bool)));
     connect(view_, SIGNAL(setScaleZ(bool)), model_, SLOT(setScaleZ(bool)));
+
+    connect(view_, SIGNAL(setHorizontalScale(int)), model_, SLOT(setHorizontalScale(int)));
+    connect(view_, SIGNAL(setVerticalScale(int)), model_, SLOT(setVerticalScale(int)));
+
+    connect(view_, SIGNAL(keyPressed(QKeyEvent*)), this, SLOT(keyPressed(QKeyEvent*)));
+    connect(view_, SIGNAL(keyReleased(QKeyEvent*)), this, SLOT(keyReleased(QKeyEvent*)));
 }
 
 void Controller::createMouseControllers() {
@@ -91,4 +97,24 @@ void Controller::setQuadViewMode()
     view_->getViewport(Model::FRONT)->show();
     view_->getViewport(Model::LEFT)->show();
     view_->getViewport(Model::TOP)->show();
+}
+
+void Controller::keyPressed(QKeyEvent *event) {
+    MouseController *mouseController;
+    if (model_->isActiveViewport(Model::PERSPECTIVE)) mouseController = mousePerspective;
+    if (model_->isActiveViewport(Model::FRONT)) mouseController = mouseFront;
+    if (model_->isActiveViewport(Model::LEFT)) mouseController = mouseLeft;
+    if (model_->isActiveViewport(Model::TOP)) mouseController = mouseTop;
+
+    mouseController->keyPressEvent(event);
+}
+
+void Controller::keyReleased(QKeyEvent *event) {
+    MouseController *mouseController;
+    if (model_->isActiveViewport(Model::PERSPECTIVE)) mouseController = mousePerspective;
+    if (model_->isActiveViewport(Model::FRONT)) mouseController = mouseFront;
+    if (model_->isActiveViewport(Model::LEFT)) mouseController = mouseLeft;
+    if (model_->isActiveViewport(Model::TOP)) mouseController = mouseTop;
+
+    mouseController->keyReleaseEvent(event);
 }

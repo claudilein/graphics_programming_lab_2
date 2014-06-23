@@ -1,0 +1,14 @@
+#version 400
+
+layout (location = 0) in vec3 positionModelSpace_in;
+
+uniform mat4 modelMatrix;
+uniform mat4 projectionMatrix;
+
+out vec3 positionWorldSpace;
+
+void main() {
+	//positionWorldSpace = (projectionMatrix * modelMatrix * vec4(positionModelSpace_in, 1)).xyz;
+	gl_Position = modelMatrix * vec4(positionModelSpace_in, 1);
+}
+

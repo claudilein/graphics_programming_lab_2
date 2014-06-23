@@ -12,17 +12,18 @@
 #include <grid.h>
 #include <primitive.h>
 #include <volume.h>
+#include <terrain.h>
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
 
-Viewport::Viewport(QWidget *parent, Model::ViewportType type, Model *model) :
-    QGLWidget(parent)
+Viewport::Viewport(QWidget *parent, QGLFormat format, Model::ViewportType type, Model *model) :
+    QGLWidget(format, parent)
 {
     type_ = type;
     model_ = model;
 
-    showGrid_ = true;
+    showGrid_ = false;
     mip_ = false;
 
     gridSize_ = 5;
@@ -92,6 +93,12 @@ void Viewport::initializeGL()
 
     // set clear color
     glClearColor(0, 0.5, 0.5, 1);
+
+    // set patch vertices for tesselation shader
+    GLint maxPatchVertices = 0;
+    glGetIntegerv(GL_MAX_PATCH_VERTICES, &maxPatchVertices);
+    std::cout << "Max supported patch vertices: " << maxPatchVertices << std::endl;
+    glPatchParameteri(GL_PATCH_VERTICES, 4);    // we want to tesselate quads
 
 
 
@@ -174,8 +181,8 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -187,8 +194,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);
@@ -200,13 +207,33 @@ void Viewport::initializeGL()
     volumeVertexShader = new QGLShader(QGLShader::Vertex, this);
     volumeFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    volumeVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeVertexShader.vertexShader");
-    volumeFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeFragmentShader.fragmentShader");
+    volumeVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/volumeVertexShader.vertexShader");
+    volumeFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/volumeFragmentShader.fragmentShader");
 
 
     volumeProgram->addShader(volumeVertexShader);
     volumeProgram->addShader(volumeFragmentShader);
     volumeProgram->link();
+
+    // TERRAIN SHADER
+
+    terrainProgram = new QOpenGLShaderProgram(this);
+    terrainVertexShader = new QOpenGLShader(QOpenGLShader::Vertex, this);
+    terrainTesselationControlShader = new QOpenGLShader(QOpenGLShader::TessellationControl, this);
+    terrainTesselationEvaluationShader = new QOpenGLShader(QOpenGLShader::TessellationEvaluation, this);
+    terrainFragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, this);
+
+    terrainVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainVertexShader.vertexShader");
+    terrainTesselationControlShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainTCS.tesselationControlShader");
+    terrainTesselationEvaluationShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainTES.tesselationEvaluationShader");
+    terrainFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainFragmentShader.fragmentShader");
+
+
+    terrainProgram->addShader(terrainVertexShader);
+    //terrainProgram->addShader(terrainTesselationControlShader);
+    //terrainProgram->addShader(terrainTesselationEvaluationShader);
+    terrainProgram->addShader(terrainFragmentShader);
+    terrainProgram->link();
 
     // distribute uniform IDs
 
@@ -228,6 +255,10 @@ void Viewport::initializeGL()
     aspectRatioID_ = glGetUniformLocation(volumeProgram->programId(), "aspectRatio");
     mipID_ = glGetUniformLocation(volumeProgram->programId(), "mip");
     maxResolutionID_ = glGetUniformLocation(volumeProgram->programId(), "maxResolution");
+
+    terrainIdID_ = glGetUniformLocation(terrainProgram->programId(), "id");
+    modelMatrixID_ = glGetUniformLocation(terrainProgram->programId(), "modelMatrix");
+    projectionMatrixID_ = glGetUniformLocation(terrainProgram->programId(), "projectionMatrix");
 
 
     glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
@@ -323,21 +354,46 @@ void Viewport::paintGL()
 
     // DRAW TERRAINS
 
-    //volumeProgram->release();
+    volumeProgram->release();
+    terrainProgram->bind();
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     for (int i = 0; i < primitives->size(); i++) {
         if (primitives->at(i)->isTerrain()) {
 
-            glUniform1f(phongIdID_, primitives->at(i)->getID());
-            glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+            glUniform1f(terrainIdID_, primitives->at(i)->getID());
 
-            glPushMatrix();
-            glMultMatrix(primitives->at(i)->getModelMatrix().constData());
+            // ===== POTENTIAL ISSUE ===== //
+            // TODO could constData return double* on different architecture??
+            float* viewMatrix = (float*) malloc(16 * sizeof(float));
+            glGetFloatv(GL_MODELVIEW_MATRIX, viewMatrix);   // column-major
+            QMatrix4x4 modelViewMatrix = QMatrix4x4(viewMatrix).transposed() * primitives->at(i)->getModelMatrix();
+            glUniformMatrix4fv(modelMatrixID_, 1, GL_TRUE, modelViewMatrix.constData());
+
+            float* matrix = (float*) malloc(16 * sizeof(float));
+            glGetFloatv(GL_PROJECTION_MATRIX, matrix);  // column-major
+            QMatrix4x4 projectionMatrix = QMatrix4x4(matrix).transposed();  // row-major
+            glUniformMatrix4fv(projectionMatrixID_, 1, GL_TRUE, projectionMatrix.constData());  // GL_TRUE accepts row-major
+
+            // TODO Maybe start with some simple examples...it cannot be that hard!!!
+
+            std::cout << "ModelViewMatrix[" << type_ << "]: " << std::endl;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    std::cout << "[" << i*4+j << "]: " << modelViewMatrix.constData()[i*4+j] << "  ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << "ProjectionMatrix[" << type_ << "]: " << std::endl;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    std::cout << "[" << i*4+j << "]: " << projectionMatrix.constData()[i*4+j] << "  ";
+                }
+                std::cout << std::endl;
+
+            }
 
             primitives->at(i)->draw();
-
-            glPopMatrix();
         }
     }
 
@@ -345,7 +401,7 @@ void Viewport::paintGL()
 
     // HIGHLIGHT SELECTED OBJECT
 
-    volumeProgram->release();
+    terrainProgram->release();
     selectionProgram->bind();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -413,7 +469,7 @@ void Viewport::resizeGL(int width, int height)
     glLoadIdentity();
 
     if (camera_->getProjectionMode() == Camera::PERSPECTIVE) {
-        if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), 0.01d, 20.0d);
+        if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), NEAR_PLANE, FAR_PLANE);
     } else if (camera_->getProjectionMode() == Camera::ORTHOGRAPHIC) {
         updateProjectionMatrix();
     }
@@ -457,6 +513,9 @@ void Viewport::setClickedId(int x, int y) {
 void Viewport::copyVAOData(Primitive *p) {
     makeCurrent();
     p->copyVAOToCurrentContext();
+    if (p->isTerrain()) {
+        static_cast<Terrain*>(p)->createTextures();
+    }
 }
 
 void Viewport::copyVolumeData(Volume *volume) {
@@ -490,7 +549,7 @@ void Viewport::updateProjectionMatrix() {
         if (height() != 0) aspectRatio = (float) width() / height();
         float goodZoomFactor = zoom / 10;
 
-        glOrtho(- aspectRatio * (1 - goodZoomFactor), aspectRatio * (1 - goodZoomFactor), -1 + goodZoomFactor, 1 - goodZoomFactor, 0.01, 20.0);
+        glOrtho(- aspectRatio * (1 - goodZoomFactor), aspectRatio * (1 - goodZoomFactor), -1 + goodZoomFactor, 1 - goodZoomFactor, NEAR_PLANE, FAR_PLANE);
     }
 }
 

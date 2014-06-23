@@ -160,3 +160,42 @@ QVector3D MouseController::mapPointToTrackball(float x, float y) {
     return newPoint3D;
 }
 
+void MouseController::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_W) {
+        //QVector3D camera_->getRotation() * QVector3D(0, 0, -1);
+        //QVector3D translation = camera_->getCameraMatrix() * QVector3D(0,0,0.01);
+        QQuaternion rotationX = QQuaternion::fromAxisAndAngle(camera_->getRotation().x(), 0, 0, camera_->getRotation().scalar());
+        QMatrix4x4 rotationXMatrix = QMatrix4x4();
+        rotationXMatrix.rotate(rotationX);
+        QVector3D translation = rotationXMatrix * QVector3D(0, 0, 0.1);
+
+        std::cout << "translating by: " << translation.x() << ", " << translation.y() << ", " << translation.z() << std::endl;
+        std::cout << "camera rotation: x: " << camera_->getRotation().x() << std::endl;
+
+        camera_->translate(translation);
+        //camera_->zoom(translation.z());
+        //camera_->translate(QVector2D(1,0));
+    } else if (event->key() == Qt::Key_S) {
+        QQuaternion rotationX = QQuaternion::fromAxisAndAngle(camera_->getRotation().x(), 0, 0, camera_->getRotation().scalar());
+        QMatrix4x4 rotationXMatrix = QMatrix4x4();
+        rotationXMatrix.rotate(rotationX);
+        QVector3D translation = rotationXMatrix * QVector3D(0, 0, -0.1);
+
+        std::cout << "translating by: " << translation.x() << ", " << translation.y() << ", " << translation.z() << std::endl;
+
+        camera_->translate(translation);
+        //camera_->zoom(-0.1);
+        //camera_->translate(QVector2D(0, 0.05));
+    } else if (event->key() == Qt::Key_A) {
+        //camera_->translate(QVector2D(0.05, 0));
+        camera_->rotate(QQuaternion::fromAxisAndAngle(0, 1, 0, 1));
+    } else if (event->key() == Qt::Key_D) {
+        camera_->rotate(QQuaternion::fromAxisAndAngle(0, 1, 0, -1));
+        //camera_->translate(QVector2D(-0.05, 0));
+    }
+    emit updateViewport();
+}
+
+void MouseController::keyReleaseEvent(QKeyEvent *event) {
+
+}

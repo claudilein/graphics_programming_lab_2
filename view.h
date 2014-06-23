@@ -19,6 +19,8 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <transferfunctioneditor.h>
+#include <terrainmaterialeditor.h>
+#include <QScrollArea>
 
 class View : public QMainWindow
 {
@@ -59,6 +61,12 @@ signals:
 
     void setGridSize(int i);
     void setStepSize(int i);
+
+    void setHorizontalScale(int i);
+    void setVerticalScale(int i);
+
+    void keyPressed(QKeyEvent *event);
+    void keyReleased(QKeyEvent *event);
 
 
 public slots:
@@ -136,6 +144,7 @@ private:
 
     // === TRANSFER FUNCTION === //
     QDockWidget *transferFunctionDockWidget;
+    QScrollArea *scrollArea;
     TransferFunctionEditor *transferFunctionEditor;
 
 
@@ -145,7 +154,7 @@ private:
     QAction *scaleYAction;
     QAction *scaleZAction;
 
-    // === GRID SLIDER === //
+    // === GRID === //
 
     QAction *showGrid;
     QSlider *gridSizeSlider;
@@ -155,10 +164,14 @@ private:
 
     QAction *mipAction;
 
-    // === TERRAIN SLIDER === //
+    // === TERRAIN === //
 
     QSlider *horizontalScaleSlider;
     QSlider *verticalScaleSlider;
+    // MATERIAL EDITOR
+    TerrainMaterialEditor *terrainMaterialEditor;
+
+
 
 
 };

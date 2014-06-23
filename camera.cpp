@@ -19,6 +19,11 @@ void Camera::translate(QVector2D translation)
     pointOfInterest_ += newTranslation;
 }
 
+void Camera::translate(QVector3D translation) {
+    //QVector3D newTranslation = rotation_.conjugate().rotatedVector(translation);
+    pointOfInterest_ += translation;
+}
+
 void Camera::zoom(float zoom)
 {
     zoom_ += zoom;

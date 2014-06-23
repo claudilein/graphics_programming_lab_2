@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 
     model.addCube();
     //model.addVolume(QString("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/volumetric_data/MRI-head.raw"));
+    model.addTerrain(QString("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/terrain/grand_canyon.pgm"));
 
     return a.exec();
 }

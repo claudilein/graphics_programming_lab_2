@@ -24,6 +24,9 @@ public slots:
     void setDualViewMode();
     void setQuadViewMode();
 
+    void keyPressed(QKeyEvent *event);
+    void keyReleased(QKeyEvent *event);
+
 private:
     View *view_;
     Model *model_;

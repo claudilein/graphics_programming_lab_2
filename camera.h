@@ -22,7 +22,8 @@ signals:
 public slots:
 
     void rotate(QQuaternion newRotation);
-    void translate(QVector2D newTranslation);
+    void translate(QVector2D translation);
+    void translate(QVector3D translation);
     void zoom(float zoom);
     void reset();
 

@@ -55,6 +55,12 @@ public slots:
     void setScaleX(bool on);
     void setScaleY(bool on);
     void setScaleZ(bool on);
+    void setHorizontalScale(int h);
+    void setVerticalScale(int v);
+
+
+    void materialSelected(QString fileName);
+    void rangeChanged(int materialID, int minRange, int maxRange);
 
 private:
     static const int NR_CAMERAS = 4;
