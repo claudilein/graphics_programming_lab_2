@@ -47,12 +47,17 @@ QSize Viewport::sizeHint() const
 
 void Viewport::initializeGL()
 {
+
+    checkGLErrors("initialize...");
+
     // Initialize GLEW
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to initialize GLEW\n");
         exit(EXIT_FAILURE);
     }
+
+    checkGLErrors("glew");
 
     // enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -100,6 +105,8 @@ void Viewport::initializeGL()
     std::cout << "Max supported patch vertices: " << maxPatchVertices << std::endl;
     glPatchParameteri(GL_PATCH_VERTICES, 4);    // we want to tesselate quads
 
+
+    checkGLErrors("before creating framebuffer");
 
 
     // ==== CREATE FRAMEBUFFER AND ITS TEXTURES ==== //
@@ -160,6 +167,8 @@ void Viewport::initializeGL()
     // ============================================================ //
 
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    checkGLErrors("before shaders");
 
     // compile and link shaders
     // PHONG SHADER
@@ -230,8 +239,8 @@ void Viewport::initializeGL()
 
 
     terrainProgram->addShader(terrainVertexShader);
-    //terrainProgram->addShader(terrainTesselationControlShader);
-    //terrainProgram->addShader(terrainTesselationEvaluationShader);
+    terrainProgram->addShader(terrainTesselationControlShader);
+    terrainProgram->addShader(terrainTesselationEvaluationShader);
     terrainProgram->addShader(terrainFragmentShader);
     terrainProgram->link();
 
@@ -259,6 +268,8 @@ void Viewport::initializeGL()
     terrainIdID_ = glGetUniformLocation(terrainProgram->programId(), "id");
     modelMatrixID_ = glGetUniformLocation(terrainProgram->programId(), "modelMatrix");
     projectionMatrixID_ = glGetUniformLocation(terrainProgram->programId(), "projectionMatrix");
+    cameraPositionID_ = glGetUniformLocation(terrainProgram->programId(), "cameraPosition");
+    heightMapID_ = glGetUniformLocation(terrainProgram->programId(), "heightMap");
 
 
     glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
@@ -273,22 +284,31 @@ void Viewport::initializeGL()
 
     quad_ = new Quad();
     quad_->copyVAOToCurrentContext();
+
+    checkGLErrors("after shaders");
 }
 
 void Viewport::paintGL()
 {
+
+
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_);
     GLuint attachments[2] = { GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT };
     glDrawBuffers(2,  attachments);
 
+
+    checkGLErrors("before glClear");
+
     // clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+    checkGLErrors("before modelview");
 
     // set modelview matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMultMatrix(camera_->getCameraMatrix().constData());
-
 
 
     if (showGrid_) {
@@ -304,11 +324,17 @@ void Viewport::paintGL()
 
     // DRAW PRIMITIVES
 
+    checkGLErrors("before phong");
     phongProgram->bind();
+
+    checkGLErrors("after phong");
 
     glLightfv(GL_LIGHT0, GL_POSITION, light0Position_);
 
+
     QList<Primitive*> *primitives = model_->getScenegraph();
+
+
 
     // draw all primitives that are not a volume
     for (int i = 0; i < primitives->size(); i++) {
@@ -325,6 +351,7 @@ void Viewport::paintGL()
         }
     }
 
+    checkGLErrors("before volume drawing loop");
 
     // DRAW VOLUMES
 
@@ -352,6 +379,8 @@ void Viewport::paintGL()
         }
     }
 
+    checkGLErrors("before terrain drawing loop");
+
     // DRAW TERRAINS
 
     volumeProgram->release();
@@ -362,42 +391,35 @@ void Viewport::paintGL()
         if (primitives->at(i)->isTerrain()) {
 
             glUniform1f(terrainIdID_, primitives->at(i)->getID());
+            glUniform1i(heightMapID_, 1);
 
             // ===== POTENTIAL ISSUE ===== //
             // TODO could constData return double* on different architecture??
-            float* viewMatrix = (float*) malloc(16 * sizeof(float));
-            glGetFloatv(GL_MODELVIEW_MATRIX, viewMatrix);   // column-major
-            QMatrix4x4 modelViewMatrix = QMatrix4x4(viewMatrix).transposed() * primitives->at(i)->getModelMatrix();
-            glUniformMatrix4fv(modelMatrixID_, 1, GL_TRUE, modelViewMatrix.constData());
+
+            glUniformMatrix4fv(modelMatrixID_, 1, GL_FALSE, primitives->at(i)->getModelMatrix().constData());
 
             float* matrix = (float*) malloc(16 * sizeof(float));
+            glGetFloatv(GL_MODELVIEW_MATRIX, matrix);   // column-major
+
+            // extract camera position
+            QMatrix4x4 viewMatrix = QMatrix4x4(matrix).transposed(); // convert column-major to row-major
+            QVector4D cameraPosition = viewMatrix.inverted().column(3);
+            cameraPosition /= cameraPosition.w();
+
+            std::cout << "camera position[" << type_ << "]: (" <<  cameraPosition.x() << ", " << cameraPosition.y() << ", " << cameraPosition.z() << ")" << std::endl;
+
+            glUniform3f(cameraPositionID_, cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
+
             glGetFloatv(GL_PROJECTION_MATRIX, matrix);  // column-major
-            QMatrix4x4 projectionMatrix = QMatrix4x4(matrix).transposed();  // row-major
-            glUniformMatrix4fv(projectionMatrixID_, 1, GL_TRUE, projectionMatrix.constData());  // GL_TRUE accepts row-major
-
-            // TODO Maybe start with some simple examples...it cannot be that hard!!!
-
-            std::cout << "ModelViewMatrix[" << type_ << "]: " << std::endl;
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4; j++) {
-                    std::cout << "[" << i*4+j << "]: " << modelViewMatrix.constData()[i*4+j] << "  ";
-                }
-                std::cout << std::endl;
-            }
-            std::cout << "ProjectionMatrix[" << type_ << "]: " << std::endl;
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4; j++) {
-                    std::cout << "[" << i*4+j << "]: " << projectionMatrix.constData()[i*4+j] << "  ";
-                }
-                std::cout << std::endl;
-
-            }
-
+            QMatrix4x4 projectionMatrix = QMatrix4x4(matrix).transposed() * QMatrix4x4(viewMatrix);  // row-major
+            glUniformMatrix4fv(projectionMatrixID_, 1, GL_FALSE, projectionMatrix.constData());
             primitives->at(i)->draw();
+
+            free(matrix);
         }
     }
 
-
+    checkGLErrors("after terrain drawing loop");
 
     // HIGHLIGHT SELECTED OBJECT
 
@@ -468,11 +490,14 @@ void Viewport::resizeGL(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
+
     if (camera_->getProjectionMode() == Camera::PERSPECTIVE) {
         if (height != 0) gluPerspective(45.0d, ((double) width) / ((double) height), NEAR_PLANE, FAR_PLANE);
     } else if (camera_->getProjectionMode() == Camera::ORTHOGRAPHIC) {
         updateProjectionMatrix();
     }
+
+    checkGLErrors("after setting projection matrices");
 }
 
 
@@ -545,11 +570,13 @@ void Viewport::updateProjectionMatrix() {
         glLoadIdentity();
 
         float zoom = camera_->getZoom();
-        float aspectRatio = 0;
+        float aspectRatio = 1;
         if (height() != 0) aspectRatio = (float) width() / height();
         float goodZoomFactor = zoom / 10;
 
         glOrtho(- aspectRatio * (1 - goodZoomFactor), aspectRatio * (1 - goodZoomFactor), -1 + goodZoomFactor, 1 - goodZoomFactor, NEAR_PLANE, FAR_PLANE);
+
+        checkGLErrors("glOrtho (ignore)");
     }
 }
 
@@ -609,4 +636,18 @@ void Viewport::setStepSize(int i) {
     grid_->setStepSize(i);
     updateGL();
 
+}
+
+
+void Viewport::checkGLErrors(const char *label) {
+    GLenum errCode;
+    const GLubyte *errStr;
+    if ((errCode = glGetError()) != GL_NO_ERROR) {
+        errStr = gluErrorString(errCode);
+        printf("OpenGL ERROR: ");
+        printf((char*)errStr);
+        printf("(Label: ");
+        printf(label);
+        printf(")\n.");
+    }
 }

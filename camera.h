@@ -14,6 +14,7 @@ public:
     explicit Camera(QObject *parent = 0, ProjectionMode mode = PERSPECTIVE, bool lockRotation = false,
                     QQuaternion rotation = QQuaternion());
     QQuaternion getRotation();
+    QVector3D getTranslation();
     float getZoom();
 
 signals:

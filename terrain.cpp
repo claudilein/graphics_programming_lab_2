@@ -13,6 +13,9 @@ Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
     nrMaterials_(0)
 {
     isTerrain_ = true;
+    // TODO this should be generated once per viewport, right..?
+    glGenBuffers(1, &vertexBufferTextureCoordinates_);
+
 }
 
 void Terrain::parseHeightMap(QString fileName) {
@@ -135,8 +138,23 @@ void Terrain::createTextures() {
     checkGLErrors("after uploading material textures");
 }
 
+void Terrain::copyVAOToCurrentContext()
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
+    glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
+    glBufferData(GL_ARRAY_BUFFER, vertexTextureCoordinates_.size() *  sizeof(float3), &vertexTextureCoordinates_[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
+
+}
+
 void Terrain::bindVAOToShader() {
 
+    checkGLErrors("before binding buffers");
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
@@ -150,11 +168,22 @@ void Terrain::bindVAOToShader() {
     );
 
 
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
+    glVertexAttribPointer(
+        1,                  // attribute 1
+        3,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
 
-
+    checkGLErrors("binding buffers");
 
     // bind volume and transfer textures
     glActiveTexture(GL_TEXTURE1);
@@ -170,6 +199,8 @@ void Terrain::bindVAOToShader() {
     glActiveTexture(GL_TEXTURE0);
 
 
+
+    checkGLErrors("binding textures");
 }
 
 
@@ -180,11 +211,13 @@ void Terrain::draw() {
     bindVAOToShader();
 
     glDrawElements(
-        GL_QUADS,      // mode
+        GL_PATCHES,      // mode
         indicesList_.size(),    // count
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
     );
+
+    checkGLErrors("drawing terrain");
 
 }
 
@@ -192,8 +225,13 @@ void Terrain::createVBO() {
 
     vertexPositions_.resize(0);
     indicesList_.resize(0);
+    vertexTextureCoordinates_.resize(0);
 
 
+    /*vertexPositions_.push_back(float3(0,0,0));
+    vertexPositions_.push_back(float3(1,0,0));
+    vertexPositions_.push_back(float3(1,1,0));
+    vertexPositions_.push_back(float3(0,1,0));*/
 
     for (int i = -verticalScale_; i < verticalScale_; i++) {
         for (int j = -horizontalScale_; j < horizontalScale_; j++) {
@@ -201,12 +239,25 @@ void Terrain::createVBO() {
             vertexPositions_.push_back(float3(i, 0, j + 1));
             vertexPositions_.push_back(float3(i + 1, 0, j + 1));
             vertexPositions_.push_back(float3(i + 1, 0, j));
-
             /*
             vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + verticalScale_) * 4096 + (j + horizontalScale_)] / (float) 200, j / (float) 20));
             vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + verticalScale_)* 4096 + (j + horizontalScale_) + 1] / (float) 200, (j + 1) / (float) 20));
             vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + verticalScale_)+ 1) * 4096 + (j + horizontalScale_) + 1] / (float) 200, (j + 1) / (float) 20));
             vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + verticalScale_)+ 1) * 4096 + (j + horizontalScale_)] / (float) 200, j / (float) 20));
+            */
+
+
+
+            vertexTextureCoordinates_.push_back(float3((i + verticalScale_) / (2.0f * verticalScale_), (j + horizontalScale_) / (2.0f * horizontalScale_), 0));
+            vertexTextureCoordinates_.push_back(float3((i + verticalScale_) / (2.0f * verticalScale_), (j + 1 + horizontalScale_) / (2.0f * horizontalScale_), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1 + verticalScale_) / (2.0f * verticalScale_), (j + 1 + horizontalScale_) / (2.0f * horizontalScale_), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1 + verticalScale_) / (2.0f * verticalScale_), (j + horizontalScale_) / (2.0f * horizontalScale_), 0));
+
+            /*
+            vertexTextureCoordinates_.push_back(float3(0, 0, 0));
+            vertexTextureCoordinates_.push_back(float3(0, 1, 0));
+            vertexTextureCoordinates_.push_back(float3(1, 1, 0));
+            vertexTextureCoordinates_.push_back(float3(1, 0, 0));
             */
         }
     }

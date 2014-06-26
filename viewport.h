@@ -121,6 +121,8 @@ private:
     GLuint terrainIdID_;
     GLuint modelMatrixID_;
     GLuint projectionMatrixID_;
+    GLuint cameraPositionID_;
+    GLuint heightMapID_;
 
     float light0Position_[4];
 
@@ -139,6 +141,7 @@ private:
     int stepSize_;
 
     bool checkFramebufferStatus();
+    void checkGLErrors(const char *label);
 };
 
 #endif // VIEWPORT_H

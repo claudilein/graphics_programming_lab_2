@@ -12,6 +12,7 @@ public:
     void setHorizontalScale(int horizontalScale);
     void setVerticalScale(int verticalScale);
     void bindVAOToShader();
+    void copyVAOToCurrentContext();
     void draw();
     void createVBO();
     void uploadMaterial(QString fileName);
@@ -31,6 +32,10 @@ private:
 
     GLuint heightTexture_;
     GLuint* materialTextures_;
+    GLuint vertexBufferTextureCoordinates_;
+
+    attribute vertexTextureCoordinates_;
+
     uint nrMaterials_;
 
     unsigned short *heightValues_;

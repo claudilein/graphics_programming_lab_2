@@ -2,10 +2,13 @@
 
 
 uniform float id;
+in vec2 testTex;
+
 
 void main()
 {
-	gl_FragData[0] = vec4(1,0,0,1);
+	//gl_FragData[0] = vec4(1,0,0,1);
+	gl_FragData[0] = vec4(testTex, 0, 1);
 	// id texture uses the RED channel only!
 	gl_FragData[1] = vec4(id, 0, 0, 0);
 }

@@ -168,13 +168,14 @@ void Model::addTerrain(QString fileName) {
     name_tmp << name << idCounters_[TERRAIN];
     name = name_tmp.str();
 
-    Primitive *p = new Terrain(name, nrIDs_, tesselation_, Primitive::float3(0, 0, 0));
+    Primitive *p = new Terrain(name, 0, tesselation_, Primitive::float3(0, 0, 0));
     static_cast<Terrain*>(p)->parseHeightMap(fileName);
 
     idCounters_[TERRAIN]++;
-    nrIDs_++;
+    //nrIDs_++;
 
     scenegraphModel_->addPrimitive(p);
+   // p->translate(QVector3D(1.0f,1.0f,0.0f));
 
     emit copyVAOData(p);
     emit updateGL();

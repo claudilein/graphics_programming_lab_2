@@ -1,14 +1,44 @@
-#version 410
+#version 400
 
-layout (quads) in;
+layout (quads, equal_spacing) in;
+
+in vec3 positionWorldSpace2[];
+in vec2 texCoord2[];
+
+//patch in float gl_TessLevelOuter[4];
+
+uniform mat4 projectionMatrix;
+uniform sampler2D heightMap;
+
+out vec2 testTex;
 
 void main()
 {
+	/*
 	vec4 p1 = mix(gl_in[0].gl_Position,
 		      gl_in[1].gl_Position,
 		      gl_TessCoord.x);
 	vec4 p2 = mix(gl_in[2].gl_Position,
 		      gl_in[3].gl_Position,
 		      gl_TessCoord.x);
-	gl_Position = mix(p1, p2, gl_TessCoord.y);
+	*/
+
+	vec3 p1 = mix(positionWorldSpace2[0],
+			positionWorldSpace2[1],
+			gl_TessCoord.x);
+	vec3 p2 = mix(positionWorldSpace2[3],
+			positionWorldSpace2[2],
+			gl_TessCoord.x);
+
+	vec2 tex1 = mix(texCoord2[0], texCoord2[1], gl_TessCoord.x);
+	vec2 tex2 = mix(texCoord2[3], texCoord2[2], gl_TessCoord.x);
+	vec2 tex = mix(tex1, tex2, gl_TessCoord.y);
+
+	float height = textureLod(heightMap, tex, 3).x;
+	testTex = tex;
+
+	gl_Position = projectionMatrix * vec4(mix(p1, p2, gl_TessCoord.y), 1);
+	gl_Position += vec4(0, height, 0, 1);
+	
+//gl_Position = projectionMatrix * vec4(gl_TessCoord.xy, 0, 1);
 }

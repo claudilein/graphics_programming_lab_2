@@ -1,14 +1,20 @@
 #version 400
 
 layout (location = 0) in vec3 positionModelSpace_in;
+layout (location = 1) in vec3 texCoord_in;
 
 uniform mat4 modelMatrix;
 uniform mat4 projectionMatrix;
 
 out vec3 positionWorldSpace;
+out vec2 texCoord;
+
 
 void main() {
-	//positionWorldSpace = (projectionMatrix * modelMatrix * vec4(positionModelSpace_in, 1)).xyz;
-	gl_Position = modelMatrix * vec4(positionModelSpace_in, 1);
+	positionWorldSpace = (modelMatrix * vec4(positionModelSpace_in, 1)).xyz;
+	texCoord = texCoord_in.xy;
+
+	//gl_Position = projectionMatrix * modelMatrix * vec4(positionModelSpace_in, 1);
+	gl_Position = projectionMatrix * modelMatrix * vec4(positionModelSpace_in,1);
 }
 

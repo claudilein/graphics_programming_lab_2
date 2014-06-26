@@ -161,6 +161,27 @@ QVector3D MouseController::mapPointToTrackball(float x, float y) {
 }
 
 void MouseController::keyPressEvent(QKeyEvent *event) {
+    /*
+    QVector3D tr = QVector3D();
+            if(event->key() == Qt::Key_A) tr += QVector3D(-0.2, 0,    0);
+            if(event->key() == Qt::Key_S) tr += QVector3D(   0, 0,  0.2);
+            if(event->key() == Qt::Key_D) tr += QVector3D( 0.2, 0,    0);
+            if(event->key() == Qt::Key_W) tr += QVector3D(   0, 0, -0.2);
+
+            tr = m_camera.m_rotation.conjugate().rotatedVector(tr);
+
+            m_camera.translate(tr);
+            makeCurrent();
+            m_camera.stackModelView();
+            if (m_collision)
+            {
+                m_camera.translate(m_colVisitor.testPointComplete(m_scene, m_textureFactor, m_coordFactor, m_heightFactor));
+            }
+            updateGL();
+            */
+
+
+
     if (event->key() == Qt::Key_W) {
         //QVector3D camera_->getRotation() * QVector3D(0, 0, -1);
         //QVector3D translation = camera_->getCameraMatrix() * QVector3D(0,0,0.01);

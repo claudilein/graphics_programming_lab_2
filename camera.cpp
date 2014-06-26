@@ -66,6 +66,11 @@ QQuaternion Camera::getRotation()
     return rotation_;
 }
 
+QVector3D Camera::getTranslation()
+{
+    return QVector3D(pointOfInterest_.x(), pointOfInterest_.y(), 0);
+}
+
 float Camera::getZoom() {
     return zoom_;
 }
