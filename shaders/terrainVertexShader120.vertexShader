@@ -1,0 +1,71 @@
+#version 120
+
+attribute vec3 localTexCoord_in;
+
+uniform mat4 modelMatrix;
+uniform mat4 projectionMatrix;
+
+uniform vec2 cameraTexCoord;
+uniform vec3 cameraPosition;
+
+uniform float gridFraction;
+uniform int verticalScaling;
+uniform int gridSize;
+
+uniform sampler2D heightMap;
+
+varying vec3 positionWorldSpace;
+varying vec2 globalTexCoord;
+varying vec3 debug;
+
+varying vec3 normal;
+varying vec3 lightRay;
+varying vec3 viewRay;
+varying float height01;
+
+float getMipFromDistance(float distanceToCamera) {
+	float mipLevel = log2(2 * distanceToCamera);
+	if (mipLevel > 12) mipLevel = 12;
+	return mipLevel;
+}
+
+float getTesselationFromMip(float mipLevel) {
+	return (4096 / pow(2, mipLevel)) / (gridSize / gridFraction);
+}
+
+void main() {
+	globalTexCoord = cameraTexCoord + gridFraction * localTexCoord_in.xy;
+	height01 = texture2D(heightMap, globalTexCoord).x;
+	float height =  height01 * verticalScaling;
+
+	positionWorldSpace = (modelMatrix * (gl_Vertex + vec4(cameraPosition.x, height, cameraPosition.z, 0))).xyz;
+
+	gl_Position = projectionMatrix * vec4(positionWorldSpace, 1);
+
+	float distanceToCamera = distance(cameraPosition, positionWorldSpace);
+	float mipLevel = getMipFromDistance(distanceToCamera);
+	
+	// compute normal of this vertex
+	
+	float stepSizeTex = 1 * gridFraction / gridSize / getTesselationFromMip(mipLevel);
+	float stepSizeWorld = 1 / getTesselationFromMip(mipLevel);
+
+	float hRight = texture2DLod(heightMap, vec2(globalTexCoord.x + stepSizeTex, globalTexCoord.y), mipLevel).x * verticalScaling;
+	float hTop = texture2DLod(heightMap, vec2(globalTexCoord.x, globalTexCoord.y + stepSizeTex), mipLevel).x * verticalScaling;
+
+	vec3 toRight = vec3(stepSizeWorld, hRight - positionWorldSpace.y, 0);
+	vec3 toTop = vec3(0, hTop - positionWorldSpace.y, stepSizeWorld);
+	// careful: A x B in OpenGL is cross(B, A)
+	normal = normalize(cross(toTop, toRight));
+
+	//globalTexCoord = vec2(mipLevel/12, 0);
+	debug = normal;
+
+	lightRay = gl_LightSource[0].position.xyz - positionWorldSpace;
+	viewRay = cameraPosition - positionWorldSpace; 
+
+
+
+}
+
+
