@@ -93,7 +93,6 @@ void Terrain::createTextures() {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, resolution_[0], resolution_[1], 0, GL_RED, GL_FLOAT, floatData_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE16, width_, height_, 0, GL_LUMINANCE, GL_UNSIGNED_SHORT, heightValues_);
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -194,25 +193,12 @@ void Terrain::createVBO() {
     vertexTextureCoordinates_.resize(0);
     int halfGridSize = gridSize_ / 2;
 
-
-    /*vertexPositions_.push_back(float3(0,0,0));
-    vertexPositions_.push_back(float3(1,0,0));
-    vertexPositions_.push_back(float3(1,1,0));
-    vertexPositions_.push_back(float3(0,1,0));*/
-
     for (int i = -halfGridSize; i < halfGridSize; i++) {
         for (int j = -halfGridSize; j < halfGridSize; j++) {
             vertexPositions_.push_back(float3(i, 0, j));
             vertexPositions_.push_back(float3(i, 0, j + 1));
             vertexPositions_.push_back(float3(i + 1, 0, j + 1));
             vertexPositions_.push_back(float3(i + 1, 0, j));
-            /*
-            vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + halfGridSize) * 4096 + (j + halfGridSize)] / (float) 200, j / (float) 20));
-            vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + halfGridSize)* 4096 + (j + halfGridSize) + 1] / (float) 200, (j + 1) / (float) 20));
-            vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + halfGridSize)+ 1) * 4096 + (j + halfGridSize) + 1] / (float) 200, (j + 1) / (float) 20));
-            vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + halfGridSize)+ 1) * 4096 + (j + halfGridSize)] / (float) 200, j / (float) 20));
-            */
-
 
             // texture coordinates range from [-0.5, 0.5] here, as they will be added to the global tex coords of the camera
             vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
@@ -220,12 +206,6 @@ void Terrain::createVBO() {
             vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
             vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
 
-            /*
-            vertexTextureCoordinates_.push_back(float3(0, 0, 0));
-            vertexTextureCoordinates_.push_back(float3(0, 1, 0));
-            vertexTextureCoordinates_.push_back(float3(1, 1, 0));
-            vertexTextureCoordinates_.push_back(float3(1, 0, 0));
-            */
         }
     }
 

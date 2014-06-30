@@ -5,8 +5,8 @@
 #include <QGLWidget>
 #include <QGLShader>
 #include <QGLShaderProgram>
-//#include <QOpenGLShader>
-//#include <QOpenGLShaderProgram>
+#include <QOpenGLShader>
+#include <QOpenGLShaderProgram>
 #include <camera.h>
 #include <model.h>
 #include <cube.h>
@@ -79,20 +79,20 @@ private:
     QGLShader *volumeFragmentShader;
 
     // shader that colors the terrains
-    /*
+
     QOpenGLShaderProgram *terrainProgram;
     QOpenGLShader *terrainVertexShader;
     QOpenGLShader *terrainTesselationControlShader;
     QOpenGLShader *terrainTesselationEvaluationShader;
     QOpenGLShader *terrainFragmentShader;
-    */
 
+/*
     QGLShaderProgram *terrainProgram;
     QGLShader *terrainVertexShader;
     QGLShader *terrainTesselationControlShader;
     QGLShader *terrainTesselationEvaluationShader;
     QGLShader *terrainFragmentShader;
-
+*/
 
     // vertices of cube
     std::vector<std::vector<float> > originalVertices;

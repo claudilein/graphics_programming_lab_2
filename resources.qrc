@@ -18,5 +18,7 @@
         <file>terrain/facture_stone.jpg</file>
         <file>terrain/facture_sand.jpg</file>
         <file>terrain/facture_rock_1.jpg</file>
+        <file>shaders/selectionVertexShader.vertexShader</file>
+        <file>shaders/selectionFragmentShader.fragmentShader</file>
     </qresource>
 </RCC>

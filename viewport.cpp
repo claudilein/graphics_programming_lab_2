@@ -203,8 +203,11 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionFragmentShader.fragmentShader");
+    //selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionVertexShader.vertexShader");
+    //selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceCode(":/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceCode(":/shaders/selectionFragmentShader.fragmentShader");
+
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -216,8 +219,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);
@@ -229,8 +232,8 @@ void Viewport::initializeGL()
     volumeVertexShader = new QGLShader(QGLShader::Vertex, this);
     volumeFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    volumeVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeVertexShader.vertexShader");
-    volumeFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeFragmentShader.fragmentShader");
+    volumeVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/volumeVertexShader.vertexShader");
+    volumeFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/volumeFragmentShader.fragmentShader");
 
 
     volumeProgram->addShader(volumeVertexShader);
@@ -239,21 +242,22 @@ void Viewport::initializeGL()
 
     // TERRAIN SHADER
 
-    /* LAPTOP COMPATIBILITY
+
     terrainProgram = new QOpenGLShaderProgram(this);
     terrainVertexShader = new QOpenGLShader(QOpenGLShader::Vertex, this);
     terrainTesselationControlShader = new QOpenGLShader(QOpenGLShader::TessellationControl, this);
     terrainTesselationEvaluationShader = new QOpenGLShader(QOpenGLShader::TessellationEvaluation, this);
     terrainFragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, this);
-    */
+
+/* LAPTOP COMPATIBILITY
     terrainProgram = new QGLShaderProgram(this);
     terrainVertexShader = new QGLShader(QGLShader::Vertex, this);
     terrainFragmentShader = new QGLShader(QGLShader::Fragment, this);
-
-    terrainVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainVertexShader120.vertexShader");
-    //terrainTesselationControlShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainTCS.tesselationControlShader");
-    //terrainTesselationEvaluationShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainTES.tesselationEvaluationShader");
-    terrainFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainFragmentShader120.fragmentShader");
+*/
+    terrainVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainVertexShader120.vertexShader");
+    //terrainTesselationControlShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainTCS.tesselationControlShader");
+    //terrainTesselationEvaluationShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainTES.tesselationEvaluationShader");
+    terrainFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainFragmentShader120.fragmentShader");
 
 
     terrainProgram->addShader(terrainVertexShader);
@@ -440,17 +444,17 @@ void Viewport::paintGL()
             float* floatMatrix = (float*) malloc(16 * sizeof(float));
             double* doubleMatrix = (double*) malloc(16 * sizeof(double));
 
-            doubleMatrix = (double*) primitives->at(i)->getModelMatrix().constData();
-            for (int j = 0; j < 16; j++) { floatMatrix[j] = (float) doubleMatrix[j]; }
+            floatMatrix = (float*) primitives->at(i)->getModelMatrix().constData();
+            //for (int j = 0; j < 16; j++) { floatMatrix[j] = (float) doubleMatrix[j]; }
 
             // send model matrix to shader =============================================================
             glUniformMatrix4fv(modelMatrixID_, 1, GL_FALSE, floatMatrix);
 
             glGetFloatv(GL_MODELVIEW_MATRIX, floatMatrix);   // column-major
-            for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
+            //for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
 
             // extract camera position and compute camera texture coordinates
-            QMatrix4x4 viewMatrix = QMatrix4x4(doubleMatrix).transposed(); // convert column-major to row-major
+            QMatrix4x4 viewMatrix = QMatrix4x4(floatMatrix).transposed(); // convert column-major to row-major
             QVector4D cameraPosition = viewMatrix.inverted().column(3);
             glUniform3f(cameraPositionID_, cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
 
@@ -479,11 +483,11 @@ void Viewport::paintGL()
             glUniform2f(cameraTexCoordID_, cameraTexCoord.x(), cameraTexCoord.y());
 
             glGetFloatv(GL_PROJECTION_MATRIX, floatMatrix);  // column-major
-            for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
+            //for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
 
-            QMatrix4x4 projectionMatrix = QMatrix4x4(doubleMatrix).transposed() * QMatrix4x4(viewMatrix);  // row-major
-            doubleMatrix = (double*) projectionMatrix.constData();
-            for (int j = 0; j < 16; j++) { floatMatrix[j] = (float) doubleMatrix[j]; }
+            QMatrix4x4 projectionMatrix = QMatrix4x4(floatMatrix).transposed() * QMatrix4x4(viewMatrix);  // row-major
+            floatMatrix = (float*) projectionMatrix.constData();
+            //for (int j = 0; j < 16; j++) { floatMatrix[j] = (float) doubleMatrix[j]; }
 
             // send projection matrix to shader ========================================================
             glUniformMatrix4fv(projectionMatrixID_, 1, GL_FALSE, floatMatrix);
