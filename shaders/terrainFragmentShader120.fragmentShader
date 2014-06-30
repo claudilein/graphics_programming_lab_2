@@ -1,0 +1,99 @@
+#version 120
+
+
+uniform float id;
+uniform int nrMaterials;
+
+uniform sampler2D material0;
+uniform sampler2D material1;
+uniform sampler2D material2;
+uniform sampler2D material3;
+
+varying vec2 globalTexCoord;
+varying vec3 debug;
+
+varying vec3 normal;
+varying vec3 lightRay;
+varying vec3 viewRay;
+varying float height01;
+
+
+float smoothstep(float edge0, float edge1, float x) {
+    float t;  /* Or genDType t; */
+    t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
+}
+
+void main()
+{
+
+	vec4 color0 = texture2D(material0, globalTexCoord * 8);
+	vec4 color1 = texture2D(material1, globalTexCoord * 8);
+	vec4 color2 = texture2D(material2, globalTexCoord * 8);
+	vec4 color3 = texture2D(material3, globalTexCoord * 8);
+
+	/* The closer the height of the vertex to range 0, the closer the result to 0.
+	 * The closer the height to range 1, the closer the result to 1. 
+	 * If the height is smaller than range 0 or greater than range 1, result is 
+	 * clamped to 0/1 respectively. */
+	// ranges: color0: [0.0, 0.004], color1: [0.0041, 0.025], color2: [0,0251, 0.04]
+	// color3 is mixed in when the slope is not so steep, e.g. between [0.9, 1]
+
+	vec4 color;
+
+	if (nrMaterials == 0) {
+		color = vec4(0.5, 0.5, 0.5, 1); // grey
+	} else if (nrMaterials == 1) {
+		color = color0;
+	} else if (nrMaterials == 2) {
+		float btwnColor0_1 = smoothstep(0.02, 0.035, height01);
+		color = mix(color0, color1, btwnColor0_1);
+	} else if (nrMaterials == 3) {
+		float btwnColor0_1 = smoothstep(0.015, 0.025, height01);
+		color = mix(color0, color1, btwnColor0_1);
+
+		float btwnColor01_2 = smoothstep(0.035, 0.040, height01);
+		color = mix(color, color2, btwnColor01_2);
+	} else if (nrMaterials >=4 ) {
+
+		float slope = normalize(normal).y;
+
+		float btwnColor0_1 = smoothstep(0.015, 0.025, height01);
+		color = mix(color0, color1, btwnColor0_1);
+
+		float btwnColor01_2 = smoothstep(0.035, 0.040, height01);
+		color = mix(color, color2, btwnColor01_2);
+
+		float btwnColor012_3 = smoothstep(0.9, 1, slope) / 3;
+		color = mix(color, color3, btwnColor012_3);
+	}
+	
+
+	vec3 N = normalize(normal);
+	vec3 L = normalize(lightRay);
+	vec3 V = normalize(viewRay);
+
+	float LdotN = dot(L, N);
+
+	// only calculate lighting if light source is not behind the surface
+	if (LdotN >= 0) {
+		// R = reflection ray
+		vec3 R = 2 * LdotN * N - L;
+		float RdotV = max(0, dot(R,V));
+
+		// diffuse = kd * <L,N> * ld
+		vec4 diffuseColor = color * LdotN * gl_LightSource[0].diffuse;
+
+		// specular = ks * <R,V>^n * ls
+		vec4 specularColor = gl_FrontMaterial.specular * pow(RdotV, gl_FrontMaterial.shininess) * gl_LightSource[0].specular;
+
+		gl_FragData[0] = diffuseColor + specularColor + vec4(color.x / 5, color.y / 5, color.z / 5, 1);
+	} else {
+		gl_FragData[0] = vec4(color.x / 5, color.y / 5, color.z / 5, 1);
+	}
+
+
+
+	// id texture uses the RED channel only!
+	gl_FragData[1] = vec4(id, 0, 0, 0);
+}
