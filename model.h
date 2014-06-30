@@ -6,6 +6,7 @@
 #include <primitive.h>
 #include <scenegraph.h>
 #include <QModelIndex>
+#include <terrain.h>
 
 class Model : public QObject
 {
@@ -31,6 +32,7 @@ signals:
     void updateStatusBar();
     void updateGL();
     void activePrimitiveChanged();
+    void materialUploadNeeded(Terrain* t, QString fileName);
 
 
 public slots:
@@ -60,7 +62,6 @@ public slots:
 
 
     void materialSelected(QString fileName);
-    void rangeChanged(int materialID, int minRange, int maxRange);
 
 private:
     static const int NR_CAMERAS = 4;

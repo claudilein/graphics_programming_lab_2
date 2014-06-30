@@ -11,7 +11,7 @@ Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
     gridSize_(50),
     width_(0),
     height_(0),
-    nrMaterials_(4)
+    nrMaterials_(0)
 {
     isTerrain_ = true;
     // TODO this should be generated once per viewport, right..?
@@ -101,47 +101,6 @@ void Terrain::createTextures() {
 
     checkGLErrors("after height map upload");
 
-    materialTextures_ = (GLuint*) malloc(4 * sizeof(GLuint));
-    glGenTextures(4, materialTextures_);
-
-    QImage material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_sand.jpg"));
-
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-
-    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_rock_1.jpg"));
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_rock_0.jpg"));
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[2]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_stone.jpg"));
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[3]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
     glBindTexture(GL_TEXTURE_2D, 0);
 
     checkGLErrors("after uploading material textures");
@@ -198,9 +157,10 @@ void Terrain::bindVAOToShader() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, heightTexture_);
 
-    for (int i = 0; i < nrMaterials_; i++) {
+    for (uint i = 0; i < nrMaterials_; i++) {
         glActiveTexture(GL_TEXTURE2 + i);
-        glBindTexture(GL_TEXTURE_2D, materialTextures_[i]);
+        glBindTexture(GL_TEXTURE_2D, materialTextures_[i * 4]);
+        std::cout << "binding material " << i << std::endl;
     }
 
     glActiveTexture(GL_TEXTURE0);
@@ -287,12 +247,36 @@ void Terrain::setVerticalScale(int verticalScale) {
 }
 
 void Terrain::uploadMaterial(QString fileName) {
-    // TODO
+    QImage material = QGLWidget::convertToGLFormat(QImage(fileName));
+
+    GLuint materialTexture;
+    glGenTextures(1, &materialTexture);
+    materialTextures_.push_back(materialTexture);
+
+    glBindTexture(GL_TEXTURE_2D, materialTextures_[nrMaterials_]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    checkGLErrors("material upload");
+
+    std::cout << "material " << nrMaterials_ << " uploaded." << std::endl;
+    nrMaterials_++;
 }
 
-void Terrain::changeRange(int materialID, int minRange, int maxRange) {
-    // TODO
+void Terrain::deleteMaterial(int x) {
+    nrMaterials_ -= 4;
+    for (int i = x * 4; i < materialTextures_.size(); i++) {
+        materialTextures_[i] = materialTextures_[i + 4];
+    }
+    for (int i = 0; i < 4; i++ ) materialTextures_.pop_back();
+
 }
+
 
 void Terrain::checkGLErrors(const char *label) {
     GLenum errCode;
@@ -320,7 +304,7 @@ int Terrain::getGridSize() {
 }
 
 int Terrain::getNrMaterials() {
-    return nrMaterials_;
+    return nrMaterials_ / 4;
 }
 
 int* Terrain::getMaterialIDs() {

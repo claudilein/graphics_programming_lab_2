@@ -413,8 +413,7 @@ void View::setModel(Model *model)
     // === TERRAIN MATERIAL EDITOR WIDGET === //
 
     terrainMaterialEditor = new TerrainMaterialEditor(this);
-    connect(terrainMaterialEditor, SIGNAL(materialSelected(QString)), model_, SLOT(materialSelected(QString)));
-    connect(terrainMaterialEditor, SIGNAL(rangeChanged(int,int,int)), model_, SLOT(rangeChanged(int,int,int)));
+    connect(terrainMaterialEditor, SIGNAL(materialAdded(QString)), model_, SLOT(materialSelected(QString)));
     //transferFunctionDockWidget->setWidget(terrainMaterialEditor);
     scrollArea->setWidget(terrainMaterialEditor);
 
@@ -432,6 +431,11 @@ void View::setModel(Model *model)
     connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportFront, SLOT(copyVAOData(Primitive*)));
     connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportLeft, SLOT(copyVAOData(Primitive*)));
     connect(model_, SIGNAL(copyVAOData(Primitive*)), viewportTop, SLOT(copyVAOData(Primitive*)));
+
+    connect(model_, SIGNAL(materialUploadNeeded(Terrain*,QString)), viewportPerspective, SLOT(uploadTerrainMaterialData(Terrain*,QString)));
+    connect(model_, SIGNAL(materialUploadNeeded(Terrain*,QString)), viewportFront, SLOT(uploadTerrainMaterialData(Terrain*,QString)));
+    connect(model_, SIGNAL(materialUploadNeeded(Terrain*,QString)), viewportLeft, SLOT(uploadTerrainMaterialData(Terrain*,QString)));
+    connect(model_, SIGNAL(materialUploadNeeded(Terrain*,QString)), viewportTop, SLOT(uploadTerrainMaterialData(Terrain*,QString)));
 
     connect(resetCameraAction, SIGNAL(triggered()), model_, SLOT(resetCamera()));
     connect(model_, SIGNAL(selectItem(QModelIndex)), this, SLOT(selectItem(QModelIndex)));

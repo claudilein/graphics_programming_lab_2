@@ -15,23 +15,22 @@ public:
     explicit TerrainMaterialEditor(QWidget *parent = 0);
 
 signals:
-    void materialSelected(QString fileName);
-    void rangeChanged(int materialID, int minRange, int maxRange);
+    void materialAdded(QString fileName);
+    void materialDeleted(int i);
 
 public slots:
     void uploadMaterial();
-    //void editMinRange1(QString newRange);
+    void deleteMaterial();
+  //  void selectMaterial();
 
 private:
     QGridLayout *gridLayout;
     QPushButton *addMaterialButton;
+    QPushButton *deleteMaterialButton;
 
     std::vector<QPixmap*> materialPixmaps;
     std::vector<QLabel*> materialLabels;
-    std::vector<QLineEdit*> materialRangesMinEdit;
-    std::vector<QLineEdit*> materialRangesMaxEdit;
-    std::vector<int> materialRangesMin;
-    std::vector<int> materialRangesMax;
+    //std::vector<QLabel*> labelBackgrounds
 
     uint nrMaterials;
 

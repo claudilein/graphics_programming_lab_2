@@ -16,8 +16,8 @@ public:
     void draw();
     void createVBO();
     void uploadMaterial(QString fileName);
+    void deleteMaterial(int x);
 
-    void changeRange(int materialID, int minRange, int maxRange);
     int getHorizontalScale();
     int getVerticalScale();
     int getGridSize();
@@ -39,11 +39,11 @@ private:
     int height_;
 
     GLuint heightTexture_;
-    GLuint* materialTextures_;
     GLuint vertexBufferTextureCoordinates_;
 
     attribute vertexTextureCoordinates_;
 
+    std::vector<GLuint> materialTextures_;
     uint nrMaterials_;
 
     unsigned short *heightValues_;

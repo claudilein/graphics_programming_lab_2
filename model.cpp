@@ -304,13 +304,10 @@ void Model::setVerticalScale(int v) {
 
 
 void Model::materialSelected(QString fileName) {
-    if (activePrimitive_->isTerrain()) {
-        static_cast<Terrain*>(activePrimitive_)->uploadMaterial(fileName);
-    }
-}
-
-void Model::rangeChanged(int materialID, int minRange, int maxRange) {
-    if (activePrimitive_->isTerrain()) {
-        static_cast<Terrain*>(activePrimitive_)->changeRange(materialID, minRange, maxRange);
+    QList<Primitive*> *primitives = getScenegraph();
+    for (int i = 0; i < primitives->size(); i++) {
+        if (primitives->at(i)->isTerrain()) {
+            emit materialUploadNeeded(static_cast<Terrain*>(primitives->at(i)), fileName);
+        }
     }
 }

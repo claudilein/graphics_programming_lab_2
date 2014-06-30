@@ -471,28 +471,6 @@ void Viewport::paintGL()
                                                 (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
 
 
-            // check collision of camera with terrain
-            /*
-            float terrainHeight = static_cast<Terrain*>(primitives->at(i))->getHeightValues()[(int) (cameraTexCoord.x() *
-                           static_cast<Terrain*>(primitives->at(i))->getWidth() + cameraTexCoord.y())] *
-                           static_cast<Terrain*>(primitives->at(i))->getVerticalScale();
-
-            if (cameraPosition.y() <= terrainHeight + 0.1) {    // collision!
-                camera_->translate(QVector3D(0.0, terrainHeight + 0.1 - cameraPosition.y(), 0.0));
-                glLoadIdentity();
-                glMultMatrix(camera_->getCameraMatrix().constData());
-                glGetFloatv(GL_MODELVIEW_MATRIX, floatMatrix);   // column-major
-                for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
-                // extract camera position and compute camera texture coordinates
-                viewMatrix = QMatrix4x4(doubleMatrix).transposed(); // convert column-major to row-major
-                cameraPosition = viewMatrix.inverted().column(3);
-                glUniform3f(cameraPositionID_, cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
-                cameraTexCoord = QVector2D((cameraPosition.x() + horizontalScale / 2.0f) / horizontalScale,
-                                           (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
-            }
-            */
-
-
             if (type_ == 0) {
                 std::cout << "cameraTexCoord: (" << cameraTexCoord.x() << ", " << cameraTexCoord.y() << ")" << std::endl;
                 std::cout << "cameraPosition: (" << cameraPosition.x() << ", " << cameraPosition.y() << ", " << cameraPosition.z() << ")" << std::endl;
@@ -669,6 +647,13 @@ void Viewport::setClickedId(int x, int y) {
         emit setActivePrimitive(id);
     }
 
+}
+
+void Viewport::uploadTerrainMaterialData(Terrain *t, QString fileName) {
+    makeCurrent();
+    std::cout << "upload terrain material data" << std::endl;
+    t->uploadMaterial(fileName);
+    updateGL();
 }
 
 void Viewport::copyVAOData(Primitive *p) {

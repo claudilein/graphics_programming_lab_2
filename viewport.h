@@ -39,6 +39,7 @@ signals:
 
 public slots:
     void setClickedId(int x, int y);
+    void uploadTerrainMaterialData(Terrain *t, QString fileName);
     void copyVAOData(Primitive *p);
     void copyVolumeData(Volume *volume);
     void copyVolumeData();

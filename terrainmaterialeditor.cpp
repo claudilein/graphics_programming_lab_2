@@ -12,18 +12,12 @@ TerrainMaterialEditor::TerrainMaterialEditor(QWidget *parent) :
     addMaterialButton = new QPushButton("Add Material", this);
     connect(addMaterialButton, SIGNAL(clicked()), this, SLOT(uploadMaterial()));
 
+    //deleteMaterialButton = new QPushButton("Delete Material", this);
+    //connect(deleteMaterialButton, SIGNAL(clicked()), this, SLOT(deleteMaterial()));
+
     gridLayout->addWidget(addMaterialButton, 0, 0);
+    //gridLayout->addWidget(deleteMaterialButton, 0, 1);
 
-    materialRangesMin.push_back(0);
-    materialRangesMin.push_back(50);
-    materialRangesMin.push_back(100);
-    materialRangesMin.push_back(500);
-
-
-    materialRangesMax.push_back(49);
-    materialRangesMax.push_back(99);
-    materialRangesMax.push_back(499);
-    materialRangesMax.push_back(999);
 
 }
 
@@ -40,16 +34,31 @@ void TerrainMaterialEditor::uploadMaterial() {
     materialLabels.back()->setPixmap(*materialPixmaps.back());
     materialLabels.back()->setScaledContents(true);
     materialLabels.back()->setFixedSize(50, 50);
-
-    materialRangesMinEdit.push_back(new QLineEdit(this));
-    //connect(materialRangesMinEdit.back(), SIGNAL(textChanged(QString)), this, SLOT(editMinRange1(QString)));
-    materialRangesMaxEdit.push_back(new QLineEdit(this));
+    //connect(materialLabels.back(), SIGNAL(clicked), this, selectMaterial());
 
     gridLayout->addWidget(materialLabels.back(), nrMaterials, 0);
-    gridLayout->addWidget(materialRangesMinEdit.back(), nrMaterials, 1);
-    gridLayout->addWidget(materialRangesMaxEdit.back(), nrMaterials, 2);
 
-    emit materialSelected(fileName);
-    emit rangeChanged(nrMaterials, materialRangesMin[nrMaterials], materialRangesMax[nrMaterials]);
+    emit materialAdded(fileName);
 
 }
+
+void TerrainMaterialEditor::deleteMaterial() {
+    /*
+    for (int i = 0; i < materialLabels.size(); i++) {
+        if (materialLabels[i]->isEnabled()) {
+            emit materialDeleted(i);
+        }
+    }
+    */
+    emit materialDeleted(materialLabels.size() - 1);
+    materialLabels.pop_back();
+}
+
+/*
+ *void TerrainMaterialEditor::selectMaterial(int x) {
+    for (int i = 0; i < materialLabels.size(); i++) {
+        materialLabels[i]->setEnabled(false);
+    }
+    materialLabels[i]->setEnabled(true);
+}
+*/
