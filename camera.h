@@ -31,6 +31,7 @@ public slots:
     void setProjectionMode(ProjectionMode newMode);
     ProjectionMode getProjectionMode();
     QMatrix4x4 getCameraMatrix();
+    QMatrix4x4 getRotatedOnSpotCameraMatrix();
 
 private:
     ProjectionMode mode_;

@@ -309,8 +309,10 @@ void View::setModel(Model *model)
     // ===== VIEWPORTS ===== //
 
     QGLFormat qglFormat;
-    qglFormat.setVersion(4,0);
-    qglFormat.setProfile(QGLFormat::CompatibilityProfile);
+    //qglFormat.setVersion(4,0);
+    //qglFormat.setVersion(2,1);
+    //qglFormat.setProfile(QGLFormat::CoreProfile);
+    //qglFormat.setProfile(QGLFormat::CompatibilityProfile);
 
     viewportPerspective = new Viewport(this, qglFormat, Model::PERSPECTIVE, model_);
     viewportFront = new Viewport(this, qglFormat, Model::FRONT, model_);

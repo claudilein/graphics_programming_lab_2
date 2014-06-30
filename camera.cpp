@@ -33,7 +33,7 @@ void Camera::zoom(float zoom)
 void Camera::reset()
 {
     rotation_ = initialRotation_;
-    zoom_ = -5;
+    zoom_ = -40;
     pointOfInterest_ = QVector3D();
     emit zoomChanged();
 }
@@ -60,6 +60,18 @@ QMatrix4x4 Camera::getCameraMatrix()
     return matrix;
 }
 
+QMatrix4x4 Camera::getRotatedOnSpotCameraMatrix()
+{
+    QMatrix4x4 matrix;
+    if (mode_ == PERSPECTIVE) matrix.translate(0, 0, zoom_);
+    else if (mode_ == ORTHOGRAPHIC) {
+        matrix.translate(0,0,-5);
+    }
+    matrix.translate(pointOfInterest_);
+    matrix.rotate(rotation_);
+
+    return matrix;
+}
 
 QQuaternion Camera::getRotation()
 {

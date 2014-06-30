@@ -6,11 +6,12 @@
 
 Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
     Primitive(0, name, id, tesselation, color),
-    horizontalScale_(30),
-    verticalScale_(30),
+    horizontalScale_(100),
+    verticalScale_(300),
+    gridSize_(50),
     width_(0),
     height_(0),
-    nrMaterials_(0)
+    nrMaterials_(4)
 {
     isTerrain_ = true;
     // TODO this should be generated once per viewport, right..?
@@ -96,42 +97,50 @@ void Terrain::createTextures() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE16, width_, height_, 0, GL_LUMINANCE, GL_UNSIGNED_SHORT, heightValues_);
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    std::cout << "height map uploaded.." << std::endl;
+
     checkGLErrors("after height map upload");
 
     materialTextures_ = (GLuint*) malloc(4 * sizeof(GLuint));
     glGenTextures(4, materialTextures_);
 
-    QImage material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_sand.png"));
+    QImage material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_sand.jpg"));
+
     glBindTexture(GL_TEXTURE_2D, materialTextures_[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_stone.png"));
+
+    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_rock_1.jpg"));
     glBindTexture(GL_TEXTURE_2D, materialTextures_[1]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_rock_0.png"));
+    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_rock_0.jpg"));
     glBindTexture(GL_TEXTURE_2D, materialTextures_[2]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_rock_1.png"));
+    material = QGLWidget::convertToGLFormat(QImage(":/terrain/facture_stone.jpg"));
     glBindTexture(GL_TEXTURE_2D, materialTextures_[3]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -188,16 +197,13 @@ void Terrain::bindVAOToShader() {
     // bind volume and transfer textures
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, heightTexture_);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[0]);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[1]);
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[2]);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[3]);
-    glActiveTexture(GL_TEXTURE0);
 
+    for (int i = 0; i < nrMaterials_; i++) {
+        glActiveTexture(GL_TEXTURE2 + i);
+        glBindTexture(GL_TEXTURE_2D, materialTextures_[i]);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
 
 
     checkGLErrors("binding textures");
@@ -211,7 +217,7 @@ void Terrain::draw() {
     bindVAOToShader();
 
     glDrawElements(
-        GL_PATCHES,      // mode
+        GL_QUADS,      // mode
         indicesList_.size(),    // count
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
@@ -226,6 +232,7 @@ void Terrain::createVBO() {
     vertexPositions_.resize(0);
     indicesList_.resize(0);
     vertexTextureCoordinates_.resize(0);
+    int halfGridSize = gridSize_ / 2;
 
 
     /*vertexPositions_.push_back(float3(0,0,0));
@@ -233,25 +240,25 @@ void Terrain::createVBO() {
     vertexPositions_.push_back(float3(1,1,0));
     vertexPositions_.push_back(float3(0,1,0));*/
 
-    for (int i = -verticalScale_; i < verticalScale_; i++) {
-        for (int j = -horizontalScale_; j < horizontalScale_; j++) {
+    for (int i = -halfGridSize; i < halfGridSize; i++) {
+        for (int j = -halfGridSize; j < halfGridSize; j++) {
             vertexPositions_.push_back(float3(i, 0, j));
             vertexPositions_.push_back(float3(i, 0, j + 1));
             vertexPositions_.push_back(float3(i + 1, 0, j + 1));
             vertexPositions_.push_back(float3(i + 1, 0, j));
             /*
-            vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + verticalScale_) * 4096 + (j + horizontalScale_)] / (float) 200, j / (float) 20));
-            vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + verticalScale_)* 4096 + (j + horizontalScale_) + 1] / (float) 200, (j + 1) / (float) 20));
-            vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + verticalScale_)+ 1) * 4096 + (j + horizontalScale_) + 1] / (float) 200, (j + 1) / (float) 20));
-            vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + verticalScale_)+ 1) * 4096 + (j + horizontalScale_)] / (float) 200, j / (float) 20));
+            vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + halfGridSize) * 4096 + (j + halfGridSize)] / (float) 200, j / (float) 20));
+            vertexPositions_.push_back(float3(i / (float) 20, heightValues_[(i + halfGridSize)* 4096 + (j + halfGridSize) + 1] / (float) 200, (j + 1) / (float) 20));
+            vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + halfGridSize)+ 1) * 4096 + (j + halfGridSize) + 1] / (float) 200, (j + 1) / (float) 20));
+            vertexPositions_.push_back(float3((i + 1) / (float) 20, heightValues_[((i + halfGridSize)+ 1) * 4096 + (j + halfGridSize)] / (float) 200, j / (float) 20));
             */
 
 
-
-            vertexTextureCoordinates_.push_back(float3((i + verticalScale_) / (2.0f * verticalScale_), (j + horizontalScale_) / (2.0f * horizontalScale_), 0));
-            vertexTextureCoordinates_.push_back(float3((i + verticalScale_) / (2.0f * verticalScale_), (j + 1 + horizontalScale_) / (2.0f * horizontalScale_), 0));
-            vertexTextureCoordinates_.push_back(float3((i + 1 + verticalScale_) / (2.0f * verticalScale_), (j + 1 + horizontalScale_) / (2.0f * horizontalScale_), 0));
-            vertexTextureCoordinates_.push_back(float3((i + 1 + verticalScale_) / (2.0f * verticalScale_), (j + horizontalScale_) / (2.0f * horizontalScale_), 0));
+            // texture coordinates range from [-0.5, 0.5] here, as they will be added to the global tex coords of the camera
+            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
 
             /*
             vertexTextureCoordinates_.push_back(float3(0, 0, 0));
@@ -298,4 +305,36 @@ void Terrain::checkGLErrors(const char *label) {
         printf(label);
         printf(")\n.");
     }
+}
+
+int Terrain::getHorizontalScale() {
+    return horizontalScale_;
+}
+
+int Terrain::getVerticalScale() {
+    return verticalScale_;
+}
+
+int Terrain::getGridSize() {
+    return gridSize_;
+}
+
+int Terrain::getNrMaterials() {
+    return nrMaterials_;
+}
+
+int* Terrain::getMaterialIDs() {
+    int materialIDs[nrMaterials_];
+    for (int i = 0; i < nrMaterials_; i++) {
+        materialIDs[i] = 2 + i;
+    }
+    return materialIDs;
+}
+
+unsigned short* Terrain::getHeightValues() {
+    return heightValues_;
+}
+
+int Terrain::getWidth() {
+    return width_;
 }

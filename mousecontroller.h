@@ -43,7 +43,7 @@ private:
     QVector2D lastScalingPoint_;
 
     QVector3D mapPointToTrackball(float x, float y);
-
+    bool checkCollision();
 };
 
 #endif // MOUSECONTROLLER_H

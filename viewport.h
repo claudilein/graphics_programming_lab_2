@@ -5,8 +5,8 @@
 #include <QGLWidget>
 #include <QGLShader>
 #include <QGLShaderProgram>
-#include <QOpenGLShader>
-#include <QOpenGLShaderProgram>
+//#include <QOpenGLShader>
+//#include <QOpenGLShaderProgram>
 #include <camera.h>
 #include <model.h>
 #include <cube.h>
@@ -55,7 +55,7 @@ protected:
 
 private:
     static const double NEAR_PLANE = 0.01d;
-    static const double FAR_PLANE = 20.0d;
+    static const double FAR_PLANE = 100.0d;
 
     // shader that uses phong shading on the object
     QGLShaderProgram *phongProgram;
@@ -78,11 +78,20 @@ private:
     QGLShader *volumeFragmentShader;
 
     // shader that colors the terrains
+    /*
     QOpenGLShaderProgram *terrainProgram;
     QOpenGLShader *terrainVertexShader;
     QOpenGLShader *terrainTesselationControlShader;
     QOpenGLShader *terrainTesselationEvaluationShader;
     QOpenGLShader *terrainFragmentShader;
+    */
+
+    QGLShaderProgram *terrainProgram;
+    QGLShader *terrainVertexShader;
+    QGLShader *terrainTesselationControlShader;
+    QGLShader *terrainTesselationEvaluationShader;
+    QGLShader *terrainFragmentShader;
+
 
     // vertices of cube
     std::vector<std::vector<float> > originalVertices;
@@ -122,7 +131,17 @@ private:
     GLuint modelMatrixID_;
     GLuint projectionMatrixID_;
     GLuint cameraPositionID_;
+    GLuint cameraTexCoordID_;
     GLuint heightMapID_;
+    GLuint gridFractionID_;
+    GLuint verticalScalingID_;
+    GLuint gridSizeID_;
+
+    GLuint material0ID_;
+    GLuint material1ID_;
+    GLuint material2ID_;
+    GLuint material3ID_;
+    GLuint nrMaterialsID_;
 
     float light0Position_[4];
 

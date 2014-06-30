@@ -16,9 +16,14 @@
 
 inline void glMultMatrix(const GLfloat* matrix) { glMultMatrixf(matrix); }
 inline void glMultMatrix(const GLdouble* matrix) { glMultMatrixd(matrix); }
+inline void glUniformMatrix4(GLint location, GLsizei count, GLboolean transpose, const GLfloat *matrix) {
+    glUniformMatrix4fv(location, count, transpose, matrix); }
+inline void glUniformMatrix4(GLint location, GLsizei count, GLboolean transpose, const GLdouble *matrix) {
+    glUniformMatrix4dv(location, count, transpose, matrix); }
 
 Viewport::Viewport(QWidget *parent, QGLFormat format, Model::ViewportType type, Model *model) :
-    QGLWidget(format, parent)
+    //QGLWidget(format, parent)
+    QGLWidget(parent)
 {
     type_ = type;
     model_ = model;
@@ -100,16 +105,24 @@ void Viewport::initializeGL()
     glClearColor(0, 0.5, 0.5, 1);
 
     // set patch vertices for tesselation shader
+    /* LAPTOP COMPATIBILITY
     GLint maxPatchVertices = 0;
     glGetIntegerv(GL_MAX_PATCH_VERTICES, &maxPatchVertices);
     std::cout << "Max supported patch vertices: " << maxPatchVertices << std::endl;
     glPatchParameteri(GL_PATCH_VERTICES, 4);    // we want to tesselate quads
+    */
 
 
     checkGLErrors("before creating framebuffer");
 
 
     // ==== CREATE FRAMEBUFFER AND ITS TEXTURES ==== //
+
+    int width = this->width();
+    int height = this->height();
+    if (width == 0) width = 1;
+    if (height == 0) height = 1;
+
 
     // create a texture for the colors
     glGenTextures(1, &colorTexture_);
@@ -118,7 +131,7 @@ void Viewport::initializeGL()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_BGRA, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_FLOAT, 0);
 
     // create a texture for the object IDs
     glGenTextures(1, &idTexture_);
@@ -127,13 +140,13 @@ void Viewport::initializeGL()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width(), height(), 0, GL_RED, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // create a renderbuffer object to store depth info - openGL needs this for depth test
     glGenRenderbuffersEXT(1, &depthTexture_);
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthTexture_);
-    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width(), height());
+    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width, height);
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
     // create a framebuffer object
@@ -190,8 +203,8 @@ void Viewport::initializeGL()
     selectionVertexShader = new QGLShader(QGLShader::Vertex, this);
     selectionFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionVertexShader.vertexShader");
-    selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionFragmentShader.fragmentShader");
+    selectionVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionVertexShader.vertexShader");
+    selectionFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/selectionFragmentShader.fragmentShader");
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
@@ -203,8 +216,8 @@ void Viewport::initializeGL()
     gridVertexShader = new QGLShader(QGLShader::Vertex, this);
     gridFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    gridVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/gridVertexShader.vertexShader");
-    gridFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/gridFragmentShader.fragmentShader");
+    gridVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridVertexShader.vertexShader");
+    gridFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/gridFragmentShader.fragmentShader");
 
     gridProgram->addShader(gridVertexShader);
     gridProgram->addShader(gridFragmentShader);
@@ -216,8 +229,8 @@ void Viewport::initializeGL()
     volumeVertexShader = new QGLShader(QGLShader::Vertex, this);
     volumeFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    volumeVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/volumeVertexShader.vertexShader");
-    volumeFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/volumeFragmentShader.fragmentShader");
+    volumeVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeVertexShader.vertexShader");
+    volumeFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/volumeFragmentShader.fragmentShader");
 
 
     volumeProgram->addShader(volumeVertexShader);
@@ -226,21 +239,26 @@ void Viewport::initializeGL()
 
     // TERRAIN SHADER
 
+    /* LAPTOP COMPATIBILITY
     terrainProgram = new QOpenGLShaderProgram(this);
     terrainVertexShader = new QOpenGLShader(QOpenGLShader::Vertex, this);
     terrainTesselationControlShader = new QOpenGLShader(QOpenGLShader::TessellationControl, this);
     terrainTesselationEvaluationShader = new QOpenGLShader(QOpenGLShader::TessellationEvaluation, this);
     terrainFragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, this);
+    */
+    terrainProgram = new QGLShaderProgram(this);
+    terrainVertexShader = new QGLShader(QGLShader::Vertex, this);
+    terrainFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    terrainVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainVertexShader.vertexShader");
-    terrainTesselationControlShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainTCS.tesselationControlShader");
-    terrainTesselationEvaluationShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainTES.tesselationEvaluationShader");
-    terrainFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/terrainFragmentShader.fragmentShader");
+    terrainVertexShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainVertexShader120.vertexShader");
+    //terrainTesselationControlShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainTCS.tesselationControlShader");
+    //terrainTesselationEvaluationShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainTES.tesselationEvaluationShader");
+    terrainFragmentShader->compileSourceFile("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/shaders/terrainFragmentShader120.fragmentShader");
 
 
     terrainProgram->addShader(terrainVertexShader);
-    terrainProgram->addShader(terrainTesselationControlShader);
-    terrainProgram->addShader(terrainTesselationEvaluationShader);
+    //terrainProgram->addShader(terrainTesselationControlShader);
+    //terrainProgram->addShader(terrainTesselationEvaluationShader);
     terrainProgram->addShader(terrainFragmentShader);
     terrainProgram->link();
 
@@ -269,7 +287,16 @@ void Viewport::initializeGL()
     modelMatrixID_ = glGetUniformLocation(terrainProgram->programId(), "modelMatrix");
     projectionMatrixID_ = glGetUniformLocation(terrainProgram->programId(), "projectionMatrix");
     cameraPositionID_ = glGetUniformLocation(terrainProgram->programId(), "cameraPosition");
+    cameraTexCoordID_ = glGetUniformLocation(terrainProgram->programId(), "cameraTexCoord");
     heightMapID_ = glGetUniformLocation(terrainProgram->programId(), "heightMap");
+    gridFractionID_ = glGetUniformLocation(terrainProgram->programId(), "gridFraction");
+    verticalScalingID_ = glGetUniformLocation(terrainProgram->programId(), "verticalScaling");
+    gridSizeID_ = glGetUniformLocation(terrainProgram->programId(), "gridSize");
+    nrMaterialsID_ = glGetUniformLocation(terrainProgram->programId(), "nrMaterials");
+    material0ID_ = glGetUniformLocation(terrainProgram->programId(), "material0");
+    material1ID_ = glGetUniformLocation(terrainProgram->programId(), "material1");
+    material2ID_ = glGetUniformLocation(terrainProgram->programId(), "material2");
+    material3ID_ = glGetUniformLocation(terrainProgram->programId(), "material3");
 
 
     glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
@@ -385,37 +412,108 @@ void Viewport::paintGL()
 
     volumeProgram->release();
     terrainProgram->bind();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //glMultMatrix(camera_->getRotatedOnSpotCameraMatrix().constData());
+    glMultMatrix(camera_->getCameraMatrix().constData());
 
     for (int i = 0; i < primitives->size(); i++) {
         if (primitives->at(i)->isTerrain()) {
 
+            // send terrain id and height map to shader ================================================
             glUniform1f(terrainIdID_, primitives->at(i)->getID());
             glUniform1i(heightMapID_, 1);
 
-            // ===== POTENTIAL ISSUE ===== //
-            // TODO could constData return double* on different architecture??
+            int nrMaterials = static_cast<Terrain*>(primitives->at(i))->getNrMaterials();
+            glUniform1i(nrMaterialsID_, nrMaterials);
+            glUniform1i(material0ID_, 2);
+            glUniform1i(material1ID_, 3);
+            glUniform1i(material2ID_, 4);
+            glUniform1i(material3ID_, 5);
 
-            glUniformMatrix4fv(modelMatrixID_, 1, GL_FALSE, primitives->at(i)->getModelMatrix().constData());
+            checkGLErrors("after sending uniforms for materials");
 
-            float* matrix = (float*) malloc(16 * sizeof(float));
-            glGetFloatv(GL_MODELVIEW_MATRIX, matrix);   // column-major
+            // SWITCH DOUBLE <-> FLOAT FOR DIFFERENT ARCHITECTURE
 
-            // extract camera position
-            QMatrix4x4 viewMatrix = QMatrix4x4(matrix).transposed(); // convert column-major to row-major
+            float* floatMatrix = (float*) malloc(16 * sizeof(float));
+            double* doubleMatrix = (double*) malloc(16 * sizeof(double));
+
+            doubleMatrix = (double*) primitives->at(i)->getModelMatrix().constData();
+            for (int j = 0; j < 16; j++) { floatMatrix[j] = (float) doubleMatrix[j]; }
+
+            // send model matrix to shader =============================================================
+            glUniformMatrix4fv(modelMatrixID_, 1, GL_FALSE, floatMatrix);
+
+            glGetFloatv(GL_MODELVIEW_MATRIX, floatMatrix);   // column-major
+            for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
+
+            // extract camera position and compute camera texture coordinates
+            QMatrix4x4 viewMatrix = QMatrix4x4(doubleMatrix).transposed(); // convert column-major to row-major
             QVector4D cameraPosition = viewMatrix.inverted().column(3);
-            cameraPosition /= cameraPosition.w();
-
-            std::cout << "camera position[" << type_ << "]: (" <<  cameraPosition.x() << ", " << cameraPosition.y() << ", " << cameraPosition.z() << ")" << std::endl;
-
             glUniform3f(cameraPositionID_, cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
 
-            glGetFloatv(GL_PROJECTION_MATRIX, matrix);  // column-major
-            QMatrix4x4 projectionMatrix = QMatrix4x4(matrix).transposed() * QMatrix4x4(viewMatrix);  // row-major
-            glUniformMatrix4fv(projectionMatrixID_, 1, GL_FALSE, projectionMatrix.constData());
+
+
+            float horizontalScale = static_cast<Terrain*>(primitives->at(i))->getHorizontalScale();
+            int verticalScale = static_cast<Terrain*>(primitives->at(i))->getVerticalScale();
+            glUniform1i(verticalScalingID_, verticalScale);
+
+            int gridSize = static_cast<Terrain*>(primitives->at(i))->getGridSize();
+            /* how big is the grid with regard to the size of the terrain. Grid's local texture coordinates
+             * need to be downscaled by this factor. */
+            float gridFraction = gridSize / horizontalScale;
+            glUniform1f(gridFractionID_, gridFraction);
+            glUniform1i(gridSizeID_, gridSize);
+
+            QVector2D cameraTexCoord = QVector2D((cameraPosition.x() + horizontalScale / 2.0f) / horizontalScale,
+                                                (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
+
+
+            // check collision of camera with terrain
+            /*
+            float terrainHeight = static_cast<Terrain*>(primitives->at(i))->getHeightValues()[(int) (cameraTexCoord.x() *
+                           static_cast<Terrain*>(primitives->at(i))->getWidth() + cameraTexCoord.y())] *
+                           static_cast<Terrain*>(primitives->at(i))->getVerticalScale();
+
+            if (cameraPosition.y() <= terrainHeight + 0.1) {    // collision!
+                camera_->translate(QVector3D(0.0, terrainHeight + 0.1 - cameraPosition.y(), 0.0));
+                glLoadIdentity();
+                glMultMatrix(camera_->getCameraMatrix().constData());
+                glGetFloatv(GL_MODELVIEW_MATRIX, floatMatrix);   // column-major
+                for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
+                // extract camera position and compute camera texture coordinates
+                viewMatrix = QMatrix4x4(doubleMatrix).transposed(); // convert column-major to row-major
+                cameraPosition = viewMatrix.inverted().column(3);
+                glUniform3f(cameraPositionID_, cameraPosition.x(), cameraPosition.y(), cameraPosition.z());
+                cameraTexCoord = QVector2D((cameraPosition.x() + horizontalScale / 2.0f) / horizontalScale,
+                                           (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
+            }
+            */
+
+
+            if (type_ == 0) {
+                std::cout << "cameraTexCoord: (" << cameraTexCoord.x() << ", " << cameraTexCoord.y() << ")" << std::endl;
+                std::cout << "cameraPosition: (" << cameraPosition.x() << ", " << cameraPosition.y() << ", " << cameraPosition.z() << ")" << std::endl;
+            }
+            // send camera tex coords to shader ========================================================
+            glUniform2f(cameraTexCoordID_, cameraTexCoord.x(), cameraTexCoord.y());
+
+            glGetFloatv(GL_PROJECTION_MATRIX, floatMatrix);  // column-major
+            for (int j = 0; j < 16; j++) { doubleMatrix[j] = (double) floatMatrix[j]; }
+
+            QMatrix4x4 projectionMatrix = QMatrix4x4(doubleMatrix).transposed() * QMatrix4x4(viewMatrix);  // row-major
+            doubleMatrix = (double*) projectionMatrix.constData();
+            for (int j = 0; j < 16; j++) { floatMatrix[j] = (float) doubleMatrix[j]; }
+
+            // send projection matrix to shader ========================================================
+            glUniformMatrix4fv(projectionMatrixID_, 1, GL_FALSE, floatMatrix);
+
+            // draw terrain
             primitives->at(i)->draw();
 
-            free(matrix);
+            free(floatMatrix);
         }
     }
 
@@ -471,6 +569,26 @@ void Viewport::paintGL()
 
 void Viewport::resizeGL(int width, int height)
 {
+    if (width == 0) width = 1;
+    if (height == 0) height = 1;
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT0_EXT,  // 2. attachment point
+                           GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                           0,             // 4. tex ID
+                           0);                    // 5. mipmap level: 0(base)
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT1_EXT,  // 2. attachment point
+                           GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                           0,             // 4. tex ID
+                           0);                    // 5. mipmap level: 0(base)
+
+    // attach the renderbuffer to depth attachment point
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,      // 1. fbo target: GL_FRAMEBUFFER
+                              GL_DEPTH_ATTACHMENT_EXT, // 2. attachment point
+                              GL_RENDERBUFFER_EXT,     // 3. rbo target: GL_RENDERBUFFER
+                              0);     // 4. rbo ID
 
     glBindTexture(GL_TEXTURE_2D, colorTexture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_FLOAT, 0);
@@ -483,6 +601,24 @@ void Viewport::resizeGL(int width, int height)
     glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width, height);
     glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT0_EXT,  // 2. attachment point
+                           GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                           colorTexture_,             // 4. tex ID
+                           0);                    // 5. mipmap level: 0(base)
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,        // 1. fbo target: GL_FRAMEBUFFER
+                           GL_COLOR_ATTACHMENT1_EXT,  // 2. attachment point
+                           GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                           idTexture_,             // 4. tex ID
+                           0);                    // 5. mipmap level: 0(base)
+
+    // attach the renderbuffer to depth attachment point
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,      // 1. fbo target: GL_FRAMEBUFFER
+                              GL_DEPTH_ATTACHMENT_EXT, // 2. attachment point
+                              GL_RENDERBUFFER_EXT,     // 3. rbo target: GL_RENDERBUFFER
+                              depthTexture_);     // 4. rbo ID
+    checkFramebufferStatus();
 
     glViewport(0, 0, width, height);
 

@@ -33,9 +33,16 @@ int main(int argc, char *argv[])
 
     view.show();
 
-    //model.addCube();
+    model.addCube();
+    model.addCube();
+    model.addCube();
+    model.addCube();
+
+    model.getScenegraph()->at(0)->translate(QVector3D(-5, 0, 5));
+    model.getScenegraph()->at(1)->translate(QVector3D(-5, 0, -5));
+    model.getScenegraph()->at(2)->translate(QVector3D(5, 0, 5));
     //model.addVolume(QString("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_2/volumetric_data/MRI-head.raw"));
-    model.addTerrain(QString("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/terrain/grand_canyon.pgm"));
+    model.addTerrain(QString("/home/claudi/OpenGL_Praktikum/graphics_programming_lab_3/terrain/grand_canyon.pgm"));
 
 
     return a.exec();

@@ -18,14 +18,22 @@ public:
     void uploadMaterial(QString fileName);
 
     void changeRange(int materialID, int minRange, int maxRange);
+    int getHorizontalScale();
+    int getVerticalScale();
+    int getGridSize();
+    int getNrMaterials();
+    int* getMaterialIDs();
+    unsigned short* getHeightValues();
+    int getWidth();
 
 public slots:
     //void copyVAOToCurrentContext();
     void createTextures();
 
 private:
-    int horizontalScale_;
-    int verticalScale_;
+    int horizontalScale_;   // size of the terrain in world coordinates. I.e. for 50, the terrain will have a size of (50, 50) with the center being in (0, 0, 0).
+    int verticalScale_;     // height of the terrain. Values are transformed into range of [0, 1] when uploaded to OpenGL texture with GL_LUMINANCE, so they have to be scaled accordingly.
+    int gridSize_;          // in unit squares. Number of quads the sliding window grid should consist of. 50 should be a good start.
 
     int width_;
     int height_;

@@ -1,20 +1,22 @@
 #version 400
 
 layout (location = 0) in vec3 positionModelSpace_in;
-layout (location = 1) in vec3 texCoord_in;
+layout (location = 1) in vec3 localTexCoord_in;
 
 uniform mat4 modelMatrix;
-uniform mat4 projectionMatrix;
+uniform vec3 cameraPosition;
 
 out vec3 positionWorldSpace;
-out vec2 texCoord;
+out vec2 globalTexCoord;
 
 
 void main() {
 	positionWorldSpace = (modelMatrix * vec4(positionModelSpace_in, 1)).xyz;
-	texCoord = texCoord_in.xy;
-
-	//gl_Position = projectionMatrix * modelMatrix * vec4(positionModelSpace_in, 1);
 	gl_Position = modelMatrix * vec4(positionModelSpace_in,1);
+
+	vec2 cameraTexCoords = vec2((cameraPosition.x + horizontalTerrainScale / 2) / horizontalTerrainScale,
+				    -cameraPosition.z + horizontalTerrainScale / 2) / horizontalTerrainScale);
+	globalTexCoord = cameraTexCoord + gridSize / horizontalTerrainScale * (localTexCoord_in - vec2(0.5, 0.5));
+
 }
 
