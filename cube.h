@@ -7,7 +7,7 @@ class Cube : public Primitive
 {
 public:
     Cube(std::string name, int id, int tesselation, float3 color);
-    void draw();
+    void draw(bufferIDs buffIDs);
 };
 
 #endif // CUBE_H

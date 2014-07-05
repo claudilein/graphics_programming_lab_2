@@ -11,24 +11,18 @@ public:
     void parseHeightMap(QString fileName);
     void setHorizontalScale(int horizontalScale);
     void setVerticalScale(int verticalScale);
-    void bindVAOToShader();
-    void copyVAOToCurrentContext();
-    void draw();
-    void createVBO();
-    void uploadMaterial(QString fileName);
-    void deleteMaterial(int x);
+    void draw(bufferIDs buffIDs);
+    void uploadMaterial(QString fileName, GLuint textureID);
 
     int getHorizontalScale();
     int getVerticalScale();
     int getGridSize();
-    int getNrMaterials();
-    int* getMaterialIDs();
     unsigned short* getHeightValues();
     int getWidth();
 
 public slots:
     //void copyVAOToCurrentContext();
-    void createTextures();
+    void createTextures(GLuint id);
 
 private:
     int horizontalScale_;   // size of the terrain in world coordinates. I.e. for 50, the terrain will have a size of (50, 50) with the center being in (0, 0, 0).
@@ -39,12 +33,6 @@ private:
     int height_;
 
     GLuint heightTexture_;
-    GLuint vertexBufferTextureCoordinates_;
-
-    attribute vertexTextureCoordinates_;
-
-    std::vector<GLuint> materialTextures_;
-    uint nrMaterials_;
 
     unsigned short *heightValues_;
 

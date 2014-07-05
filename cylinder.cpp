@@ -9,7 +9,8 @@ Cylinder::Cylinder(std::string name, int id, int tesselation, float3 color,
     steps_(4 + tesselation * tesselation)
 
 {
-
+    hasVBO_[NORMALS] = true;
+    hasVBO_[COLORS] = true;
 
     for (int i = 0; i < steps_; i++) {
         double phi_left = 2 * M_PI * i / static_cast<double>(steps_);
@@ -69,9 +70,9 @@ Cylinder::Cylinder(std::string name, int id, int tesselation, float3 color,
 
 
 
-void Cylinder::draw() {
+void Cylinder::draw(bufferIDs buffIDs) {
 
-    bindVAOToShader();
+    bindVAOToShader(buffIDs);
 
     glDrawElements(
         GL_TRIANGLES,      // mode

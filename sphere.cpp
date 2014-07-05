@@ -8,6 +8,10 @@ Sphere::Sphere(std::string name, int id, int tesselation, float3 color,
     lats_(lats + tesselation),
     longs_(longs + tesselation)
 {
+
+    hasVBO_[NORMALS] = true;
+    hasVBO_[COLORS] = true;
+
     for (int i = 0; i < lats_; i++)
     {
         double theta_upper = M_PI * i / static_cast<double>(lats_);
@@ -63,9 +67,9 @@ Sphere::Sphere(std::string name, int id, int tesselation, float3 color,
 
 
 
-void Sphere::draw() {
+void Sphere::draw(bufferIDs buffIDs) {
 
-    bindVAOToShader();
+    bindVAOToShader(buffIDs);
 
     glDrawElements(
         GL_QUADS,      // mode

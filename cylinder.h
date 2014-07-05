@@ -8,7 +8,7 @@ class Cylinder : public Primitive
 public:
     Cylinder(std::string name, int id, int tesselation, float3 color,
              float radius, float height);
-    void draw();
+    void draw(bufferIDs buffIDs);
 
 private:
     float radius_;

@@ -9,6 +9,9 @@ Cone::Cone(std::string name, int id, int tesselation, float3 color,
     height_(height)
 {
 
+    hasVBO_[NORMALS] = true;
+    hasVBO_[COLORS] = true;
+
     int steps = 4 + tesselation_ * tesselation_;
     for (int i = 0; i < steps; i++) {
         double phi_left = 2 * M_PI * i / static_cast<double>(steps);
@@ -43,12 +46,12 @@ Cone::Cone(std::string name, int id, int tesselation, float3 color,
 
 
     // set indices list
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         indicesList_.push_back(i);
     }
 
     float coneColor[3] = {1, 1, 0};
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         vertexColors_.push_back(float3(coneColor));
     }
 
@@ -58,10 +61,9 @@ Cone::Cone(std::string name, int id, int tesselation, float3 color,
 }
 
 
-void Cone::draw() {
+void Cone::draw(bufferIDs buffIDs) {
 
-    bindVAOToShader();    
-
+    bindVAOToShader(buffIDs);
 
     glDrawElements(
         GL_TRIANGLES,      // mode

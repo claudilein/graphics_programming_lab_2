@@ -12,14 +12,10 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     isVolume_(false),
     isTerrain_(false)
 {
-    glGenVertexArrays(1, &vertexArray_);
-    glBindVertexArray(vertexArray_);
+    for (int i = 0; i < NR_VBOS; i++) {
+        hasVBO_[i] = false;
+    }
 
-    glGenBuffers(1, &vertexBufferPositions_);
-    glGenBuffers(1, &vertexBufferNormals_);
-    glGenBuffers(1, &vertexBufferColors_);
-
-    glGenBuffers(1, &indexBuffer_);
 
     translation_ = QVector3D();
     rotation_ = QQuaternion();
@@ -30,27 +26,43 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
 
 }
 
-void Primitive::copyVAOToCurrentContext() {
+void Primitive::copyVAOToCurrentContext(bufferIDs buffIDs) {
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
+    // every primitive has a VAO, positions and indices
+
+    glBindVertexArray(buffIDs.VAO_);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffIDs.positions_);
     glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glBufferData(GL_ARRAY_BUFFER, vertexNormals_.size() * sizeof(float3), &vertexNormals_[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glBufferData(GL_ARRAY_BUFFER, vertexColors_.size()  * sizeof(float3), &vertexColors_[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffIDs.indices_);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
+
+    // bind normals, colors and texCoords if needed
+
+    if (buffIDs.hasNormals_) {
+        glBindBuffer(GL_ARRAY_BUFFER, buffIDs.normals_);
+        glBufferData(GL_ARRAY_BUFFER, vertexNormals_.size() * sizeof(float3), &vertexNormals_[0], GL_STATIC_DRAW);
+    }
+    if (buffIDs.hasColors_) {
+        glBindBuffer(GL_ARRAY_BUFFER, buffIDs.colors_);
+        glBufferData(GL_ARRAY_BUFFER, vertexColors_.size()  * sizeof(float3), &vertexColors_[0], GL_STATIC_DRAW);
+    }
+    if (buffIDs.hasTexCoords_) {
+        glBindBuffer(GL_ARRAY_BUFFER, buffIDs.texCoords_);
+        glBufferData(GL_ARRAY_BUFFER, vertexTextureCoordinates_.size() *  sizeof(float3), &vertexTextureCoordinates_[0], GL_STATIC_DRAW);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }
 
-void Primitive::bindVAOToShader() {
+void Primitive::bindVAOToShader(bufferIDs buffIDs) {
+
+    glBindVertexArray(buffIDs.VAO_);
 
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
+    glBindBuffer(GL_ARRAY_BUFFER, buffIDs.positions_);
     glVertexAttribPointer(
         0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
         3,                  // size
@@ -60,38 +72,61 @@ void Primitive::bindVAOToShader() {
         (void*)0            // array buffer offset
     );
 
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferNormals_);
-    glVertexAttribPointer(
-        1,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferColors_);
-    glVertexAttribPointer(
-        2,                  // attribute 2
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
-
-
     // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffIDs.indices_);
+
+
+    if (buffIDs.hasNormals_) {
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, buffIDs.normals_);
+        glVertexAttribPointer(
+            1,                  // attribute 1
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+        );
+    }
+
+    if (buffIDs.hasColors_) {
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, buffIDs.colors_);
+        glVertexAttribPointer(
+            2,                  // attribute 2
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+        );
+    }
+
+    if (buffIDs.hasTexCoords_) {
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, buffIDs.texCoords_);
+        glVertexAttribPointer(
+            1,                  // attribute 2
+            3,                  // size
+            GL_FLOAT,           // type
+            GL_FALSE,           // normalized?
+            0,                  // stride
+            (void*)0            // array buffer offset
+        );
+    }
+
+
 
     // ambient color
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambientColor_);
 }
 
-void Primitive::draw() {
+void Primitive::draw(bufferIDs buffIDs) {
+    std::cout << "The super draw method of Primitive was called, but should never be called" << std::endl;
+}
 
+bool Primitive::hasVBO(VBO vbo) {
+    return hasVBO_[vbo];
 }
 
 Primitive::float3* Primitive::getColor() {

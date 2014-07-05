@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     model.getScenegraph()->at(0)->translate(QVector3D(-5, 0, 5));
     model.getScenegraph()->at(1)->translate(QVector3D(-5, 0, -5));
-    model.getScenegraph()->at(2)->translate(QVector3D(5, 0, 5));
+    model.getScenegraph()->at(2)->translate(QVector3D(0, 20, 0));
 
     model.addTerrain(QString("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/terrain/grand_canyon.pgm"));
 

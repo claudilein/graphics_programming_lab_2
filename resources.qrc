@@ -11,14 +11,10 @@
         <file>img/view-single.png</file>
         <file>img/viewports.png</file>
         <file>img/cam_home.png</file>
-        <file>shaders/phongVertexShader.vertexShader</file>
-        <file>shaders/phongFragmentShader.fragmentShader</file>
         <file>img/grid.png</file>
         <file>terrain/facture_rock_0.jpg</file>
         <file>terrain/facture_stone.jpg</file>
         <file>terrain/facture_sand.jpg</file>
         <file>terrain/facture_rock_1.jpg</file>
-        <file>shaders/selectionVertexShader.vertexShader</file>
-        <file>shaders/selectionFragmentShader.fragmentShader</file>
     </qresource>
 </RCC>

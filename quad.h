@@ -8,15 +8,11 @@ class Quad : public Primitive
     Q_OBJECT
 public:
     Quad();
-    void bindVAOToShader();
-    void draw();
+    void draw(bufferIDs buffIDs);
 
 public slots:
-    void copyVAOToCurrentContext();
 
 private:
-    GLuint vertexBufferTextureCoordinates_;
-    attribute vertexTextureCoordinates_;
 };
 
 #endif // QUAD_H

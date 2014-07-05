@@ -8,7 +8,7 @@ class Sphere : public Primitive
 public:
     Sphere(std::string name, int id, int tesselation, float3 color,
           float radius, int lats, int longs);
-    void draw();
+    void draw(bufferIDs buffIDs);
 
 private:
     float radius_;

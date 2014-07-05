@@ -168,11 +168,11 @@ void Model::addTerrain(QString fileName) {
     name_tmp << name << idCounters_[TERRAIN];
     name = name_tmp.str();
 
-    Primitive *p = new Terrain(name, 0, tesselation_, Primitive::float3(0, 0, 0));
+    Primitive *p = new Terrain(name, nrIDs_, tesselation_, Primitive::float3(0, 0, 0));
     static_cast<Terrain*>(p)->parseHeightMap(fileName);
 
     idCounters_[TERRAIN]++;
-    //nrIDs_++;
+    nrIDs_++;
 
     scenegraphModel_->addPrimitive(p);
    // p->translate(QVector3D(1.0f,1.0f,0.0f));
@@ -181,6 +181,16 @@ void Model::addTerrain(QString fileName) {
     emit updateGL();
     emit updateGL();
 
+}
+
+Primitive* Model::getPrimitive(int ID) {
+    for (int i = 0; i < scenegraphModel_->getPrimitiveList()->size(); i++) {
+        if (scenegraphModel_->getPrimitiveList()->at(i)->getID() == ID) {
+            return scenegraphModel_->getPrimitiveList()->at(i);
+        }
+    }
+    std::cout << "getPrimitive(" << ID << ") ERROR: primitive with this ID does not exist." << std::endl;
+    return NULL;
 }
 
 void Model::setActivePrimitive(float ID)
@@ -286,19 +296,23 @@ QVector3D Model::getScaleMask() {
 }
 
 void Model::setHorizontalScale(int h) {
-    if (activePrimitive_ != NULL && activePrimitive_->isTerrain()) {
-        static_cast<Terrain*>(activePrimitive_)->setHorizontalScale(h);
-        emit copyVAOData(activePrimitive_);
-        emit updateGL();
+    QList<Primitive*> *primitives = getScenegraph();
+    for (int i = 0; i < primitives->size(); i++) {
+        if (primitives->at(i)->isTerrain()) {
+            static_cast<Terrain*>(primitives->at(i))->setHorizontalScale(h);
+            emit updateGL();
+        }
     }
 }
 
 
 void Model::setVerticalScale(int v) {
-    if (activePrimitive_ != NULL && activePrimitive_->isTerrain()) {
-        static_cast<Terrain*>(activePrimitive_)->setVerticalScale(v);
-        emit copyVAOData(activePrimitive_);
-        emit updateGL();
+    QList<Primitive*> *primitives = getScenegraph();
+    for (int i = 0; i < primitives->size(); i++) {
+        if (primitives->at(i)->isTerrain()) {
+            static_cast<Terrain*>(primitives->at(i))->setVerticalScale(v);
+            emit updateGL();
+        }
     }
 }
 

@@ -237,15 +237,15 @@ View::View(QWidget *parent)
     horizontalScaleSlider = new QSlider(toolBar);
     horizontalScaleSlider->setOrientation(Qt::Horizontal);
     horizontalScaleSlider->setFixedWidth(80);
-    horizontalScaleSlider->setRange(5, 40);
-    horizontalScaleSlider->setValue(25);
+    horizontalScaleSlider->setRange(50, 200);
+    horizontalScaleSlider->setValue(100);
     connect(horizontalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setHorizontalScale(int)));
 
     verticalScaleSlider = new QSlider(toolBar);
     verticalScaleSlider->setOrientation(Qt::Horizontal);
     verticalScaleSlider->setFixedWidth(80);
-    verticalScaleSlider->setRange(5, 40);
-    verticalScaleSlider->setValue(25);
+    verticalScaleSlider->setRange(200, 500);
+    verticalScaleSlider->setValue(300);
     connect(verticalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setVerticalScale(int)));
 
 

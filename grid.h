@@ -7,7 +7,7 @@ class Grid : public Primitive
 {
 public:
     Grid(float3 color, int gridSize, int stepSize);
-    void draw();
+    void draw(bufferIDs buffIDs);
     void setGridSize(int i);
     void setStepSize(int i);
 private:

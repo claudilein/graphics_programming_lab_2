@@ -22,6 +22,8 @@ class Viewport : public QGLWidget
 {
     Q_OBJECT
 public:
+
+
     explicit Viewport(QWidget *parent = 0, QGLFormat format = QGLFormat(), Model::ViewportType type = Model::PERSPECTIVE, Model *model = 0);
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
@@ -48,6 +50,7 @@ public slots:
     void setGridSize(int i);
     void setStepSize(int i);
     void setMip(bool on);
+    Primitive::bufferIDs createPrimitiveBufferIDs(Primitive* p);
 
 protected:
     void initializeGL();
@@ -130,21 +133,21 @@ private:
 
     GLuint terrainIdID_;
     GLuint modelMatrixID_;
-    GLuint projectionMatrixID_;
+    GLuint viewProjectionMatrixID_;
     GLuint cameraPositionID_;
     GLuint cameraTexCoordID_;
     GLuint heightMapID_;
     GLuint gridFractionID_;
     GLuint verticalScalingID_;
     GLuint gridSizeID_;
-
     GLuint material0ID_;
     GLuint material1ID_;
     GLuint material2ID_;
     GLuint material3ID_;
     GLuint nrMaterialsID_;
+    GLuint light0ID_;
 
-    float light0Position_[4];
+    QVector4D light0_[4];
 
     bool showGrid_;
     bool mip_;
@@ -160,8 +163,17 @@ private:
     int gridSize_;
     int stepSize_;
 
+    std::vector<Primitive::bufferIDs> primitiveBufferIDs_;
+    Primitive::bufferIDs quadBufferIDs_;
+    Primitive::bufferIDs gridBufferIDs_;
+
+    GLuint heightMapTextureID_;
+    std::vector<GLuint> materialTextureIDs_;
+
     bool checkFramebufferStatus();
     void checkGLErrors(const char *label);
+
+    float light0Position_[4];
 };
 
 #endif // VIEWPORT_H

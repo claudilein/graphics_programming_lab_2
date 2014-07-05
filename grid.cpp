@@ -7,6 +7,9 @@ Grid::Grid(float3 color, int gridSize, int stepSize) :
     stepSize_(stepSize)
 {
 
+    hasVBO_[NORMALS] = true;
+    hasVBO_[COLORS] = true;
+
     for (int i = -gridSize_; i < gridSize_; i++) {
         for (int j = 0; j < stepSize_; j++) {
             vertexPositions_.push_back(float3(i + (j / (float)stepSize_), 0, -gridSize_));
@@ -65,7 +68,8 @@ void Grid::setGridSize(int i) {
         vertexColors_.push_back(float3(gridColor));
     }
 
-    copyVAOToCurrentContext();
+    // TODO should not be called from within
+    //copyVAOToCurrentContext();
 }
 
 void Grid::setStepSize(int i) {
@@ -101,13 +105,14 @@ void Grid::setStepSize(int i) {
         vertexColors_.push_back(float3(gridColor));
     }
 
-    copyVAOToCurrentContext();
+    // TODO should not be called from within
+    //copyVAOToCurrentContext();
 }
 
 
-void Grid::draw() {
+void Grid::draw(bufferIDs buffIDs) {
 
-    bindVAOToShader();
+    bindVAOToShader(buffIDs);
 
     glDrawElements(
         GL_LINES,      // mode

@@ -9,6 +9,8 @@ Torus::Torus(std::string name, int id, int tesselation, float3 color,
     sides_(sides + tesselation_),
     rings_(rings + tesselation_)
 {
+    hasVBO_[NORMALS] = true;
+    hasVBO_[COLORS] = true;
 
     int i, j;
     float theta, phi, theta1;
@@ -79,9 +81,9 @@ Torus::Torus(std::string name, int id, int tesselation, float3 color,
     ambientColor_[2] = 0.2;
 }
 
-void Torus::draw() {
+void Torus::draw(bufferIDs buffIDs) {
 
-    bindVAOToShader();
+    bindVAOToShader(buffIDs);
 
     glDrawElements(
         GL_QUAD_STRIP,      // mode

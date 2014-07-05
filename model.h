@@ -25,6 +25,7 @@ public:
     Scenegraph* getScenegraphModel();
     InteractionType getInteractionMode();
     QVector3D getScaleMask();
+    Primitive* getPrimitive(int ID);
 
 signals:
     void copyVAOData(Primitive *p);

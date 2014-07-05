@@ -10,12 +10,37 @@ Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
     verticalScale_(300),
     gridSize_(50),
     width_(0),
-    height_(0),
-    nrMaterials_(0)
+    height_(0)
 {
+
+    hasVBO_[TEXCOORDS] = true;
     isTerrain_ = true;
-    // TODO this should be generated once per viewport, right..?
-    glGenBuffers(1, &vertexBufferTextureCoordinates_);
+
+    vertexPositions_.resize(0);
+    indicesList_.resize(0);
+    vertexTextureCoordinates_.resize(0);
+    int halfGridSize = gridSize_ / 2;
+
+    for (int i = -halfGridSize; i < halfGridSize; i++) {
+        for (int j = -halfGridSize; j < halfGridSize; j++) {
+            vertexPositions_.push_back(float3(i, 0, j));
+            vertexPositions_.push_back(float3(i, 0, j + 1));
+            vertexPositions_.push_back(float3(i + 1, 0, j + 1));
+            vertexPositions_.push_back(float3(i + 1, 0, j));
+
+            // texture coordinates range from [-0.5, 0.5] here, as they will be added to the global tex coords of the camera
+            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
+
+        }
+    }
+
+    // set indices list
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
+        indicesList_.push_back(i);
+    }
 
 }
 
@@ -79,16 +104,14 @@ void Terrain::parseHeightMap(QString fileName) {
         std::cout << "Failed to open file " << fileName.toStdString() << std::endl;
     }
 
-
-    createVBO();
 }
 
-void Terrain::createTextures() {
+void Terrain::createTextures(GLuint id) {
 
     checkGLErrors("before height map upload");
 
-    glGenTextures(1, &heightTexture_);
-    glBindTexture(GL_TEXTURE_2D, heightTexture_);
+//    glGenTextures(1, &heightTexture_);
+    glBindTexture(GL_TEXTURE_2D, id);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -105,78 +128,16 @@ void Terrain::createTextures() {
     checkGLErrors("after uploading material textures");
 }
 
-void Terrain::copyVAOToCurrentContext()
-{
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glBufferData(GL_ARRAY_BUFFER, vertexPositions_.size() * sizeof(float3), &vertexPositions_[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
-    glBufferData(GL_ARRAY_BUFFER, vertexTextureCoordinates_.size() *  sizeof(float3), &vertexTextureCoordinates_[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesList_.size() * sizeof(uint), &indicesList_[0], GL_STATIC_DRAW);
-
-}
-
-void Terrain::bindVAOToShader() {
-
-    checkGLErrors("before binding buffers");
-
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPositions_);
-    glVertexAttribPointer(
-        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
 
 
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferTextureCoordinates_);
-    glVertexAttribPointer(
-        1,                  // attribute 1
-        3,                  // size
-        GL_FLOAT,           // type
-        GL_FALSE,           // normalized?
-        0,                  // stride
-        (void*)0            // array buffer offset
-    );
+void Terrain::draw(bufferIDs buffIDs) {
 
+    bindVAOToShader(buffIDs);
 
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-
-    checkGLErrors("binding buffers");
-
-    // bind volume and transfer textures
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, heightTexture_);
-
-    for (uint i = 0; i < nrMaterials_; i++) {
-        glActiveTexture(GL_TEXTURE2 + i);
-        glBindTexture(GL_TEXTURE_2D, materialTextures_[i * 4]);
-        std::cout << "binding material " << i << std::endl;
-    }
-
-    glActiveTexture(GL_TEXTURE0);
-
-
-    checkGLErrors("binding textures");
-}
-
-
-
-
-void Terrain::draw() {
-
-    bindVAOToShader();
+    checkGLErrors("before drawing terrain");
 
     glDrawElements(
-        GL_QUADS,      // mode
+        GL_PATCHES,      // mode
         indicesList_.size(),    // count
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
@@ -186,54 +147,18 @@ void Terrain::draw() {
 
 }
 
-void Terrain::createVBO() {
-
-    vertexPositions_.resize(0);
-    indicesList_.resize(0);
-    vertexTextureCoordinates_.resize(0);
-    int halfGridSize = gridSize_ / 2;
-
-    for (int i = -halfGridSize; i < halfGridSize; i++) {
-        for (int j = -halfGridSize; j < halfGridSize; j++) {
-            vertexPositions_.push_back(float3(i, 0, j));
-            vertexPositions_.push_back(float3(i, 0, j + 1));
-            vertexPositions_.push_back(float3(i + 1, 0, j + 1));
-            vertexPositions_.push_back(float3(i + 1, 0, j));
-
-            // texture coordinates range from [-0.5, 0.5] here, as they will be added to the global tex coords of the camera
-            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
-            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
-            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
-            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
-
-        }
-    }
-
-    // set indices list
-    for (uint i = 0; i < vertexPositions_.size(); i++) {
-        indicesList_.push_back(i);
-    }
-
-}
-
 void Terrain::setHorizontalScale(int horizontalScale) {
     horizontalScale_ = horizontalScale;
-    createVBO();
 }
 
 void Terrain::setVerticalScale(int verticalScale) {
     verticalScale_ = verticalScale;
-    createVBO();
 }
 
-void Terrain::uploadMaterial(QString fileName) {
+void Terrain::uploadMaterial(QString fileName, GLuint textureID) {
     QImage material = QGLWidget::convertToGLFormat(QImage(fileName));
 
-    GLuint materialTexture;
-    glGenTextures(1, &materialTexture);
-    materialTextures_.push_back(materialTexture);
-
-    glBindTexture(GL_TEXTURE_2D, materialTextures_[nrMaterials_]);
+    glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, material.width(), material.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, material.bits());
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -243,18 +168,6 @@ void Terrain::uploadMaterial(QString fileName) {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     checkGLErrors("material upload");
-
-    std::cout << "material " << nrMaterials_ << " uploaded." << std::endl;
-    nrMaterials_++;
-}
-
-void Terrain::deleteMaterial(int x) {
-    nrMaterials_ -= 4;
-    for (int i = x * 4; i < materialTextures_.size(); i++) {
-        materialTextures_[i] = materialTextures_[i + 4];
-    }
-    for (int i = 0; i < 4; i++ ) materialTextures_.pop_back();
-
 }
 
 
@@ -283,17 +196,6 @@ int Terrain::getGridSize() {
     return gridSize_;
 }
 
-int Terrain::getNrMaterials() {
-    return nrMaterials_ / 4;
-}
-
-int* Terrain::getMaterialIDs() {
-    int materialIDs[nrMaterials_];
-    for (int i = 0; i < nrMaterials_; i++) {
-        materialIDs[i] = 2 + i;
-    }
-    return materialIDs;
-}
 
 unsigned short* Terrain::getHeightValues() {
     return heightValues_;

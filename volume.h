@@ -42,11 +42,12 @@ public:
     int getMaxResolution();
     int* getHistogram();
 
-    void bindVAOToShader();
-    void draw();
+
+    void draw(bufferIDs buffIDs);
+    void bindVAOToShader(bufferIDs buffIDs);
 
 public slots:
-    void copyVAOToCurrentContext();
+    void copyVAOToCurrentContext(bufferIDs buffIDs);
 
 private:
     static const int MAX_SCALAR_VALUE_ = 256;
@@ -58,9 +59,6 @@ private:
     GLuint transferTexture_;
 
     uchar* floatData_;
-
-    GLuint vertexBufferTextureCoordinates_;
-    attribute vertexTextureCoordinates_;
 
     transferScalar transferFunction_[MAX_SCALAR_VALUE_];
     int histogram_[MAX_SCALAR_VALUE_];

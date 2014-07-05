@@ -5,6 +5,9 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
     Primitive(0, name, id, tesselation, color)
 {
 
+    hasVBO_[NORMALS] = true;
+    hasVBO_[COLORS] = true;
+
     // set cube vertices
     float x = 0.5f;
 
@@ -55,7 +58,7 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
 
 
     // set indices list
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         indicesList_.push_back(i);
     }
 
@@ -88,7 +91,7 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
     }
 
     float cubeColor[3] = {1, 0, 0};
-    for (int i = 0; i < vertexPositions_.size(); i++) {
+    for (uint i = 0; i < vertexPositions_.size(); i++) {
         vertexColors_.push_back(float3(cubeColor));
     }
 
@@ -99,9 +102,9 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
 
 
 
-void Cube::draw() {
+void Cube::draw(bufferIDs buffIDs) {
 
-    bindVAOToShader();
+    bindVAOToShader(buffIDs);
 
 
     glDrawElements(

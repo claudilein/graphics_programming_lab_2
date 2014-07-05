@@ -13,6 +13,28 @@ class Primitive : public QObject
 {
     Q_OBJECT
 public:
+    enum VBO { NORMALS, COLORS, TEXCOORDS };
+    static const int NR_VBOS = 3;
+
+
+    struct bufferIDs {
+        bufferIDs() : VAO_(0), positions_(0), indices_(0), normals_(0), colors_(0), texCoords_(0), hasNormals_(false), hasColors_(false), hasTexCoords_(false) {}
+
+        bufferIDs(GLuint VAO, GLuint positions, GLuint indices, GLuint normals, GLuint colors, GLuint texCoords, bool hasNormals, bool hasColors, bool hasTexCoords) :
+            VAO_(VAO), positions_(positions), indices_(indices), normals_(normals), colors_(colors), texCoords_(texCoords), hasNormals_(hasNormals), hasColors_(hasColors), hasTexCoords_(hasTexCoords)
+        {}
+
+        GLuint VAO_;
+        GLuint positions_;
+        GLuint indices_;
+        GLuint normals_;
+        GLuint colors_;
+        GLuint texCoords_;
+
+        bool hasNormals_;
+        bool hasColors_;
+        bool hasTexCoords_;
+    };
 
     struct float3 {
         float3() { x_ = 0.0f; y_ = 0.0f; z_ = 0.0f; }
@@ -39,20 +61,21 @@ public:
     void scale(QVector3D scalingFactor);
 
     QMatrix4x4 getModelMatrix();
-    virtual void draw();
+    virtual void draw(bufferIDs buffIDs);
     float3* getColor();
     int getID();
     bool isVolume();
     bool isTerrain();
     std::string getName();
+    bool hasVBO(VBO vbo);
 
     void setName(std::string name);
-    virtual void bindVAOToShader();
+    virtual void bindVAOToShader(bufferIDs buffIDs);
 
 signals:
 
 public slots:
-    virtual void copyVAOToCurrentContext();
+    virtual void copyVAOToCurrentContext(bufferIDs buffIDs);
 
 protected:
     std::string name_;
@@ -63,13 +86,9 @@ protected:
     attribute vertexPositions_;
     attribute vertexColors_;
     attribute vertexNormals_;
+    attribute vertexTextureCoordinates_;
     std::vector<uint> indicesList_;
 
-    GLuint vertexArray_;
-    GLuint vertexBufferPositions_;
-    GLuint vertexBufferNormals_;
-    GLuint vertexBufferColors_;
-    GLuint indexBuffer_;
     float ambientColor_[4];
 
     QVector3D translation_;
@@ -79,6 +98,8 @@ protected:
     RBTNode rbtNode_;
     bool isVolume_;
     bool isTerrain_;
+
+    bool hasVBO_[NR_VBOS];
 
 
 };

@@ -269,5 +269,6 @@ bool MouseController::checkCollision() {
             }
         }
     }
-    return collision;
+    //return collision;
+    return false;
 }
