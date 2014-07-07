@@ -120,7 +120,7 @@ void main()
 	else if (debug.y <= 32) { c = vec3(1, 0, 1); }	// magenta
 	else if (debug.y <= 64) { c = vec3(1, 1, 1); }	// white
 */
-	gl_FragData[0] = vec4(debug.x, debug.y, debug.z, debug.w);
+	gl_FragData[0] = vec4(debug.x, debug.y, debug.z, 1);
 
 	//gl_FragData[0] = vec4(modf(-1.5, bla) + 1, 0, 0, 1);
 

@@ -450,7 +450,7 @@ void Viewport::paintGL()
     // DRAW TERRAINS
 
     terrainProgram->bind();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -526,7 +526,7 @@ void Viewport::paintGL()
             glUniform1i(gridSizeID_, gridSize);
 
             QVector2D cameraTexCoord = QVector2D((cameraPosition.x() + horizontalScale / 2.0f) / horizontalScale,
-                                                (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
+                                                ((-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale));
 
 
             if (type_ == 0) {

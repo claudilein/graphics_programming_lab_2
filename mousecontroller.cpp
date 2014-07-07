@@ -200,7 +200,7 @@ void MouseController::keyPressEvent(QKeyEvent *event) {
         camera_->translate(translation);
         */
 
-        QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0, 0, -0.2));
+        QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0, 0, 0.2));
         camera_->translate(translation);
         if (checkCollision()) camera_->translate(-translation);
 
@@ -214,7 +214,7 @@ void MouseController::keyPressEvent(QKeyEvent *event) {
         QVector3D translation = rotationXMatrix * QVector3D(0, 0, -0.1);        
         camera_->translate(translation);
         */
-        QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0, 0, 0.2));
+        QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0, 0, -0.2));
         camera_->translate(translation);
         if (checkCollision()) camera_->translate(-translation);
 

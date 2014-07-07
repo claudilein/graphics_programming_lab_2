@@ -9,7 +9,9 @@ out vec3 tPosition_WS[];
 out vec2 tTexCoord_Terrain[];
 out float tTesselation[];
 out float tMipLevel[];
-patch out int seam[4];
+out int cornerTesselated[];
+patch out float baseMipLevel;
+//patch out int seam[4];
 
 uniform vec3 camPosition_WS;
 uniform float gridFraction;
@@ -35,27 +37,40 @@ void main()
 	
 	float halfQuadLength = 0.5;
 
-	vec3 posNeighbours[4];	// 0: left, 1: bottom/front, 2: right, 3: top/back
-	posNeighbours[0] = (vPosition_WS[0] + vPosition_WS[3]) / 2 + vec3(-halfQuadLength, 0, 0); 
-	posNeighbours[1] = (vPosition_WS[0] + vPosition_WS[1]) / 2 + vec3(0, 0, halfQuadLength); 	
+	// neighbours:
+	// | 7 | 3 | 6 |
+	// | 0 | x | 2 |
+	// | 4 | 1 | 5 |
+
+	vec3 posNeighbours[8];	
+	posNeighbours[0] = (vPosition_WS[0] + vPosition_WS[3]) / 2 + vec3(-halfQuadLength, 0, 0);
+	posNeighbours[1] = (vPosition_WS[0] + vPosition_WS[1]) / 2 + vec3(0, 0, halfQuadLength); 
 	posNeighbours[2] = (vPosition_WS[1] + vPosition_WS[2]) / 2 + vec3(halfQuadLength, 0, 0);
 	posNeighbours[3] = (vPosition_WS[2] + vPosition_WS[3]) / 2 + vec3(0, 0, -halfQuadLength);
+	
+	posNeighbours[4] = vPosition_WS[0] + vec3(-halfQuadLength, 0, halfQuadLength);  
+	posNeighbours[5] = vPosition_WS[1] + vec3(halfQuadLength, 0, halfQuadLength);
+	posNeighbours[6] = vPosition_WS[2] + vec3(halfQuadLength, 0, -halfQuadLength);
+	posNeighbours[7] = vPosition_WS[3] + vec3(-halfQuadLength, 0, -halfQuadLength);
 
 	float halfQuadLengthTex = 1 * gridFraction / nrQuads / 2;
 
-	vec2 texNeighbours[4];	// 0: left, 1: bottom/front, 2: right, 3: top/back
+	vec2 texNeighbours[8];	
 	texNeighbours[0] = (vTexCoord_Terrain[0] + vTexCoord_Terrain[3]) / 2 + vec2(-halfQuadLengthTex, 0); 
-	texNeighbours[1] = (vTexCoord_Terrain[0] + vTexCoord_Terrain[1]) / 2 + vec2(0, -halfQuadLengthTex); 	
+	texNeighbours[1] = (vTexCoord_Terrain[0] + vTexCoord_Terrain[1]) / 2 + vec2(0, -halfQuadLengthTex);
 	texNeighbours[2] = (vTexCoord_Terrain[1] + vTexCoord_Terrain[2]) / 2 + vec2(halfQuadLengthTex, 0);
 	texNeighbours[3] = (vTexCoord_Terrain[2] + vTexCoord_Terrain[3]) / 2 + vec2(0, halfQuadLengthTex);
 
-	float height_01;
-	float distanceToCamera;
-	float tessNeighbours[4];
+	texNeighbours[4] = vTexCoord_Terrain[0] + vec2(-halfQuadLengthTex, -halfQuadLengthTex); 
+	texNeighbours[5] = vTexCoord_Terrain[1] + vec2(halfQuadLengthTex, -halfQuadLengthTex); 
+	texNeighbours[6] = vTexCoord_Terrain[2] + vec2(halfQuadLengthTex, halfQuadLengthTex); 
+	texNeighbours[7] = vTexCoord_Terrain[3] + vec2(-halfQuadLengthTex, halfQuadLengthTex); 
 
-	for (int i = 0; i < 4; i++) {
-		height_01 = textureLod(heightMap, texNeighbours[i], 3).x;
-		posNeighbours[i] += vec3(0, height_01 * verticalScaling, 0);
+
+	float distanceToCamera;
+	float tessNeighbours[8];
+
+	for (int i = 0; i < 8; i++) {
 		distanceToCamera = distance(camPosition_WS, posNeighbours[i]);
 		tessNeighbours[i] = getTesselationFromDistance(distanceToCamera);
 	}
@@ -64,34 +79,39 @@ void main()
 	/* need to chose some intermediate mip level, as there is circular dependency
 	 * between determining distanceToCamera and mipLevel. */
 
-	height_01 = textureLod(heightMap, tex, 3).x;
+	float height_01 = textureLod(heightMap, tex, 3).x;
 	vec3 posWithHeight = pos + vec3(0, height_01 * verticalScaling, 0);
 
-	distanceToCamera = distance(camPosition_WS, posWithHeight);
+	distanceToCamera = distance(camPosition_WS, pos); // posWithHeight
 	float tesselation = getTesselationFromDistance(distanceToCamera);
-	float mipLevel = getMipFromTesselation(tesselation);
+	baseMipLevel = getMipFromTesselation(tesselation);
 
 	if (gl_InvocationID == 0)
     	{		
 		gl_TessLevelInner[0] = tesselation;
 		gl_TessLevelInner[1] = tesselation;
-		gl_TessLevelOuter[0] = tesselation;
-		gl_TessLevelOuter[1] = tesselation;
-		gl_TessLevelOuter[2] = tesselation;
-		gl_TessLevelOuter[3] = tesselation;
-
-		seam[0] = 0; seam[1] = 0; seam[2] = 0; seam[3] = 0;
-
-		// compare to neighbour tesselations and set accordingly
-		for (int i = 0; i < 4; i++) {
-			if (tessNeighbours[i] > tesselation) {
-				seam[i] = 1;
-				gl_TessLevelOuter[int(mod((i + 1),4))] = 2 * tesselation;
-			}	
-		}
    	}
 
-	tMipLevel[gl_InvocationID] = mipLevel;
+	//seam[gl_InvocationID] = 0;
+	tMipLevel[gl_InvocationID] = baseMipLevel;
+	gl_TessLevelOuter[gl_InvocationID] = tesselation;
+	cornerTesselated[gl_InvocationID] = 0;
+
+	if (tessNeighbours[gl_InvocationID] > tesselation) {
+		gl_TessLevelOuter[gl_InvocationID] = 2 * tesselation;
+		tMipLevel[gl_InvocationID] = getMipFromTesselation(2 * tesselation);
+	}
+
+	// check corner tesselation
+	if (tessNeighbours[gl_InvocationID + 4] > tesselation) {
+		//seam[gl_InvocationID] = 1;
+		cornerTesselated[gl_InvocationID] = 1;
+	}
+
+
+
+
+
 	tTesselation[gl_InvocationID] = tesselation;
 	tPosition_WS[gl_InvocationID] = vPosition_WS[gl_InvocationID];
 	tTexCoord_Terrain[gl_InvocationID] = vTexCoord_Terrain[gl_InvocationID];

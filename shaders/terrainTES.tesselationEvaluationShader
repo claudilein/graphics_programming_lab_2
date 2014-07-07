@@ -5,8 +5,10 @@ layout (quads, equal_spacing) in;
 in vec2 tTexCoord_Terrain[];
 in vec3 tPosition_WS[];
 in float tTesselation[];	// same for all 4 corner vertices
-in float tMipLevel[];		// same for all 4 corner vertices
-patch in int seam[4];
+in float tMipLevel[];
+in int cornerTesselated[];		
+//patch in int seam[4];
+patch in float baseMipLevel;
 
 out vec2 fTexCoord_Terrain;
 out vec3 fNormal_WS;
@@ -42,20 +44,68 @@ void main()
 	vec2 tex2 = mix(tTexCoord_Terrain[3], tTexCoord_Terrain[2], gl_TessCoord.x);
 	fTexCoord_Terrain = mix(tex1, tex2, gl_TessCoord.y);
 
+	float myMipLevel = baseMipLevel;
 
-	fHeight_01 = textureLod(heightMap, fTexCoord_Terrain, tMipLevel[0]).x;
+	// determine to which edge the vertex belongs
+	if (gl_TessCoord.x  == 0) {	// left edge
+		myMipLevel = tMipLevel[0];
+		if (gl_TessCoord.y == 0) {	// left, lower corner
+			if (cornerTesselated[0] == 1) {
+				myMipLevel = baseMipLevel - 1;
+			} else {
+				myMipLevel = min(myMipLevel, tMipLevel[1]);
+			}
+		}
+		if (gl_TessCoord.y == 1) {	// left, upper corner
+			if (cornerTesselated[3] == 1) {
+				myMipLevel = baseMipLevel - 1;
+			} else {
+				myMipLevel = min(myMipLevel, tMipLevel[3]);
+			}
+		}
+	} else if (gl_TessCoord.y == 0) {	// bottom edge
+		myMipLevel = tMipLevel[1];
+		if (gl_TessCoord.x == 1) {	// right, lower corner
+			if (cornerTesselated[1] == 1) {
+				myMipLevel = baseMipLevel - 1;
+			} else {
+				myMipLevel = min(myMipLevel, tMipLevel[2]);
+			}
+		}
+ 	} else if (gl_TessCoord.x == 1) {	// right edge
+		myMipLevel = tMipLevel[2];
+		if (gl_TessCoord.y == 1) {	// right, upper corner
+			if (cornerTesselated[2] == 1) {
+				myMipLevel = baseMipLevel - 1;
+			} else {
+				myMipLevel = min(myMipLevel, tMipLevel[3]);
+			}
+		}
+	} else if (gl_TessCoord.y == 1) {				// top edge
+		myMipLevel = tMipLevel[3];
+	}
+
+	if (myMipLevel > 6) myMipLevel = 6;
+
+	fHeight_01 = textureLod(heightMap, fTexCoord_Terrain, myMipLevel).x;
+
 	pos_WS += vec3(0, fHeight_01 * verticalScaling, 0);
 
 	debug.x = tTesselation[0];
 	debug.y = tMipLevel[0];
 
-	debug.x = seam[0];
-	debug.y = seam[1];
-	debug.z = seam[2];
+	debug.x = 0;
+	debug.y = 0;
+	debug.z = 0;
 
-	//debug.x = round(log2(8));
-	//debug.y = pos_WS.z / nrQuads;
-	
+	if (myMipLevel == 4) {
+		debug.x = 1;
+	} else if (myMipLevel == 5) {
+		debug.y = 1;
+	} else if (myMipLevel == 3) {
+		debug.z = 1;
+	}
+
 	// compute normal of this vertex
 	
 	float stepSizeTex = 1 * gridFraction / nrQuads / tTesselation[0];
