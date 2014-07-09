@@ -8,6 +8,7 @@ uniform vec3 camPosition_WS;	// WS = WorldSpace
 
 uniform float gridFraction;
 uniform int nrQuads;
+uniform int wireframe;
 
 out vec3 vPosition_WS;
 out vec2 vTexCoord_Terrain;
@@ -38,6 +39,9 @@ void main() {
 
 	vPosition_WS.x = round(vPosition_WS.x);
 	vPosition_WS.z = round(vPosition_WS.z);
+	if (wireframe == 1) {
+		vPosition_WS.y += 0.01;
+	}
 
 
 

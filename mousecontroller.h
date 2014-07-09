@@ -31,6 +31,7 @@ public slots:
     void wheelEvent(QWheelEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
+    void setFeedbackHeightTextureID(GLuint id);
 
 private:
     Viewport *viewport_;
@@ -44,6 +45,7 @@ private:
 
     QVector3D mapPointToTrackball(float x, float y);
     bool checkCollision();
+    GLuint feedbackHeightTextureID;
 };
 
 #endif // MOUSECONTROLLER_H

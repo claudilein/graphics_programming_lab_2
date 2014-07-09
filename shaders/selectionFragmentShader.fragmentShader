@@ -1,0 +1,55 @@
+#version 120
+
+varying vec2 texCoord;
+
+// idTexture uses the RED channel only!
+uniform sampler2D idTexture;
+uniform sampler2D colorTexture;
+uniform float id;
+uniform int active;
+uniform float offsetX;
+uniform float offsetY;
+
+void main() {
+	gl_FragColor = texture2D(colorTexture, texCoord);	
+//	
+//gl_FragColor = vec4(0,0,0,1);
+
+	bool border = false;
+
+	// if this pixel has the object ID and any of the adjacent pixels does not,
+	// it is a border pixel of the object.
+
+	if (texture2D(idTexture, texCoord).x == id && id != 0) {
+		/*
+		if (textureOffset(idTexture, texCoord, ivec2(-1,-1)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(-1, 0)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(-1, 1)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(0, 1)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(1, 1)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(1, 0)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(1,-1)).x != id) border = true;
+		if (textureOffset(idTexture, texCoord, ivec2(0,-1)).x != id) border = true;
+		*/
+
+		if (texture2D(idTexture, vec2(texCoord.x - offsetX, texCoord.y - offsetY)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x - offsetX, texCoord.y)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x - offsetX, texCoord.y + offsetY)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x, texCoord.y + offsetY)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x + offsetX, texCoord.y + offsetY)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x + offsetX, texCoord.y)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x + offsetX, texCoord.y - offsetY)).x != id) border = true;
+		if (texture2D(idTexture, vec2(texCoord.x, texCoord.y - offsetY)).x != id) border = true;		
+
+	}
+
+	// set object border yellow
+	if (border) gl_FragColor = vec4(1, 1, 0, 1);
+
+	if (active == 1) {
+		if (texCoord.x < offsetX * 5 || texCoord.y < offsetY * 5 || texCoord.x > 1 - offsetX * 5 || texCoord.y > 1 - offsetY * 5) 
+			gl_FragColor = vec4(1, 1, 1, 1);
+	}
+
+
+}

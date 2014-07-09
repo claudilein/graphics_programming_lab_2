@@ -166,6 +166,7 @@ private:
 
     // === TERRAIN === //
 
+    QAction *showWireframeAction;
     QSlider *horizontalScaleSlider;
     QSlider *verticalScaleSlider;
     // MATERIAL EDITOR

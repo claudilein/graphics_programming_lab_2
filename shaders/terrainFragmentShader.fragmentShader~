@@ -8,6 +8,9 @@ uniform sampler2D material1;
 uniform sampler2D material2;
 uniform sampler2D material3;
 
+uniform int wireframe;
+uniform int verticalScaling;
+
 in vec2 fTexCoord_Terrain;
 in vec3 fNormal_WS;
 in vec3 fLightRay_WS;
@@ -24,45 +27,108 @@ float smoothstep(float edge0, float edge1, float x) {
 
 void main()
 {
+	/* for realistic look, choose materials as follows:
+	 * 0: rock1, 1: rock0, 2: sand, 3: stone */
 	vec4 color0 = texture2D(material0, fTexCoord_Terrain * 8);
 	vec4 color1 = texture2D(material1, fTexCoord_Terrain * 8);
 	vec4 color2 = texture2D(material2, fTexCoord_Terrain * 8);
 	vec4 color3 = texture2D(material3, fTexCoord_Terrain * 8);
+
+	float color0_kd = 0.8;
+	float color1_kd = 0.9;
+	float color2_kd = 1;
+	float color3_kd = 0.1;
+
+	float color0_ks = 0.2;
+	float color1_ks = 0.1;
+	float color2_ks = 0;
+	float color3_ks = 0.9;
+
+	float color0_shininess = 100;
+	float color1_shininess = 120;
+	float color2_shininess = 160;
+	float color3_shininess = 50;
 
 	/* The closer the height of the vertex to range 0, the closer the result to 0.
 	 * The closer the height to range 1, the closer the result to 1. 
 	 * If the height is smaller than range 0 or greater than range 1, result is 
 	 * clamped to 0/1 respectively. */
 	// ranges: color0: [0.0, 0.004], color1: [0.0041, 0.025], color2: [0,0251, 0.04]
-	// color3 is mixed in when the slope is not so steep, e.g. between [0.9, 1]
+	// color3 is mixed in when the slope is steep, e.g. between [0, 0.1]
 
 	vec4 color = vec4(1, 0, 0, 1);
+	float kd = 1;
+	float ks = 1;
+	float shininess = 100;
 
 	if (nrMaterials == 0) {
 		color = vec4(0.5, 0.5, 0.5, 1); // grey
+		kd = color1_kd;
+		ks = color1_ks;
+		shininess = color1_shininess;
 	} else if (nrMaterials == 1) {
 		color = color0;
+		kd = color0_kd;
+		ks = color0_ks;
+		shininess = color0_shininess;
 	} else if (nrMaterials == 2) {
 		float btwnColor0_1 = smoothstep(0.02, 0.035, fHeight_01);
 		color = mix(color0, color1, btwnColor0_1);
+		kd = mix(color0_kd, color1_kd, btwnColor0_1);
+		ks = mix(color0_ks, color1_ks, btwnColor0_1);
+		shininess = mix(color0_shininess, color1_shininess, btwnColor0_1);
 	} else if (nrMaterials == 3) {
-		float btwnColor0_1 = smoothstep(0.015, 0.025, fHeight_01);
+		/*float btwnColor0_1 = smoothstep(0.015, 0.025, fHeight_01);
 		color = mix(color0, color1, btwnColor0_1);
 
 		float btwnColor01_2 = smoothstep(0.035, 0.040, fHeight_01);
+		color = mix(color, color2, btwnColor01_2);*/
+
+		float btwnColor0_1 = smoothstep(0.02, 0.035, fHeight_01);
+		color = mix(color0, color1, btwnColor0_1);
+
+		float slope = normalize(fNormal_WS).y;
+		float btwnColor01_2 = smoothstep(0.9, 1, slope) / 3;
 		color = mix(color, color2, btwnColor01_2);
+
+		kd = mix(color0_kd, color1_kd, btwnColor0_1);
+		ks = mix(color0_ks, color1_ks, btwnColor0_1);
+		shininess = mix(color0_shininess, color1_shininess, btwnColor0_1);
+
+		kd = mix(kd, color2_kd, btwnColor01_2);
+		ks = mix(ks, color2_ks, btwnColor01_2);
+		shininess = mix(shininess, color2_shininess, btwnColor01_2);
+			
 	} else if (nrMaterials >=4 ) {
 
 		float slope = normalize(fNormal_WS).y;
 
-		float btwnColor0_1 = smoothstep(0.015, 0.025, fHeight_01);
+		/*float btwnColor0_1 = smoothstep(0.015, 0.025, fHeight_01);
 		color = mix(color0, color1, btwnColor0_1);
 
 		float btwnColor01_2 = smoothstep(0.035, 0.040, fHeight_01);
+		color = mix(color, color2, btwnColor01_2);*/
+
+		float btwnColor0_1 = smoothstep(0.02, 0.035, fHeight_01);
+		color = mix(color0, color1, btwnColor0_1);
+
+		float btwnColor01_2 = smoothstep(0.9, 1, slope) / 3;
 		color = mix(color, color2, btwnColor01_2);
 
-		float btwnColor012_3 = smoothstep(0.9, 1, slope) / 3;
+		float btwnColor012_3 = smoothstep(0.5, 0.3, slope) / 1.5;
 		color = mix(color, color3, btwnColor012_3);
+
+		kd = mix(color0_kd, color1_kd, btwnColor0_1);
+		ks = mix(color0_ks, color1_ks, btwnColor0_1);
+		shininess = mix(color0_shininess, color1_shininess, btwnColor0_1);
+
+		kd = mix(kd, color2_kd, btwnColor01_2);
+		ks = mix(ks, color2_ks, btwnColor01_2);
+		shininess = mix(shininess, color2_shininess, btwnColor01_2);
+
+		kd = mix(kd, color3_kd, btwnColor012_3);
+		ks = mix(ks, color3_ks, btwnColor012_3);
+		shininess = mix(shininess, color3_shininess, btwnColor012_3);
 	}
 	
 
@@ -84,44 +150,51 @@ void main()
 		vec4 diffuseColor = color * LdotN * light0[2];
 
 		// specular = ks * <R,V>^n * ls
-		vec4 specularColor = pow(RdotV, 240) * light0[3];
+		vec4 specularColor = pow(RdotV, shininess) * light0[3] ;
 
-		outputColor += diffuseColor + specularColor;
+		outputColor += kd * diffuseColor + ks * specularColor;
 	
 	} 
 	
 	gl_FragData[0] = outputColor;
+	//gl_FragData[0] = vec4(N, 1);
 
 	vec3 c;
-	if (debug.y <= 0) { c = vec3(1, 0, 0); }	// red
-	else if (debug.y <= 1) { c = vec3(0, 1, 0); }	// green
-	else if (debug.y <= 2) { c = vec3(0, 0, 1); }	// blue
-	else if (debug.y <= 3) { c = vec3(1, 1, 0); } 	// yellow
-	else if (debug.y <= 4) { c = vec3(0, 1, 1); }	// cyan
-	else if (debug.y <= 5) { c = vec3(1, 0, 1); }	// magenta
-	else if (debug.y <= 6) { c = vec3(1, 1, 1); }	// white
-	else if (debug.y <= 7) { c = vec3(0, 0, 0); }	// black
-	else if (debug.y <= 8) { c = vec3(0.5, 0, 0); }	// dark red
-	else if (debug.y <= 9) { c = vec3(0, 0.5, 0); }	// dark green
-	else if (debug.y <= 10) { c = vec3(0, 0, 0.5); }	// dark blue
-	else if (debug.y <= 11) { c = vec3(0.5, 0.5, 0); }	// dark yellow
-	else if (debug.y <= 12) { c = vec3(0, 0.5, 0.5); }	// dark cyan
-	else if (debug.y <= 13) { c = vec3(0.5, 0, 0.5); }	// dark magenta
+	if (debug.x <= 0) { c = vec3(1, 0, 0); }	// red
+	else if (debug.x <= 1) { c = vec3(0, 1, 0); }	// green
+	else if (debug.x <= 2) { c = vec3(0, 0, 1); }	// blue
+	else if (debug.x <= 3) { c = vec3(1, 1, 0); } 	// yellow
+	else if (debug.x <= 4) { c = vec3(0, 1, 1); }	// cyan
+	else if (debug.x <= 5) { c = vec3(1, 0, 1); }	// magenta
+	else if (debug.x <= 6) { c = vec3(1, 1, 1); }	// white
+	else if (debug.x <= 7) { c = vec3(0, 0, 0); }	// black
+	else if (debug.x <= 8) { c = vec3(0.5, 0, 0); }	// dark red
+	else if (debug.x <= 9) { c = vec3(0, 0.5, 0); }	// dark green
+	else if (debug.x <= 10) { c = vec3(0, 0, 0.5); }	// dark blue
+	else if (debug.x <= 11) { c = vec3(0.5, 0.5, 0); }	// dark yellow
+	else if (debug.x <= 12) { c = vec3(0, 0.5, 0.5); }	// dark cyan
+	else if (debug.x <= 13) { c = vec3(0.5, 0, 0.5); }	// dark magenta
 	else { c = vec3(0.5, 0.5, 0.5); }	// grey
 
 	
 
 
-/*	if (debug.y <= 1) { c = vec3(1, 0, 0); }	// red
-	else if (debug.y <= 2) { c = vec3(0, 1, 0); }	// green
-	else if (debug.y <= 4) { c = vec3(0, 0, 1); }	// blue
-	else if (debug.y <= 8) { c = vec3(1, 1, 0); } 	// yellow
-	else if (debug.y <= 16) { c = vec3(0, 1, 1); }	// cyan
-	else if (debug.y <= 32) { c = vec3(1, 0, 1); }	// magenta
-	else if (debug.y <= 64) { c = vec3(1, 1, 1); }	// white
-*/
-	gl_FragData[0] = vec4(debug.x, debug.y, debug.z, 1);
+	if (debug.x <= 1) { c = vec3(1, 0, 0); }	// red
+	else if (debug.x <= 2) { c = vec3(0, 1, 0); }	// green
+	else if (debug.x <= 4) { c = vec3(0, 0, 1); }	// blue
+	else if (debug.x <= 8) { c = vec3(1, 1, 0); } 	// yellow
+	else if (debug.x <= 16) { c = vec3(0, 1, 1); }	// cyan
+	else if (debug.x <= 32) { c = vec3(1, 0, 1); }	// magenta
+	else if (debug.x <= 64) { c = vec3(1, 1, 1); }	// white
 
-	//gl_FragData[0] = vec4(modf(-1.5, bla) + 1, 0, 0, 1);
+	//gl_FragData[0] = vec4(debug.x, debug.x, debug.z, 1);
+
+	gl_FragData[0] = vec4(c, 1);
+
+
+	gl_FragData[2] = vec4(fHeight_01 * verticalScaling, 0, 0, 1);
+	if (wireframe == 1) {
+		gl_FragData[0] = vec4(0, 1, 0, 1);
+	}
 
 }

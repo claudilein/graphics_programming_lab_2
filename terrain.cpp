@@ -6,9 +6,9 @@
 
 Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
     Primitive(0, name, id, tesselation, color),
-    horizontalScale_(100),
+    horizontalScale_(256),
     verticalScale_(300),
-    gridSize_(100),
+    gridSize_(128),
     width_(0),
     height_(0)
 {
@@ -20,6 +20,23 @@ Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
     indicesList_.resize(0);
     vertexTextureCoordinates_.resize(0);
     int halfGridSize = gridSize_ / 2;
+/*
+    for (int i = 0; i < gridSize_; i++) {
+        for (int j = 0; j > gridSize_; j++) {
+            vertexPositions_.push_back(float3(i, 0, j));
+            vertexPositions_.push_back(float3(i + 1, 0, j));
+            vertexPositions_.push_back(float3(i + 1, 0, j - 1));
+            vertexPositions_.push_back(float3(i, 0, j - 1));
+
+            // texture coordinates range from [-0.5, 0.5] here, as they will be added to the global tex coords of the camera
+            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (-j) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (-j) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (-j + 1) / (2.0f * halfGridSize), 0));
+            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (-j + 1) / (2.0f * halfGridSize), 0));
+
+        }
+    }*/
+
 
     for (int i = -halfGridSize; i < halfGridSize; i++) {
         for (int j = halfGridSize; j > -halfGridSize; j--) {
@@ -35,19 +52,6 @@ Terrain::Terrain(std::string name, int id, int tesselation, float3 color) :
             vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (-j + 1) / (2.0f * halfGridSize), 0));
 
         }
-        /*for (int j = -halfGridSize; j < halfGridSize; j++) {
-            vertexPositions_.push_back(float3(i, 0, j));
-            vertexPositions_.push_back(float3(i, 0, j + 1));
-            vertexPositions_.push_back(float3(i + 1, 0, j + 1));
-            vertexPositions_.push_back(float3(i + 1, 0, j));
-
-            // texture coordinates range from [-0.5, 0.5] here, as they will be added to the global tex coords of the camera
-            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
-            vertexTextureCoordinates_.push_back(float3((i) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
-            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j + 1) / (2.0f * halfGridSize), 0));
-            vertexTextureCoordinates_.push_back(float3((i + 1) / (2.0f * halfGridSize), (j) / (2.0f * halfGridSize), 0));
-
-        }*/
     }
 
     // set indices list
@@ -162,6 +166,7 @@ void Terrain::draw(bufferIDs buffIDs) {
 
 void Terrain::setHorizontalScale(int horizontalScale) {
     horizontalScale_ = horizontalScale;
+    if (horizontalScale_ % 2 != 0) horizontalScale_--;
 }
 
 void Terrain::setVerticalScale(int verticalScale) {

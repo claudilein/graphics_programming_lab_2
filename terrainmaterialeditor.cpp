@@ -27,18 +27,20 @@ void TerrainMaterialEditor::uploadMaterial() {
     QString fileName;
     fileName = QFileDialog::getOpenFileName(this,
         tr("Upload Material Image"), "../", tr("Image Files (*.jpg)"));
+    if (fileName != "") {
 
-    materialPixmaps.push_back(new QPixmap(fileName));
+        materialPixmaps.push_back(new QPixmap(fileName));
 
-    materialLabels.push_back(new QLabel());
-    materialLabels.back()->setPixmap(*materialPixmaps.back());
-    materialLabels.back()->setScaledContents(true);
-    materialLabels.back()->setFixedSize(50, 50);
-    //connect(materialLabels.back(), SIGNAL(clicked), this, selectMaterial());
+        materialLabels.push_back(new QLabel());
+        materialLabels.back()->setPixmap(*materialPixmaps.back());
+        materialLabels.back()->setScaledContents(true);
+        materialLabels.back()->setFixedSize(50, 50);
+        //connect(materialLabels.back(), SIGNAL(clicked), this, selectMaterial());
 
-    gridLayout->addWidget(materialLabels.back(), nrMaterials, 0);
+        gridLayout->addWidget(materialLabels.back(), nrMaterials, 0);
 
-    emit materialAdded(fileName);
+        emit materialAdded(fileName);
+    }
 
 }
 

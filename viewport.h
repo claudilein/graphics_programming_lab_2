@@ -38,6 +38,7 @@ signals:
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
     void setActivePrimitive(float id);
+    void transmitFeedbackHeightTextureID(GLuint id);
 
 public slots:
     void setClickedId(int x, int y);
@@ -50,6 +51,7 @@ public slots:
     void setGridSize(int i);
     void setStepSize(int i);
     void setMip(bool on);
+    void showWireframe(bool on);
     Primitive::bufferIDs createPrimitiveBufferIDs(Primitive* p);
 
 protected:
@@ -110,6 +112,7 @@ private:
     GLuint colorTexture_;
     GLuint idTexture_;
     GLuint depthTexture_;
+    GLuint feedbackHeightTexture_;
 
     // shader inputs
     GLuint phongIdID_;
@@ -146,11 +149,13 @@ private:
     GLuint material3ID_;
     GLuint nrMaterialsID_;
     GLuint light0ID_;
+    GLuint wireframeID_;
 
     QVector4D light0_[4];
 
     bool showGrid_;
     bool mip_;
+    bool showWireframe_;
 
     Cube *cube_;
     Torus *torus_;

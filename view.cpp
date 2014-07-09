@@ -233,18 +233,21 @@ View::View(QWidget *parent)
 
     // === TERRAIN SLIDERS === //
 
+    showWireframeAction = new QAction("Wireframe", this);
+    showWireframeAction->setCheckable(true);
+    showWireframeAction->setChecked(false);
 
     horizontalScaleSlider = new QSlider(toolBar);
     horizontalScaleSlider->setOrientation(Qt::Horizontal);
     horizontalScaleSlider->setFixedWidth(80);
-    horizontalScaleSlider->setRange(50, 200);
-    horizontalScaleSlider->setValue(100);
+    horizontalScaleSlider->setRange(128, 512);
+    horizontalScaleSlider->setValue(256);
     connect(horizontalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setHorizontalScale(int)));
 
     verticalScaleSlider = new QSlider(toolBar);
     verticalScaleSlider->setOrientation(Qt::Horizontal);
     verticalScaleSlider->setFixedWidth(80);
-    verticalScaleSlider->setRange(200, 500);
+    verticalScaleSlider->setRange(200, 700);
     verticalScaleSlider->setValue(300);
     connect(verticalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setVerticalScale(int)));
 
@@ -282,6 +285,7 @@ View::View(QWidget *parent)
     toolBar->addAction(mipAction);
 
     toolBar->addSeparator();
+    toolBar->addAction(showWireframeAction);
     toolBar->addWidget(horizontalScaleSlider);
     toolBar->addWidget(verticalScaleSlider);
 
@@ -378,6 +382,12 @@ void View::setModel(Model *model)
     connect(mipAction, SIGNAL(toggled(bool)), viewportLeft, SLOT(setMip(bool)));
     connect(mipAction, SIGNAL(toggled(bool)), viewportTop, SLOT(setMip(bool)));
 
+    connect(showWireframeAction, SIGNAL(toggled(bool)), viewportPerspective, SLOT(showWireframe(bool)));
+    connect(showWireframeAction, SIGNAL(toggled(bool)), viewportFront, SLOT(showWireframe(bool)));
+    connect(showWireframeAction, SIGNAL(toggled(bool)), viewportLeft, SLOT(showWireframe(bool)));
+    connect(showWireframeAction, SIGNAL(toggled(bool)), viewportTop, SLOT(showWireframe(bool)));
+
+
     // ===== OUTLINER ===== //
 
     outlinerWidget = new QDockWidget("Outliner: ", this);
@@ -462,7 +472,9 @@ void View::readTerrainFile() {
     QString fileName;
     fileName = QFileDialog::getOpenFileName(this,
         tr("Upload Height Map"), "../", tr("Pgm Files (*.pgm)"));
-    emit createTerrain(fileName);
+    if (fileName != "") {
+        emit createTerrain(fileName);
+    }
 }
 
 Viewport* View::getViewport(Model::ViewportType type)

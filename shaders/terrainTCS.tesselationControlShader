@@ -21,19 +21,18 @@ uniform sampler2D heightMap;
 
 float getTesselationFromDistance(float distanceToCamera) {
 	int texelPerQuadLevel0 = int(round(4096 * gridFraction / nrQuads));
-	return max(1, min(64, pow(2, round(log2(texelPerQuadLevel0 / (1 * distanceToCamera))))));
+	return max(1, min(32, pow(2, round(log2(texelPerQuadLevel0 / (0.005 * distanceToCamera * distanceToCamera))))));
 }
 
 // tesselation should always be a power of 2, max. 64
 float getMipFromTesselation(float tesselation) {
-	return (6 - log2(tesselation));
+	return (5 - log2(tesselation));
 }
 
 void main() 
 {
 	vec3 pos = (vPosition_WS[0] + vPosition_WS[1] + vPosition_WS[2] + vPosition_WS[3]) / 4;
 	vec2 tex = (vTexCoord_Terrain[0] + vTexCoord_Terrain[1] + vTexCoord_Terrain[2] + vTexCoord_Terrain[3]) / 4;
-
 	
 	float halfQuadLength = 0.5;
 
@@ -43,7 +42,7 @@ void main()
 	// | 4 | 1 | 5 |
 
 	vec3 posNeighbours[8];	
-	posNeighbours[0] = (vPosition_WS[0] + vPosition_WS[3]) / 2 + vec3(-halfQuadLength, 0, 0);
+	posNeighbours[0] = (vPosition_WS[3] + vPosition_WS[0]) / 2 + vec3(-halfQuadLength, 0, 0);
 	posNeighbours[1] = (vPosition_WS[0] + vPosition_WS[1]) / 2 + vec3(0, 0, halfQuadLength); 
 	posNeighbours[2] = (vPosition_WS[1] + vPosition_WS[2]) / 2 + vec3(halfQuadLength, 0, 0);
 	posNeighbours[3] = (vPosition_WS[2] + vPosition_WS[3]) / 2 + vec3(0, 0, -halfQuadLength);
@@ -56,7 +55,7 @@ void main()
 	float halfQuadLengthTex = 1 * gridFraction / nrQuads / 2;
 
 	vec2 texNeighbours[8];	
-	texNeighbours[0] = (vTexCoord_Terrain[0] + vTexCoord_Terrain[3]) / 2 + vec2(-halfQuadLengthTex, 0); 
+	texNeighbours[0] = (vTexCoord_Terrain[3] + vTexCoord_Terrain[0]) / 2 + vec2(-halfQuadLengthTex, 0); 
 	texNeighbours[1] = (vTexCoord_Terrain[0] + vTexCoord_Terrain[1]) / 2 + vec2(0, -halfQuadLengthTex);
 	texNeighbours[2] = (vTexCoord_Terrain[1] + vTexCoord_Terrain[2]) / 2 + vec2(halfQuadLengthTex, 0);
 	texNeighbours[3] = (vTexCoord_Terrain[2] + vTexCoord_Terrain[3]) / 2 + vec2(0, halfQuadLengthTex);
@@ -74,7 +73,6 @@ void main()
 		distanceToCamera = distance(camPosition_WS, posNeighbours[i]);
 		tessNeighbours[i] = getTesselationFromDistance(distanceToCamera);
 	}
-
 
 	/* need to chose some intermediate mip level, as there is circular dependency
 	 * between determining distanceToCamera and mipLevel. */

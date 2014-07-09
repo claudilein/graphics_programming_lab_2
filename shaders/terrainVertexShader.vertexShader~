@@ -8,6 +8,7 @@ uniform vec3 camPosition_WS;	// WS = WorldSpace
 
 uniform float gridFraction;
 uniform int nrQuads;
+uniform int wireframe;
 
 out vec3 vPosition_WS;
 out vec2 vTexCoord_Terrain;
@@ -20,7 +21,7 @@ void main() {
 
 	float restX = mod(vTexCoord_Terrain.x, quadLengthTex);
 	float restY = mod(vTexCoord_Terrain.y, quadLengthTex);
-
+/*
 	if (restX >= quadLengthTex / 2) {
 		vTexCoord_Terrain.x += quadLengthTex - restX;
 	} else {
@@ -32,19 +33,16 @@ void main() {
 	} else {
 		vTexCoord_Terrain.y -= restY;
 	}		
-
+*/
 	// no model matrix: terrain cannot be moved or rotated
 	vPosition_WS = vPosition_MS_in + vec3(camPosition_WS.x, 0, camPosition_WS.z);
 
-	vPosition_WS.x = round(vPosition_WS.x);
-	vPosition_WS.z = round(vPosition_WS.z);
+//	vPosition_WS.x = round(vPosition_WS.x);
+//	vPosition_WS.z = round(vPosition_WS.z);
+	if (wireframe == 1) {
+		vPosition_WS.y += 0.01;
+	}
 
-	/*float quadLength = 1;
-	neighbourPosition_WS[0] = vPosition_WS + vec3(-quadLength, 0, 0);	// left
-	neighbourPosition_WS[1] = vPosition_WS + vec3(quadLength, 0, 0);	// right
-	neighbourPosition_WS[2] = vPosition_WS + vec3(0, 0, -quadLength);	// back/top
-	neighbourPosition_WS[3] = vPosition_WS + vec3(0, 0, quadLength);	// front/bottom
-*/
 
 
 

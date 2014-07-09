@@ -37,10 +37,16 @@ int main(int argc, char *argv[])
     model.addCube();
     model.addCube();
     model.addCube();
+    model.addCube();
+    model.addCube();
+    model.addCube();
 
-    model.getScenegraph()->at(0)->translate(QVector3D(-5, 0, 5));
-    model.getScenegraph()->at(1)->translate(QVector3D(-5, 0, -5));
-    model.getScenegraph()->at(2)->translate(QVector3D(0, 20, 0));
+    model.getScenegraph()->at(0)->translate(QVector3D(0, 4, 0));
+    model.getScenegraph()->at(1)->translate(QVector3D(0, 5, 0));
+    model.getScenegraph()->at(2)->translate(QVector3D(0, 6, 0));
+    model.getScenegraph()->at(3)->translate(QVector3D(0, 7, 0));
+    model.getScenegraph()->at(4)->translate(QVector3D(0, 8, 0));
+    model.getScenegraph()->at(5)->translate(QVector3D(0, 9, 1));
 
     model.addTerrain(QString("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/terrain/grand_canyon.pgm"));
 

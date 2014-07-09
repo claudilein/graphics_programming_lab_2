@@ -4,6 +4,7 @@
 #include <iostream>
 #include <model.h>
 #include <terrain.h>
+#include <GL/gl.h>
 
 MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *camera, Model *model) :
     QObject(parent)
@@ -17,6 +18,7 @@ MouseController::MouseController(QObject *parent, Viewport *viewport, Camera *ca
     connect(viewport_, SIGNAL(mouseMoveEvent(QMouseEvent*)), this, SLOT(mouseMoveEvent(QMouseEvent*)));
     connect(viewport_, SIGNAL(wheelEvent(QWheelEvent*)), this, SLOT(wheelEvent(QWheelEvent*)));
     connect(viewport_, SIGNAL(setActivePrimitive(float)), this, SIGNAL(setActivePrimitive(float)));
+    connect(viewport_, SIGNAL(transmitFeedbackHeightTextureID(GLuint)), this, SLOT(setFeedbackHeightTextureID(GLuint)));
 
     connect(this, SIGNAL(setClickedId(int,int)), viewport_, SLOT(setClickedId(int,int)));
 }
@@ -131,6 +133,7 @@ void MouseController::mouseMoveEvent(QMouseEvent *event)
 void MouseController::wheelEvent(QWheelEvent *event)
 {
     camera_->zoom(event->delta() * 0.002f);
+    if (checkCollision()) camera_->zoom(-event->delta() * 0.002f);
     emit updateViewport();
 }
 
@@ -242,33 +245,57 @@ void MouseController::keyReleaseEvent(QKeyEvent *event) {
 
 bool MouseController::checkCollision() {
     bool collision = false;
-    std::cout << "entered checkCollision" << std::endl;
+    if (viewport_->getType() == Model::PERSPECTIVE) {
+        QList<Primitive*> *primitives = model_->getScenegraph();
+        for (int i = 0; i < primitives->size(); i++) {
+            if (primitives->at(i)->isTerrain()) {
+                Terrain* terrain = static_cast<Terrain*>(primitives->at(i));
+                QVector4D cameraPosition = camera_->getCameraMatrix().inverted().column(3);
+                float horizontalScale = terrain->getHorizontalScale();
+                QVector2D cameraTexCoord = QVector2D((cameraPosition.x() + horizontalScale / 2.0f) / horizontalScale,
+                                                    (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
 
-    QList<Primitive*> *primitives = model_->getScenegraph();
-    for (int i = 0; i < primitives->size(); i++) {
-        if (primitives->at(i)->isTerrain()) {
-            std::cout << "entered for loop" << std::endl;
-            QVector4D cameraPosition = camera_->getCameraMatrix().inverted().column(3);
-            float horizontalScale = static_cast<Terrain*>(primitives->at(i))->getHorizontalScale();
-            QVector2D cameraTexCoord = QVector2D((cameraPosition.x() + horizontalScale / 2.0f) / horizontalScale,
-                                                (-cameraPosition.z() + horizontalScale / 2.0f) / horizontalScale);
 
-            float terrainWidth = static_cast<Terrain*>(primitives->at(i))->getWidth();
-            cameraTexCoord *= terrainWidth;  // scale from [0, 1] to [0, 4096]
+                int terrainWidth = terrain->getWidth();
+                cameraTexCoord.setX(1 - cameraTexCoord.x());
+                cameraTexCoord.setY(cameraTexCoord.y());
+                cameraTexCoord *= (terrainWidth - 1);  // scale from [0, 1] to [0, 4096]
 
-            float terrainHeight = static_cast<Terrain*>(primitives->at(i))->getHeightValues()
-                                  [(int) (cameraTexCoord.x() * terrainWidth + cameraTexCoord.y()) ] *
-                           static_cast<Terrain*>(primitives->at(i))->getVerticalScale() /
-                           65535.0f ;
+                // TODO row andersherum... col auch?
+                int index = (cameraTexCoord.y() * terrainWidth + cameraTexCoord.x());
+                std::cout << "row: " << cameraTexCoord.y() << ", column: " << cameraTexCoord.x() << std::endl;
+                if (index < terrainWidth * terrainWidth && index > 0) {
 
-            std::cout << "Cam height: " << cameraPosition.y() << ", terrain height: " << terrainHeight + 0.1 << std::endl;
-            if (cameraPosition.y() <= terrainHeight + 0.1) {    // collision!
-                std::cout << "Collision: Camera height: " << cameraPosition.y() << ", terrain height: " << terrainHeight << std::endl;
-                // translate camera back
-                collision = true;
+                    /*(terrain->getHeightValues()[index] + terrain->getHeightValues()[index + 1] + terrain->getHeightValues()[index - 1] +
+                                           terrain->getHeightValues()[index - terrainWidth] + terrain->getHeightValues()[index - terrainWidth - 1] + terrain->getHeightValues()[index - terrainWidth + 1] +
+                                           terrain->getHeightValues()[index + terrainWidth] + terrain->getHeightValues()[index + terrainWidth - 1] + terrain->getHeightValues()[index + terrainWidth + 1])
+                                           / 9 */
+
+                    float terrainHeight = terrain->getHeightValues()[index] / 65535.0f *
+                                          terrain->getVerticalScale()  ;
+                    std::cout << "terrainHeight: " << terrain->getHeightValues()[index]
+                                 << ", * vS: " << terrain->getHeightValues()[index] *
+                                    terrain->getVerticalScale()
+                                 << ", / 65535.0f: " << terrainHeight << std::endl;
+
+                    //std::cout << "row: " << cameraTexCoord.y() << ", column: " << cameraTexCoord.x() << ", cam height: " << cameraPosition.y() << ", terrain height: " << terrainHeight + 0.1 << std::endl;
+
+                    if (cameraPosition.y() <= terrainHeight + 0.1) {    // collision!
+                        std::cout << "Collision: Camera height: " << cameraPosition.y() << ", terrain height: " << terrainHeight + 0.1 << std::endl;
+                        collision = true;
+                    } else {
+                        std::cout << "No collision: camera height: " << cameraPosition.y() << ", terrain height: " << terrainHeight + 0.1 << std::endl;
+                    }
+                } else {    // camera is in area of clamped terrain
+                    collision = true;
+                }
             }
         }
     }
-    //return collision;
-    return false;
+    return collision;
+    //return false;
+}
+
+void MouseController::setFeedbackHeightTextureID(GLuint id) {
+    feedbackHeightTextureID = id;
 }

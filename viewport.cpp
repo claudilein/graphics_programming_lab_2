@@ -30,6 +30,7 @@ Viewport::Viewport(QWidget *parent, QGLFormat format, Model::ViewportType type, 
 
     showGrid_ = false;
     mip_ = false;
+    showWireframe_ = false;
 
     gridSize_ = 5;
     stepSize_ = 1;
@@ -81,8 +82,8 @@ void Viewport::initializeGL()
 
     light0_[0] = QVector4D(0, 20, 0, 1);    // position
     light0_[1] = QVector4D(0.3, 0.3, 0.3, 1.0);  // ambient
-    light0_[2] = QVector4D(0.6, 0.6, 0.6, 1);    // diffuse
-    light0_[3] = QVector4D(0.1, 0.1, 0.1, 1);    // specular
+    light0_[2] = QVector4D(1, 1, 1, 1);    // diffuse
+    light0_[3] = QVector4D(1, 1, 1, 1);    // specular
 
     // Assign created components to GL_LIGHT0
     float* tmp = (float*) malloc(sizeof(float) * 4);
@@ -152,6 +153,17 @@ void Viewport::initializeGL()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_FLOAT, 0);
 
+    // create feedback height texture
+    glGenTextures(1, &feedbackHeightTexture_);
+    glBindTexture(GL_TEXTURE_2D, feedbackHeightTexture_);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, 0);
+
+    emit transmitFeedbackHeightTextureID(feedbackHeightTexture_);
+
     // create a texture for the object IDs
     glGenTextures(1, &idTexture_);
     glBindTexture(GL_TEXTURE_2D, idTexture_);
@@ -184,6 +196,12 @@ void Viewport::initializeGL()
                            GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
                            idTexture_,             // 4. tex ID
                            0);                    // 5. mipmap level: 0(base)
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT,
+                              GL_COLOR_ATTACHMENT2_EXT,
+                              GL_TEXTURE_2D,
+                              feedbackHeightTexture_,
+                              0);
 
     // attach the renderbuffer to depth attachment point
     glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT,      // 1. fbo target: GL_FRAMEBUFFER
@@ -321,6 +339,7 @@ void Viewport::initializeGL()
     material2ID_ = glGetUniformLocation(terrainProgram->programId(), "material2");
     material3ID_ = glGetUniformLocation(terrainProgram->programId(), "material3");
     light0ID_ = glGetUniformLocation(terrainProgram->programId(), "light0");
+    wireframeID_ = glGetUniformLocation(terrainProgram->programId(), "wireframe");
 
 
     glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
@@ -450,7 +469,7 @@ void Viewport::paintGL()
     // DRAW TERRAINS
 
     terrainProgram->bind();
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -487,6 +506,7 @@ void Viewport::paintGL()
             glUniform1i(material1ID_, 3);
             glUniform1i(material2ID_, 4);
             glUniform1i(material3ID_, 5);
+            glUniform1i(wireframeID_, 0);
 
             checkGLErrors("after sending uniforms for materials");
 
@@ -530,8 +550,8 @@ void Viewport::paintGL()
 
 
             if (type_ == 0) {
-                std::cout << "cameraTexCoord: (" << cameraTexCoord.x() << ", " << cameraTexCoord.y() << ")" << std::endl;
-                std::cout << "cameraPosition: (" << cameraPosition.x() << ", " << cameraPosition.y() << ", " << cameraPosition.z() << ")" << std::endl;
+                //std::cout << "cameraTexCoord: (" << cameraTexCoord.x() << ", " << cameraTexCoord.y() << ")" << std::endl;
+                //std::cout << "cameraPosition: (" << cameraPosition.x() << ", " << cameraPosition.y() << ", " << cameraPosition.z() << ")" << std::endl;
             }
             // send camera tex coords to shader ========================================================
             glUniform2f(cameraTexCoordID_, cameraTexCoord.x(), cameraTexCoord.y());
@@ -550,6 +570,13 @@ void Viewport::paintGL()
             primitives->at(i)->draw(primitiveBufferIDs_[primitives->at(i)->getID()]);
 
             //free(floatMatrix);
+
+            if (showWireframe_) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glUniform1i(wireframeID_, 1);
+                primitives->at(i)->draw(primitiveBufferIDs_[primitives->at(i)->getID()]);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
         }
     }
 
@@ -605,6 +632,7 @@ void Viewport::paintGL()
 
 }
 
+
 void Viewport::resizeGL(int width, int height)
 {
     //if (width == 0) width = 1;
@@ -632,6 +660,10 @@ void Viewport::resizeGL(int width, int height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_FLOAT, 0);
 
     glBindTexture(GL_TEXTURE_2D, idTexture_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, feedbackHeightTexture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -835,6 +867,12 @@ void Viewport::showGrid(bool on) {
 
 void Viewport::setMip(bool on) {
     mip_ = on;
+
+    updateGL();
+}
+
+void Viewport::showWireframe(bool on) {
+    showWireframe_ = on;
 
     updateGL();
 }

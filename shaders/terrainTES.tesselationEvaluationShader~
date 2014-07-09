@@ -51,14 +51,14 @@ void main()
 		myMipLevel = tMipLevel[0];
 		if (gl_TessCoord.y == 0) {	// left, lower corner
 			if (cornerTesselated[0] == 1) {
-				myMipLevel--;
+				myMipLevel = baseMipLevel - 1;
 			} else {
 				myMipLevel = min(myMipLevel, tMipLevel[1]);
 			}
 		}
 		if (gl_TessCoord.y == 1) {	// left, upper corner
 			if (cornerTesselated[3] == 1) {
-				myMipLevel--;
+				myMipLevel = baseMipLevel - 1;
 			} else {
 				myMipLevel = min(myMipLevel, tMipLevel[3]);
 			}
@@ -67,7 +67,7 @@ void main()
 		myMipLevel = tMipLevel[1];
 		if (gl_TessCoord.x == 1) {	// right, lower corner
 			if (cornerTesselated[1] == 1) {
-				myMipLevel--;
+				myMipLevel = baseMipLevel - 1;
 			} else {
 				myMipLevel = min(myMipLevel, tMipLevel[2]);
 			}
@@ -76,7 +76,7 @@ void main()
 		myMipLevel = tMipLevel[2];
 		if (gl_TessCoord.y == 1) {	// right, upper corner
 			if (cornerTesselated[2] == 1) {
-				myMipLevel--;
+				myMipLevel = baseMipLevel - 1;
 			} else {
 				myMipLevel = min(myMipLevel, tMipLevel[3]);
 			}
@@ -85,13 +85,12 @@ void main()
 		myMipLevel = tMipLevel[3];
 	}
 
-	
+	if (myMipLevel > 6) myMipLevel = 6;
 
 	fHeight_01 = textureLod(heightMap, fTexCoord_Terrain, myMipLevel).x;
 
 	pos_WS += vec3(0, fHeight_01 * verticalScaling, 0);
 
-	debug.x = tTesselation[0];
 	debug.y = tMipLevel[0];
 
 	debug.x = 0;
@@ -106,13 +105,16 @@ void main()
 		debug.z = 1;
 	}
 
+
+	debug.x = tTesselation[0];
+
 	// compute normal of this vertex
 	
 	float stepSizeTex = 1 * gridFraction / nrQuads / tTesselation[0];
 	float stepSizeWorld = 1 / tTesselation[0];
 
-	float hRight_scaled = textureLod(heightMap, vec2(fTexCoord_Terrain.x + stepSizeTex, fTexCoord_Terrain.y), tMipLevel[0]).x * verticalScaling;
-	float hTop_scaled = textureLod(heightMap, vec2(fTexCoord_Terrain.x, fTexCoord_Terrain.y + stepSizeTex), tMipLevel[0]).x * verticalScaling;
+	float hRight_scaled = textureLod(heightMap, vec2(fTexCoord_Terrain.x + stepSizeTex, fTexCoord_Terrain.y), baseMipLevel).x * verticalScaling;
+	float hTop_scaled = textureLod(heightMap, vec2(fTexCoord_Terrain.x, fTexCoord_Terrain.y + stepSizeTex), baseMipLevel).x * verticalScaling;
 
 	vec3 toRight = vec3(stepSizeWorld, hRight_scaled - pos_WS.y, 0);
 	vec3 toTop = vec3(0, hTop_scaled - pos_WS.y, stepSizeWorld);
