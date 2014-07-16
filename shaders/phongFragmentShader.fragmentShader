@@ -5,6 +5,7 @@ varying vec3 lightRay;
 varying vec3 viewRay;
 
 uniform float id;
+uniform sampler2D diffuseTexture;
 
 void main() {
 	vec3 N = normalize(normal);
@@ -12,7 +13,6 @@ void main() {
 	vec3 V = normalize(viewRay);
 
 
-	vec4 ambientColor = gl_FrontMaterial.ambient;
 
 	float LdotN = dot(L, N);
 
@@ -31,12 +31,13 @@ void main() {
 
 	gl_FragData[0] = diffuseColor + specularColor + vec4(gl_Color.x / 5, gl_Color.y / 5, gl_Color.z / 5, 1);
 	} else {
-	//gl_FragData[0] = ambientColor;
 	//gl_FragData[0] = vec4(0,0,0,1);
 	gl_FragData[0] = vec4(gl_Color.x / 5, gl_Color.y / 5, gl_Color.z / 5, 1);
 	}
 
 	// id texture uses the RED channel only!
 	gl_FragData[1] = vec4(id, 0, 0, 0);
+
+	gl_FragData[0] = texture2D(diffuseTexture, vec2(0.5, 0.5));
 
 }

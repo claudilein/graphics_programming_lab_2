@@ -21,6 +21,7 @@
 #include <transferfunctioneditor.h>
 #include <terrainmaterialeditor.h>
 #include <QScrollArea>
+#include <materialeditor.h>
 
 class View : public QMainWindow
 {
@@ -68,6 +69,13 @@ signals:
     void keyPressed(QKeyEvent *event);
     void keyReleased(QKeyEvent *event);
 
+    void ambientColorChanged(uint red, uint green, uint blue);
+    void diffuseColorChanged(uint red, uint green, uint blue);
+    void specularColorChanged(uint red, uint green, uint blue);
+    void roughnessChanged(int roughness);
+    void refractionIndexChanged(int refractionIndex);
+    void textureChecked(Primitive::Textures x, bool status);
+    void textureUploaded(Primitive::Textures x, QImage texture);
 
 public slots:
     void showAboutBox();
@@ -169,9 +177,14 @@ private:
     QAction *showWireframeAction;
     QSlider *horizontalScaleSlider;
     QSlider *verticalScaleSlider;
-    // MATERIAL EDITOR
+    // terrain material editor
     TerrainMaterialEditor *terrainMaterialEditor;
 
+    // === MATERIAL EDITOR === //
+
+    QDockWidget *materialEditorDockWidget;
+    QScrollArea *materialEditorScrollArea;
+    MaterialEditor *materialEditor;
 
 
 

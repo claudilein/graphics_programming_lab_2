@@ -28,7 +28,7 @@ Viewport::Viewport(QWidget *parent, QGLFormat format, Model::ViewportType type, 
     type_ = type;
     model_ = model;
 
-    showGrid_ = false;
+    showGrid_ = true;
     mip_ = false;
     showWireframe_ = false;
 
@@ -39,6 +39,8 @@ Viewport::Viewport(QWidget *parent, QGLFormat format, Model::ViewportType type, 
 
     // set up default Camera
     camera_ = new Camera();
+    grid_ = new Grid(Primitive::float3(0.72, 0.72, 0.72), gridSize_, stepSize_);
+    quad_ = new Quad();
 }
 
 
@@ -142,7 +144,6 @@ void Viewport::initializeGL()
     if (height == 0) height = 1;
 
     glViewport(0, 0, width, height);
-    std::cout << "viewport set to (" << width << ", " << height << std::endl;
 
     // create a texture for the colors
     glGenTextures(1, &colorTexture_);
@@ -222,17 +223,17 @@ void Viewport::initializeGL()
 
     // compile and link shaders
     // PHONG SHADER
-    phongProgram = new QGLShaderProgram(this);
+    shadingProgram = new QGLShaderProgram(this);
 
-    phongVertexShader = new QGLShader(QGLShader::Vertex, this);
-    phongFragmentShader = new QGLShader(QGLShader::Fragment, this);
+    shadingVertexShader = new QGLShader(QGLShader::Vertex, this);
+    shadingFragmentShader = new QGLShader(QGLShader::Fragment, this);
 
-    phongVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/phongVertexShader.vertexShader");
-    phongFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/phongFragmentShader.fragmentShader");
+    shadingVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/phongVertexShader.vertexShader");
+    shadingFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/phongFragmentShader.fragmentShader");
 
-    phongProgram->addShader(phongVertexShader);
-    phongProgram->addShader(phongFragmentShader);
-    phongProgram->link();
+    shadingProgram->addShader(shadingVertexShader);
+    shadingProgram->addShader(shadingFragmentShader);
+    shadingProgram->link();
 
     // SELECTION SHADER
 
@@ -242,8 +243,6 @@ void Viewport::initializeGL()
 
     selectionVertexShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionVertexShader.vertexShader");
     selectionFragmentShader->compileSourceFile("/home/claudia/OpenGL Praktikum/Assignment 4/Terrain Modeling Tool/shaders/selectionFragmentShader.fragmentShader");
-    //selectionVertexShader->compileSourceCode(":/shaders/selectionVertexShader.vertexShader");
-    //selectionFragmentShader->compileSourceCode(":/shaders/selectionFragmentShader.fragmentShader");
 
 
     selectionProgram->addShader(selectionVertexShader);
@@ -305,8 +304,11 @@ void Viewport::initializeGL()
 
     // distribute uniform IDs
 
-    phongIdID_ = glGetUniformLocation(phongProgram->programId(), "id");
-    phongColorID_ = glGetUniformLocation(phongProgram->programId(), "color");
+    shadingIdID_ = glGetUniformLocation(shadingProgram->programId(), "id");
+    shadingColorID_ = glGetUniformLocation(shadingProgram->programId(), "color");
+    shadingDiffuseTextureID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseTexture");
+    shadingDiffuseShaderID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseShader");
+    shadingSpecularShaderID_ = glGetUniformLocation(shadingProgram->programId(), "specularShader");
 
     idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
     colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
@@ -342,27 +344,20 @@ void Viewport::initializeGL()
     wireframeID_ = glGetUniformLocation(terrainProgram->programId(), "wireframe");
 
 
-    glBindAttribLocation(phongProgram->programId(), 1, "normal_in");
-    //glBindAttribLocation(selectionProgram->programId(), 1, "tex");
+    glBindAttribLocation(shadingProgram->programId(), 1, "normal_in");
 
-    //std::cout << "1: " << glGetAttribLocation(phongProgram->programId(), "normal_in") << std::endl;
-    //std::cout << "2: " << glGetAttribLocation(phongProgram->programId(), "color_in") << std::endl;
 
-    std::cout << "creating grid" << std::endl;
 
-    grid_ = new Grid(Primitive::float3(0.72, 0.72, 0.72), gridSize_, stepSize_);
     gridBufferIDs_ = createPrimitiveBufferIDs(static_cast<Primitive*>(grid_));
     grid_->copyVAOToCurrentContext(gridBufferIDs_);
 
-    std::cout << "creating quad" << std::endl;
 
-    quad_ = new Quad();
+
     quadBufferIDs_ = createPrimitiveBufferIDs(static_cast<Primitive*>(quad_));
     quad_->copyVAOToCurrentContext(quadBufferIDs_);
 
     checkGLErrors("after shaders");
 
-    std::cout << "initializeGL() done" << std::endl;
 }
 
 void Viewport::paintGL()
@@ -402,7 +397,7 @@ void Viewport::paintGL()
     // DRAW PRIMITIVES
 
     checkGLErrors("before phong");
-    phongProgram->bind();
+    shadingProgram->bind();
 
     checkGLErrors("after phong");
 
@@ -421,8 +416,13 @@ void Viewport::paintGL()
     // draw all primitives that are not a volume
     for (int i = 0; i < primitives->size(); i++) {
         if (!primitives->at(i)->isVolume() && !primitives->at(i)->isTerrain()) {
-            glUniform1f(phongIdID_, primitives->at(i)->getID());
-            glUniform3f(phongColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+            glUniform1f(shadingIdID_, primitives->at(i)->getID());
+            glUniform3f(shadingColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+            glUniform1i(shadingDiffuseShaderID_, diffuseShader_);
+            glUniform1i(shadingSpecularShaderID_, specularShader_);
+
+            // do this for every texture and think about other shaders, too!! do uber shader? seems easier to implement and its just two if statements
+            glUniform1i(shadingDiffuseTextureID_, 11);
 
             glPushMatrix();
             glMultMatrix(primitives->at(i)->getModelMatrix().constData());
@@ -437,7 +437,7 @@ void Viewport::paintGL()
 
     // DRAW VOLUMES
 
-    phongProgram->release();
+    shadingProgram->release();
 
 /*    volumeProgram->bind();
 
@@ -465,7 +465,7 @@ void Viewport::paintGL()
     checkGLErrors("before terrain drawing loop");
 
     volumeProgram->release();
-*/
+
     // DRAW TERRAINS
 
     terrainProgram->bind();
@@ -539,8 +539,8 @@ void Viewport::paintGL()
 
 
 
-            /* how big is the grid with regard to the size of the terrain. Grid's local texture coordinates
-             * need to be downscaled by this factor. */
+            // how big is the grid with regard to the size of the terrain. Grid's local texture coordinates
+            // need to be downscaled by this factor.
             float gridFraction = gridSize / horizontalScale;
             glUniform1f(gridFractionID_, gridFraction);
             glUniform1i(gridSizeID_, gridSize);
@@ -585,9 +585,11 @@ void Viewport::paintGL()
     // HIGHLIGHT SELECTED OBJECT
 
     terrainProgram->release();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    */
 
     selectionProgram->bind();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -773,6 +775,15 @@ void Viewport::uploadTerrainMaterialData(Terrain *t, QString fileName) {
     updateGL();
 }
 
+void Viewport::copyTextureData(Primitive *p, Primitive::Textures x) {
+    int primitiveID = p->getID();
+
+    glGenTextures(1, &primitiveBufferIDs_[primitiveID].textures_[x]);
+    p->copyTextureToCurrentContext(primitiveBufferIDs_[primitiveID].textures_[x], x);
+    primitiveBufferIDs_[primitiveID].hasTextures_[x] = true;
+    std::cout << "copyTextureData executed for tex " << x << std::endl;
+}
+
 void Viewport::copyVAOData(Primitive *p) {
     makeCurrent();
     Primitive::bufferIDs buffIDs = createPrimitiveBufferIDs(p);
@@ -880,6 +891,7 @@ void Viewport::showWireframe(bool on) {
 void Viewport::setGridSize(int i) {
     makeCurrent();
     grid_->setGridSize(i);
+    grid_->copyVAOToCurrentContext(gridBufferIDs_);
     updateGL();
 
 }
@@ -887,8 +899,19 @@ void Viewport::setGridSize(int i) {
 void Viewport::setStepSize(int i) {
     makeCurrent();
     grid_->setStepSize(i);
+    grid_->copyVAOToCurrentContext(gridBufferIDs_);
     updateGL();
 
+}
+
+void Viewport::setDiffuseShader(int id) {
+    diffuseShader_ = id;
+    std::cout << "diffuse shader set to " << id << std::endl;
+}
+
+void Viewport::setSpecularShader(int id) {
+    specularShader_ = id;
+    std::cout << "specular shader set to " << id << std::endl;
 }
 
 

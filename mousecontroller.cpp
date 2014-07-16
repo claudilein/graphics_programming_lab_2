@@ -257,8 +257,8 @@ bool MouseController::checkCollision() {
 
 
                 int terrainWidth = terrain->getWidth();
-                cameraTexCoord.setX(1 - cameraTexCoord.x());
-                cameraTexCoord.setY(cameraTexCoord.y());
+                cameraTexCoord.setX(cameraTexCoord.x());
+                cameraTexCoord.setY(1 -cameraTexCoord.y());
                 cameraTexCoord *= (terrainWidth - 1);  // scale from [0, 1] to [0, 4096]
 
                 // TODO row andersherum... col auch?

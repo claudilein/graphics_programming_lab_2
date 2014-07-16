@@ -77,8 +77,6 @@ Torus::Torus(std::string name, int id, int tesselation, float3 color,
         vertexColors_.push_back(float3(torusColor));
     }
 
-    ambientColor_[0] = 0.2;
-    ambientColor_[2] = 0.2;
 }
 
 void Torus::draw(bufferIDs buffIDs) {

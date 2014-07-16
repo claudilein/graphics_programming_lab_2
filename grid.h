@@ -13,6 +13,7 @@ public:
 private:
     int gridSize_;
     int stepSize_;
+    void createGrid();
 };
 
 #endif // GRID_H

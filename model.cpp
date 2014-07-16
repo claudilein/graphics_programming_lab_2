@@ -29,6 +29,7 @@ Model::Model(QObject *parent) :
 
 
     active_ = PERSPECTIVE;
+    activePrimitive_ = NULL;
 }
 
 Camera* Model::getCamera(ViewportType type) {

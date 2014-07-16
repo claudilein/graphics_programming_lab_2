@@ -96,7 +96,6 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
     }
 
 
-    ambientColor_[0] = 0.2;
 
 }
 

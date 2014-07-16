@@ -46,6 +46,7 @@ public slots:
     void copyVAOData(Primitive *p);
     void copyVolumeData(Volume *volume);
     void copyVolumeData();
+    void copyTextureData(Primitive *p, Primitive::Textures x);
     void updateProjectionMatrix();
     void showGrid(bool on);
     void setGridSize(int i);
@@ -53,6 +54,8 @@ public slots:
     void setMip(bool on);
     void showWireframe(bool on);
     Primitive::bufferIDs createPrimitiveBufferIDs(Primitive* p);
+    void setDiffuseShader(int id);
+    void setSpecularShader(int id);
 
 protected:
     void initializeGL();
@@ -63,10 +66,10 @@ private:
     static const double NEAR_PLANE = 0.01d;
     static const double FAR_PLANE = 100.0d;
 
-    // shader that uses phong shading on the object
-    QGLShaderProgram *phongProgram;
-    QGLShader *phongVertexShader;
-    QGLShader *phongFragmentShader;
+    // master shader that uses the selected shading on the object
+    QGLShaderProgram *shadingProgram;
+    QGLShader *shadingVertexShader;
+    QGLShader *shadingFragmentShader;
 
     // shader that colors the selected object
     QGLShaderProgram *selectionProgram;
@@ -115,8 +118,11 @@ private:
     GLuint feedbackHeightTexture_;
 
     // shader inputs
-    GLuint phongIdID_;
-    GLuint phongColorID_;
+    GLuint shadingIdID_;
+    GLuint shadingColorID_;
+    GLuint shadingDiffuseTextureID_;
+    GLuint shadingDiffuseShaderID_;
+    GLuint shadingSpecularShaderID_;
 
     GLuint selectionIdID_;
     GLuint idTextureID_;
@@ -177,6 +183,10 @@ private:
 
     bool checkFramebufferStatus();
     void checkGLErrors(const char *label);
+
+    int diffuseShader_;
+    int specularShader_;
+
 
     float light0Position_[4];
 };

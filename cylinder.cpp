@@ -64,7 +64,6 @@ Cylinder::Cylinder(std::string name, int id, int tesselation, float3 color,
         vertexColors_.push_back(float3(cylinderColor));
     }
 
-    ambientColor_[2] = 0.2;
 
 }
 

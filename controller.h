@@ -27,6 +27,14 @@ public slots:
     void keyPressed(QKeyEvent *event);
     void keyReleased(QKeyEvent *event);
 
+    void setAmbientColor(uint red, uint green, uint blue);
+    void setDiffuseColor(uint red, uint green, uint blue);
+    void setSpecularColor(uint red, uint green, uint blue);
+    void setRoughness(int roughness);
+    void setRefractionIndex(int refractionIndex);
+    void setTextureChecked(Primitive::Textures x, bool status);
+    void setTexture(Primitive::Textures x, QImage texture);
+
 private:
     View *view_;
     Model *model_;

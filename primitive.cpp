@@ -16,13 +16,21 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
         hasVBO_[i] = false;
     }
 
+    for (int i = 0; i < NR_TEXTURES; i++) {
+        textures[i] = QImage();
+    }
+
+    ambientColor_ = float3(0, 0, 0);
+    diffuseColor_ = float3(0, 0, 0);
+    specularColor_ = float3(0, 0, 0);
+    roughness_ = 1;
+    refractionIndex_ = 1;
+
 
     translation_ = QVector3D();
     rotation_ = QQuaternion();
     scalingFactor_ = QVector3D(1,1,1);
-    ambientColor_[0] = 0; ambientColor_[1] = 0; ambientColor_[2] = 0; ambientColor_[3] = 1;
 
-    //rbtNode_ = new RBTNode(QQuaternion(), QVector3D(1,1,1));
 
 }
 
@@ -54,7 +62,19 @@ void Primitive::copyVAOToCurrentContext(bufferIDs buffIDs) {
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
+
+
+void Primitive::copyTextureToCurrentContext(GLuint textureID, Textures x) {
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textures[x].width(), textures[x].height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, textures[x].bits());
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Primitive::bindVAOToShader(bufferIDs buffIDs) {
@@ -115,10 +135,15 @@ void Primitive::bindVAOToShader(bufferIDs buffIDs) {
         );
     }
 
+    for (int i = 0; i < NR_TEXTURES; i++) {
+        if (buffIDs.hasTextures_[i]) {
+            glActiveTexture(GL_TEXTURE10 + i);
+            glBindTexture(GL_TEXTURE_2D, buffIDs.textures_[i]);
+            std::cout << "texture " << i << " bound" << std::endl;
+        }
+    }
+    glActiveTexture(GL_TEXTURE0);
 
-
-    // ambient color
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambientColor_);
 }
 
 void Primitive::draw(bufferIDs buffIDs) {
@@ -189,4 +214,40 @@ bool Primitive::isTerrain() {
 std::string Primitive::getName()
 {
     return name_;
+}
+
+void Primitive::setAmbientColor(float3 color) {
+    ambientColor_ = color;
+    std::cout << "ambient color changed to " << ambientColor_.x_  << ", " << ambientColor_.y_ << ", " << ambientColor_.z_ << std::endl;
+}
+
+void Primitive::setDiffuseColor(float3 color) {
+    diffuseColor_ = color;
+    std::cout << "diffuse color changed to " << diffuseColor_.x_  << ", " << diffuseColor_.y_ << ", " << diffuseColor_.z_ << std::endl;
+}
+
+void Primitive::setSpecularColor(float3 color) {
+    specularColor_ = color;
+    std::cout << "specular color changed to " << specularColor_.x_  << ", " << specularColor_.y_ << ", " << specularColor_.z_ << std::endl;
+}
+
+void Primitive::setRoughness(float roughness) {
+    roughness_ = roughness;
+    std::cout << "roughness set to " << roughness_ << std::endl;
+}
+
+void Primitive::setRefractionIndex(float refractionIndex) {
+    refractionIndex_ = refractionIndex;
+    std::cout << "refractionIndex set to " << refractionIndex_ << std::endl;
+}
+
+void Primitive::setTexture(Textures x, QImage texture) {
+    textures[x] = texture;
+    // upload to OpenGL context
+    std::cout << "Texture " << x << "reset" << std::endl;
+}
+
+void Primitive::setTextureActive(Textures x, bool status) {
+    texturesActive[x] = status;
+    std::cout << "Texture " << x << "set to " << status << std::endl;
 }

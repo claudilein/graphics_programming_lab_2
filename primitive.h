@@ -6,6 +6,7 @@
 #include <vector>
 #include <QQuaternion>
 #include <QVector3D>
+#include <QImage>
 
 
 
@@ -15,14 +16,25 @@ class Primitive : public QObject
 public:
     enum VBO { NORMALS, COLORS, TEXCOORDS };
     static const int NR_VBOS = 3;
-
+    enum Textures { AMBIENT, DIFFUSE, SPECULAR, ROUGHNESS, REFRACTION_INDEX, NORMAL };
+    static const int NR_TEXTURES = 6;
 
     struct bufferIDs {
-        bufferIDs() : VAO_(0), positions_(0), indices_(0), normals_(0), colors_(0), texCoords_(0), hasNormals_(false), hasColors_(false), hasTexCoords_(false) {}
+        bufferIDs() : VAO_(0), positions_(0), indices_(0), normals_(0), colors_(0), texCoords_(0), hasNormals_(false), hasColors_(false), hasTexCoords_(false) {
+            for (int i = 0; i < NR_TEXTURES; i++) {
+                textures_[i] = 0;
+                hasTextures_[i] = false;
+            }
+        }
 
         bufferIDs(GLuint VAO, GLuint positions, GLuint indices, GLuint normals, GLuint colors, GLuint texCoords, bool hasNormals, bool hasColors, bool hasTexCoords) :
             VAO_(VAO), positions_(positions), indices_(indices), normals_(normals), colors_(colors), texCoords_(texCoords), hasNormals_(hasNormals), hasColors_(hasColors), hasTexCoords_(hasTexCoords)
-        {}
+        {
+            for (int i = 0; i < NR_TEXTURES; i++) {
+                textures_[i] = 0;
+                hasTextures_[i] = false;
+            }
+        }
 
         GLuint VAO_;
         GLuint positions_;
@@ -30,11 +42,14 @@ public:
         GLuint normals_;
         GLuint colors_;
         GLuint texCoords_;
+        GLuint textures_[NR_TEXTURES];
 
         bool hasNormals_;
         bool hasColors_;
         bool hasTexCoords_;
+        bool hasTextures_[NR_TEXTURES];
     };
+
 
     struct float3 {
         float3() { x_ = 0.0f; y_ = 0.0f; z_ = 0.0f; }
@@ -70,6 +85,15 @@ public:
     bool hasVBO(VBO vbo);
 
     void setName(std::string name);
+    void setAmbientColor(float3 color);
+    void setDiffuseColor(float3 color);
+    void setSpecularColor(float3 color);
+    void setRoughness(float roughness);
+    void setRefractionIndex(float refractionIndex);
+    void setTexture(Textures x, QImage texture);
+    void setTextureActive(Textures x, bool status);
+    void copyTextureToCurrentContext(GLuint textureID, Textures x);
+
     virtual void bindVAOToShader(bufferIDs buffIDs);
 
 signals:
@@ -79,17 +103,26 @@ public slots:
 
 protected:
     std::string name_;
-    float3 color_;
     int id_;
     int tesselation_;
+
+    // material properties
+    float3 ambientColor_;
+    float3 diffuseColor_;
+    float3 specularColor_;
+    float roughness_;
+    float refractionIndex_;
+    QImage textures[NR_TEXTURES];
+    bool texturesActive[NR_TEXTURES];
+
+
+    float3 color_;
 
     attribute vertexPositions_;
     attribute vertexColors_;
     attribute vertexNormals_;
     attribute vertexTextureCoordinates_;
     std::vector<uint> indicesList_;
-
-    float ambientColor_[4];
 
     QVector3D translation_;
     QQuaternion rotation_;

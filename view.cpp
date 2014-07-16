@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
+
 View::View(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -251,6 +252,30 @@ View::View(QWidget *parent)
     verticalScaleSlider->setValue(300);
     connect(verticalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setVerticalScale(int)));
 
+    // === MATERIAL EDITOR === //
+
+    materialEditorDockWidget = new QDockWidget("Material Editor", this);
+    materialEditorDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    materialEditorDockWidget->setFixedWidth(300);
+    addDockWidget(Qt::RightDockWidgetArea, materialEditorDockWidget);
+
+    materialEditorScrollArea = new QScrollArea(this);
+    materialEditorScrollArea->setWidgetResizable(true);
+    materialEditorDockWidget->setWidget(materialEditorScrollArea);
+
+    materialEditor = new MaterialEditor(this);
+    materialEditorScrollArea->setWidget(materialEditor);
+
+
+
+    connect(materialEditor, SIGNAL(ambientColorChanged(uint,uint,uint)), this, SIGNAL(ambientColorChanged(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(diffuseColorChanged(uint,uint,uint)), this, SIGNAL(diffuseColorChanged(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(specularColorChanged(uint,uint,uint)), this, SIGNAL(specularColorChanged(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(roughnessChanged(int)), this, SIGNAL(roughnessChanged(int)));
+    connect(materialEditor, SIGNAL(refractionIndexChanged(int)), this, SIGNAL(refractionIndexChanged(int)));
+    connect(materialEditor, SIGNAL(textureChecked(Primitive::Textures,bool)), this, SIGNAL(textureChecked(Primitive::Textures,bool)));
+    connect(materialEditor, SIGNAL(textureUploaded(Primitive::Textures,QImage)), this, SIGNAL(textureUploaded(Primitive::Textures,QImage)));
+
 
     // ===== TOOL BAR ===== //
 
@@ -387,12 +412,21 @@ void View::setModel(Model *model)
     connect(showWireframeAction, SIGNAL(toggled(bool)), viewportLeft, SLOT(showWireframe(bool)));
     connect(showWireframeAction, SIGNAL(toggled(bool)), viewportTop, SLOT(showWireframe(bool)));
 
+    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportPerspective, SLOT(setDiffuseShader(int)));
+    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportPerspective, SLOT(setSpecularShader(int)));
+    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportFront, SLOT(setDiffuseShader(int)));
+    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportFront, SLOT(setSpecularShader(int)));
+    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportLeft, SLOT(setDiffuseShader(int)));
+    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportLeft, SLOT(setSpecularShader(int)));
+    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportTop, SLOT(setDiffuseShader(int)));
+    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportTop, SLOT(setSpecularShader(int)));
+
 
     // ===== OUTLINER ===== //
 
-    outlinerWidget = new QDockWidget("Outliner: ", this);
+    outlinerWidget = new QDockWidget("Outliner", this);
     outlinerWidget->setAllowedAreas(Qt::RightDockWidgetArea);
-    outlinerWidget->setFixedWidth(270);
+    outlinerWidget->setFixedWidth(300);
     addDockWidget(Qt::RightDockWidgetArea, outlinerWidget);
 
     outliner = new QTreeView(outlinerWidget);
@@ -403,9 +437,9 @@ void View::setModel(Model *model)
 
     // === TRANSFER FUNCTION WIDGET === //
 
-    transferFunctionDockWidget = new QDockWidget("Transfer Function Editor: ", this);
+    /*transferFunctionDockWidget = new QDockWidget("Transfer Function Editor: ", this);
     transferFunctionDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
-    transferFunctionDockWidget->setFixedWidth(270);
+    transferFunctionDockWidget->setFixedWidth(300);
     addDockWidget(Qt::RightDockWidgetArea, transferFunctionDockWidget);
     scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
@@ -425,7 +459,7 @@ void View::setModel(Model *model)
     terrainMaterialEditor = new TerrainMaterialEditor(this);
     connect(terrainMaterialEditor, SIGNAL(materialAdded(QString)), model_, SLOT(materialSelected(QString)));
     //transferFunctionDockWidget->setWidget(terrainMaterialEditor);
-    scrollArea->setWidget(terrainMaterialEditor);
+    scrollArea->setWidget(terrainMaterialEditor);*/
 
 
 
