@@ -22,6 +22,7 @@
 #include <terrainmaterialeditor.h>
 #include <QScrollArea>
 #include <materialeditor.h>
+#include <materialpreview.h>
 
 class View : public QMainWindow
 {
@@ -76,6 +77,11 @@ signals:
     void refractionIndexChanged(int refractionIndex);
     void textureChecked(Primitive::Textures x, bool status);
     void textureUploaded(Primitive::Textures x, QImage texture);
+    void diffuseShaderChanged(int i);
+    void specularShaderChanged(int i);
+    void kaChanged(int ka);
+    void kdChanged(int kd);
+    void ksChanged(int ks);
 
 public slots:
     void showAboutBox();
@@ -85,6 +91,7 @@ public slots:
     void keyReleaseEvent(QKeyEvent *event);
     void readVolumeFile();
     void readTerrainFile();
+    void adjustToActivePrimitive();
 private:
 
     Model *model_;
@@ -144,6 +151,9 @@ private:
     QSplitter *splitterHorizontalTop;
     QSplitter *splitterHorizontalBottom;
     QSplitter *splitterVertical;
+
+    // === PREVIEW === //
+    MaterialPreview *materialPreview;
 
 
     // === OUTLINER === //

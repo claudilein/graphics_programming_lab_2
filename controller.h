@@ -34,6 +34,11 @@ public slots:
     void setRefractionIndex(int refractionIndex);
     void setTextureChecked(Primitive::Textures x, bool status);
     void setTexture(Primitive::Textures x, QImage texture);
+    void setDiffuseShader(int i);
+    void setSpecularShader(int i);
+    void setKa(int ka);
+    void setKd(int kd);
+    void setKs(int ks);
 
 private:
     View *view_;

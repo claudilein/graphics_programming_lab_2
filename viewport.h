@@ -54,8 +54,6 @@ public slots:
     void setMip(bool on);
     void showWireframe(bool on);
     Primitive::bufferIDs createPrimitiveBufferIDs(Primitive* p);
-    void setDiffuseShader(int id);
-    void setSpecularShader(int id);
 
 protected:
     void initializeGL();
@@ -118,12 +116,24 @@ private:
     GLuint feedbackHeightTexture_;
 
     // shader inputs
+    // master shader for lighting
     GLuint shadingIdID_;
-    GLuint shadingColorID_;
-    GLuint shadingDiffuseTextureID_;
-    GLuint shadingDiffuseShaderID_;
-    GLuint shadingSpecularShaderID_;
+    //GLuint shadingColorID_;
+    GLuint ambientColorID_;
+    GLuint diffuseColorID_;
+    GLuint specularColorID_;
+    GLuint roughnessID_;
+    GLuint refractionIndexID_;
+    GLuint textureIDs_;
+    GLuint textureActiveIDs_;
+    GLuint nrTexturesID_;
+    GLuint diffuseShaderID_;
+    GLuint specularShaderID_;
+    GLuint kaID_;
+    GLuint kdID_;
+    GLuint ksID_;
 
+    // selection shader
     GLuint selectionIdID_;
     GLuint idTextureID_;
     GLuint colorTextureID_;
@@ -131,8 +141,10 @@ private:
     GLuint offsetYID_;
     GLuint activeViewportID_;
 
+    // grid shader
     GLuint gridColorID_;
 
+    // volume shader
     GLuint volumeIdID_;
     GLuint volumeTextureID_;
     GLuint transferTextureID_;
@@ -140,6 +152,7 @@ private:
     GLuint mipID_;
     GLuint maxResolutionID_;
 
+    // terrain shader
     GLuint terrainIdID_;
     GLuint modelMatrixID_;
     GLuint viewProjectionMatrixID_;
@@ -183,10 +196,6 @@ private:
 
     bool checkFramebufferStatus();
     void checkGLErrors(const char *label);
-
-    int diffuseShader_;
-    int specularShader_;
-
 
     float light0Position_[4];
 };

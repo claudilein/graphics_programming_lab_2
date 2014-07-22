@@ -35,7 +35,8 @@ SOURCES += main.cpp\
     transferfunctioneditor.cpp \
     terrain.cpp \
     terrainmaterialeditor.cpp \
-    materialeditor.cpp
+    materialeditor.cpp \
+    materialpreview.cpp
 
 HEADERS  += view.h \
     controller.h \
@@ -57,7 +58,8 @@ HEADERS  += view.h \
     transferfunctioneditor.h \
     terrain.h \
     terrainmaterialeditor.h \
-    materialeditor.h
+    materialeditor.h \
+    materialpreview.h
 
 RESOURCES += \
     resources.qrc

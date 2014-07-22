@@ -39,6 +39,7 @@ View::View(QWidget *parent)
     tesselationSlider->setOrientation(Qt::Horizontal);
     tesselationSlider->setFixedWidth(80);
     tesselationSlider->setRange(1, 50);
+    tesselationSlider->setValue(6);
     connect(tesselationSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setTesselation(int)));
 
 
@@ -252,30 +253,6 @@ View::View(QWidget *parent)
     verticalScaleSlider->setValue(300);
     connect(verticalScaleSlider, SIGNAL(valueChanged(int)), this, SIGNAL(setVerticalScale(int)));
 
-    // === MATERIAL EDITOR === //
-
-    materialEditorDockWidget = new QDockWidget("Material Editor", this);
-    materialEditorDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
-    materialEditorDockWidget->setFixedWidth(300);
-    addDockWidget(Qt::RightDockWidgetArea, materialEditorDockWidget);
-
-    materialEditorScrollArea = new QScrollArea(this);
-    materialEditorScrollArea->setWidgetResizable(true);
-    materialEditorDockWidget->setWidget(materialEditorScrollArea);
-
-    materialEditor = new MaterialEditor(this);
-    materialEditorScrollArea->setWidget(materialEditor);
-
-
-
-    connect(materialEditor, SIGNAL(ambientColorChanged(uint,uint,uint)), this, SIGNAL(ambientColorChanged(uint,uint,uint)));
-    connect(materialEditor, SIGNAL(diffuseColorChanged(uint,uint,uint)), this, SIGNAL(diffuseColorChanged(uint,uint,uint)));
-    connect(materialEditor, SIGNAL(specularColorChanged(uint,uint,uint)), this, SIGNAL(specularColorChanged(uint,uint,uint)));
-    connect(materialEditor, SIGNAL(roughnessChanged(int)), this, SIGNAL(roughnessChanged(int)));
-    connect(materialEditor, SIGNAL(refractionIndexChanged(int)), this, SIGNAL(refractionIndexChanged(int)));
-    connect(materialEditor, SIGNAL(textureChecked(Primitive::Textures,bool)), this, SIGNAL(textureChecked(Primitive::Textures,bool)));
-    connect(materialEditor, SIGNAL(textureUploaded(Primitive::Textures,QImage)), this, SIGNAL(textureUploaded(Primitive::Textures,QImage)));
-
 
     // ===== TOOL BAR ===== //
 
@@ -349,6 +326,9 @@ void View::setModel(Model *model)
     viewportLeft = new Viewport(this, qglFormat, Model::LEFT, model_);
     viewportTop = new Viewport(this, qglFormat, Model::TOP, model_);
 
+    // PREVIEW
+    materialPreview = new MaterialPreview(this);
+
     std::cout << "OpenGL Version: " << viewportFront->format().majorVersion() << "." << viewportFront->format().minorVersion() << std::endl;
 
     splitterHorizontalTop = new QSplitter(this);
@@ -412,21 +392,12 @@ void View::setModel(Model *model)
     connect(showWireframeAction, SIGNAL(toggled(bool)), viewportLeft, SLOT(showWireframe(bool)));
     connect(showWireframeAction, SIGNAL(toggled(bool)), viewportTop, SLOT(showWireframe(bool)));
 
-    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportPerspective, SLOT(setDiffuseShader(int)));
-    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportPerspective, SLOT(setSpecularShader(int)));
-    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportFront, SLOT(setDiffuseShader(int)));
-    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportFront, SLOT(setSpecularShader(int)));
-    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportLeft, SLOT(setDiffuseShader(int)));
-    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportLeft, SLOT(setSpecularShader(int)));
-    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), viewportTop, SLOT(setDiffuseShader(int)));
-    connect(materialEditor, SIGNAL(specularShaderChanged(int)), viewportTop, SLOT(setSpecularShader(int)));
-
 
     // ===== OUTLINER ===== //
 
     outlinerWidget = new QDockWidget("Outliner", this);
     outlinerWidget->setAllowedAreas(Qt::RightDockWidgetArea);
-    outlinerWidget->setFixedWidth(300);
+    outlinerWidget->setFixedWidth(350);
     addDockWidget(Qt::RightDockWidgetArea, outlinerWidget);
 
     outliner = new QTreeView(outlinerWidget);
@@ -439,7 +410,7 @@ void View::setModel(Model *model)
 
     /*transferFunctionDockWidget = new QDockWidget("Transfer Function Editor: ", this);
     transferFunctionDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
-    transferFunctionDockWidget->setFixedWidth(300);
+    transferFunctionDockWidget->setFixedWidth(350);
     addDockWidget(Qt::RightDockWidgetArea, transferFunctionDockWidget);
     scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
@@ -461,6 +432,49 @@ void View::setModel(Model *model)
     //transferFunctionDockWidget->setWidget(terrainMaterialEditor);
     scrollArea->setWidget(terrainMaterialEditor);*/
 
+
+    // === MATERIAL EDITOR === //
+
+    materialEditorDockWidget = new QDockWidget("Material Editor", this);
+    materialEditorDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    materialEditorDockWidget->setFixedWidth(350);
+    addDockWidget(Qt::RightDockWidgetArea, materialEditorDockWidget);
+
+    materialEditorScrollArea = new QScrollArea(this);
+    materialEditorScrollArea->setWidgetResizable(true);
+    materialEditorDockWidget->setWidget(materialEditorScrollArea);
+
+    materialEditor = new MaterialEditor(this, materialPreview);
+    materialEditorScrollArea->setWidget(materialEditor);
+
+
+    // connects to the controller -> model -> active object -> updates viewports
+    connect(materialEditor, SIGNAL(ambientColorChanged(uint,uint,uint)), this, SIGNAL(ambientColorChanged(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(diffuseColorChanged(uint,uint,uint)), this, SIGNAL(diffuseColorChanged(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(specularColorChanged(uint,uint,uint)), this, SIGNAL(specularColorChanged(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(roughnessChanged(int)), this, SIGNAL(roughnessChanged(int)));
+    connect(materialEditor, SIGNAL(refractionIndexChanged(int)), this, SIGNAL(refractionIndexChanged(int)));
+    connect(materialEditor, SIGNAL(textureChecked(Primitive::Textures,bool)), this, SIGNAL(textureChecked(Primitive::Textures,bool)));
+    connect(materialEditor, SIGNAL(textureUploaded(Primitive::Textures,QImage)), this, SIGNAL(textureUploaded(Primitive::Textures,QImage)));
+    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), this, SIGNAL(diffuseShaderChanged(int)));
+    connect(materialEditor, SIGNAL(specularShaderChanged(int)), this, SIGNAL(specularShaderChanged(int)));
+    connect(materialEditor, SIGNAL(kaChanged(int)), this, SIGNAL(kaChanged(int)));
+    connect(materialEditor, SIGNAL(kdChanged(int)), this, SIGNAL(kdChanged(int)));
+    connect(materialEditor, SIGNAL(ksChanged(int)), this, SIGNAL(ksChanged(int)));
+
+    // connects to the material preview with its one sphere
+    connect(materialEditor, SIGNAL(ambientColorChanged(uint,uint,uint)), materialPreview, SLOT(setAmbientColor(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(diffuseColorChanged(uint,uint,uint)), materialPreview, SLOT(setDiffuseColor(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(specularColorChanged(uint,uint,uint)), materialPreview, SLOT(setSpecularColor(uint,uint,uint)));
+    connect(materialEditor, SIGNAL(roughnessChanged(int)), materialPreview, SLOT(setRoughness(int)));
+    connect(materialEditor, SIGNAL(refractionIndexChanged(int)), materialPreview, SLOT(setRefractionIndex(int)));
+    connect(materialEditor, SIGNAL(textureChecked(Primitive::Textures,bool)), materialPreview, SLOT(setTextureChecked(Primitive::Textures,bool)));
+    connect(materialEditor, SIGNAL(textureUploaded(Primitive::Textures,QImage)), materialPreview, SLOT(setTexture(Primitive::Textures,QImage)));
+    connect(materialEditor, SIGNAL(diffuseShaderChanged(int)), materialPreview, SLOT(setDiffuseShader(int)));
+    connect(materialEditor, SIGNAL(specularShaderChanged(int)), materialPreview, SLOT(setSpecularShader(int)));
+    connect(materialEditor, SIGNAL(kaChanged(int)), materialPreview, SLOT(setKa(int)));
+    connect(materialEditor, SIGNAL(kdChanged(int)), materialPreview, SLOT(setKd(int)));
+    connect(materialEditor, SIGNAL(ksChanged(int)), materialPreview, SLOT(setKs(int)));
 
 
     // CONNECT SIGNALS AND SLOTS
@@ -485,6 +499,8 @@ void View::setModel(Model *model)
     connect(model_, SIGNAL(selectItem(QModelIndex)), this, SLOT(selectItem(QModelIndex)));
     connect(model_, SIGNAL(updateStatusBar()), this, SLOT(updateStatusBar()));
     connect(deleteSelectedObjectAction, SIGNAL(triggered()), model_, SLOT(deleteActivePrimitive()));
+
+    connect(model_, SIGNAL(activePrimitiveChanged()), this, SLOT(adjustToActivePrimitive()));
 
 }
 
@@ -552,6 +568,10 @@ void View::keyReleaseEvent(QKeyEvent *event) {
     } else {
         emit keyReleased(event);
     }
+}
+
+void View::adjustToActivePrimitive() {
+    materialEditor->adjustToPrimitive(model_->getActivePrimitive());
 }
 
 

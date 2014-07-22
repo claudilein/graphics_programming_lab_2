@@ -7,6 +7,7 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
 
     hasVBO_[NORMALS] = true;
     hasVBO_[COLORS] = true;
+    hasVBO_[TEXCOORDS] = true;
 
     // set cube vertices
     float x = 0.5f;
@@ -26,17 +27,17 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
     vertexPositions_.push_back(float3(position5));
     vertexPositions_.push_back(float3(position4));
 
-    // right
+    // right 2-6-5-1?
+    vertexPositions_.push_back(float3(position1));
     vertexPositions_.push_back(float3(position2));
     vertexPositions_.push_back(float3(position6));
     vertexPositions_.push_back(float3(position5));
-    vertexPositions_.push_back(float3(position1));
 
-    // back
-    vertexPositions_.push_back(float3(position3));
+    // back 3-2-6-7?
     vertexPositions_.push_back(float3(position2));
-    vertexPositions_.push_back(float3(position6));
+    vertexPositions_.push_back(float3(position3));
     vertexPositions_.push_back(float3(position7));
+    vertexPositions_.push_back(float3(position6));
 
     // left
     vertexPositions_.push_back(float3(position3));
@@ -44,22 +45,35 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
     vertexPositions_.push_back(float3(position4));
     vertexPositions_.push_back(float3(position7));
 
-    // bottom
+    // bottom 3-0-1-2?
     vertexPositions_.push_back(float3(position3));
-    vertexPositions_.push_back(float3(position0));
-    vertexPositions_.push_back(float3(position1));
     vertexPositions_.push_back(float3(position2));
+    vertexPositions_.push_back(float3(position1));
+    vertexPositions_.push_back(float3(position0));
 
-    // top
-    vertexPositions_.push_back(float3(position7));
+    // top 7-4-5-6?
     vertexPositions_.push_back(float3(position4));
     vertexPositions_.push_back(float3(position5));
     vertexPositions_.push_back(float3(position6));
+    vertexPositions_.push_back(float3(position7));
 
 
     // set indices list
     for (uint i = 0; i < vertexPositions_.size(); i++) {
         indicesList_.push_back(i);
+    }
+
+    // set cube texture coordinates. Each quad will feature the same texture.
+    float3 lowerLeftCorner = float3(0,0,0);
+    float3 lowerRightCorner = float3(1,0,0);
+    float3 upperRightCorner = float3(1,1,0);
+    float3 upperLeftCorner = float3(0,1,0);
+
+    for (int i = 0; i < 6; i++) {
+        vertexTextureCoordinates_.push_back(lowerLeftCorner);
+        vertexTextureCoordinates_.push_back(lowerRightCorner);
+        vertexTextureCoordinates_.push_back(upperRightCorner);
+        vertexTextureCoordinates_.push_back(upperLeftCorner);
     }
 
 
@@ -90,12 +104,40 @@ Cube::Cube(std::string name, int id, int tesselation, float3 color) :
         vertexNormals_.push_back(float3(normal5));
     }
 
+
+    // compute tangents and bitangents
+    float3 deltaPos1, deltaPos2, deltaUV1, deltaUV2, tangent, bitangent;
+    float r;
+
+    for (int i = 0; i < vertexPositions_.size(); i += 3) {
+        deltaPos1 = vertexPositions_[i + 1] - vertexPositions_[i];
+        deltaPos2 = vertexPositions_[i + 2] - vertexPositions_[i];
+        deltaUV1 = vertexTextureCoordinates_[i + 1] - vertexTextureCoordinates_[i];
+        deltaUV2 = vertexTextureCoordinates_[i + 2] - vertexTextureCoordinates_[i];
+
+        r = 1.0f / (deltaUV1.x_ * deltaUV2.y_ - deltaUV1.y_ * deltaUV2.x_);
+        tangent = (deltaPos1 * deltaUV2.y_ - deltaPos2 * deltaUV1.y_) * r;
+        bitangent = (deltaPos2 * deltaUV1.x_ - deltaPos1 * deltaUV2.x_) * r;
+
+        // make tangent base orthogonal
+        //tangent = normalize(tangent - n * glm::dot(n, t));
+
+        vertexTangents_.push_back(tangent);
+        vertexTangents_.push_back(tangent);
+        vertexTangents_.push_back(tangent);
+
+        vertexBitangents_.push_back(bitangent);
+        vertexBitangents_.push_back(bitangent);
+        vertexBitangents_.push_back(bitangent);
+    }
+
+
     float cubeColor[3] = {1, 0, 0};
     for (uint i = 0; i < vertexPositions_.size(); i++) {
         vertexColors_.push_back(float3(cubeColor));
     }
 
-
+    generateTangents(4);
 
 }
 
@@ -112,5 +154,6 @@ void Cube::draw(bufferIDs buffIDs) {
         GL_UNSIGNED_INT,       // type
         (void*)0           // element array buffer offset
     );
+
 
 }

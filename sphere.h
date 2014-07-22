@@ -9,6 +9,7 @@ public:
     Sphere(std::string name, int id, int tesselation, float3 color,
           float radius, int lats, int longs);
     void draw(bufferIDs buffIDs);
+    void generateTangents(int verticesPerPrimitive, int startIndex = 0);
 
 private:
     float radius_;

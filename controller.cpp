@@ -51,6 +51,11 @@ void Controller::setView(View *view) {
     connect(view_, SIGNAL(refractionIndexChanged(int)), this, SLOT(setRefractionIndex(int)));
     connect(view_, SIGNAL(textureChecked(Primitive::Textures,bool)), this, SLOT(setTextureChecked(Primitive::Textures,bool)));
     connect(view_, SIGNAL(textureUploaded(Primitive::Textures,QImage)), this, SLOT(setTexture(Primitive::Textures,QImage)));
+    connect(view_, SIGNAL(diffuseShaderChanged(int)), this, SLOT(setDiffuseShader(int)));
+    connect(view_, SIGNAL(specularShaderChanged(int)), this, SLOT(setSpecularShader(int)));
+    connect(view_, SIGNAL(kaChanged(int)), this, SLOT(setKa(int)));
+    connect(view_, SIGNAL(kdChanged(int)), this, SLOT(setKd(int)));
+    connect(view_, SIGNAL(ksChanged(int)), this, SLOT(setKs(int)));
 }
 
 void Controller::createMouseControllers() {
@@ -77,6 +82,8 @@ void Controller::createMouseControllers() {
     connect(mouseFront, SIGNAL(updateViewport()), view_, SIGNAL(updateViewports()));
     connect(mouseLeft, SIGNAL(updateViewport()), view_, SIGNAL(updateViewports()));
     connect(mouseTop, SIGNAL(updateViewport()), view_, SIGNAL(updateViewports()));
+
+    connect(this, SIGNAL(updateViewports()), view_, SIGNAL(updateViewports()));
 }
 
 void Controller::setSingleViewMode()
@@ -130,36 +137,42 @@ void Controller::keyReleased(QKeyEvent *event) {
 void Controller::setAmbientColor(uint red, uint green, uint blue) {
     if (model_->getActivePrimitive() != NULL) {
         model_->getActivePrimitive()->setAmbientColor(Primitive::float3(red / 255.0f, green / 255.0f, blue / 255.0f));
+        emit updateViewports();
     }
 }
 
 void Controller::setDiffuseColor(uint red, uint green, uint blue) {
     if (model_->getActivePrimitive() != NULL) {
         model_->getActivePrimitive()->setDiffuseColor(Primitive::float3(red / 255.0f, green / 255.0f, blue / 255.0f));
+        emit updateViewports();
     }
 }
 
 void Controller::setSpecularColor(uint red, uint green, uint blue) {
     if (model_->getActivePrimitive() != NULL) {
         model_->getActivePrimitive()->setSpecularColor(Primitive::float3(red / 255.0f, green / 255.0f, blue / 255.0f));
+        emit updateViewports();
     }
 }
 
 void Controller::setRoughness(int roughness) {
     if (model_->getActivePrimitive() != NULL) {
         model_->getActivePrimitive()->setRoughness(roughness / 100.0f);
+        emit updateViewports();
     }
 }
 
 void Controller::setRefractionIndex(int refractionIndex) {
     if (model_->getActivePrimitive() != NULL) {
-        model_->getActivePrimitive()->setRefractionIndex(refractionIndex / 100.0f);
+        model_->getActivePrimitive()->setRefractionIndex((refractionIndex / 100.0f) * 3 + 1);
+        emit updateViewports();
     }
 }
 
 void Controller::setTextureChecked(Primitive::Textures x, bool status) {
     if (model_->getActivePrimitive() != NULL) {
         model_->getActivePrimitive()->setTextureActive(x, status);
+        emit updateViewports();
     }
 }
 
@@ -170,5 +183,43 @@ void Controller::setTexture(Primitive::Textures x, QImage texture) {
         view_->getViewport(Model::FRONT)->copyTextureData(model_->getActivePrimitive(), x);
         view_->getViewport(Model::LEFT)->copyTextureData(model_->getActivePrimitive(), x);
         view_->getViewport(Model::TOP)->copyTextureData(model_->getActivePrimitive(), x);
+        emit updateViewports();
+    }
+}
+
+void Controller::setDiffuseShader(int i) {
+    if (model_->getActivePrimitive() != NULL) {
+        model_->getActivePrimitive()->setDiffuseShader(i);
+        emit updateViewports();
+    }
+}
+
+void Controller::setSpecularShader(int i) {
+    if (model_->getActivePrimitive() != NULL) {
+        model_->getActivePrimitive()->setSpecularShader(i);
+        emit updateViewports();
+    }
+}
+
+void Controller::setKa(int ka) {
+    if (model_->getActivePrimitive() != NULL) {
+        model_->getActivePrimitive()->setKa(ka / 100.0f);
+        emit updateViewports();
+    }
+}
+
+
+void Controller::setKd(int kd) {
+    if (model_->getActivePrimitive() != NULL) {
+        model_->getActivePrimitive()->setKd(kd / 100.0f);
+        emit updateViewports();
+    }
+}
+
+
+void Controller::setKs(int ks) {
+    if (model_->getActivePrimitive() != NULL) {
+        model_->getActivePrimitive()->setKs(ks / 100.0f);
+        emit updateViewports();
     }
 }

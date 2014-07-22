@@ -167,71 +167,19 @@ QVector3D MouseController::mapPointToTrackball(float x, float y) {
 }
 
 void MouseController::keyPressEvent(QKeyEvent *event) {
-    /*
-    QVector3D tr = QVector3D();
-            if(event->key() == Qt::Key_A) tr += QVector3D(-0.2, 0,    0);
-            if(event->key() == Qt::Key_S) tr += QVector3D(   0, 0,  0.2);
-            if(event->key() == Qt::Key_D) tr += QVector3D( 0.2, 0,    0);
-            if(event->key() == Qt::Key_W) tr += QVector3D(   0, 0, -0.2);
-
-            tr = m_camera.m_rotation.conjugate().rotatedVector(tr);
-
-            m_camera.translate(tr);
-            makeCurrent();
-            m_camera.stackModelView();
-            if (m_collision)
-            {
-                m_camera.translate(m_colVisitor.testPointComplete(m_scene, m_textureFactor, m_coordFactor, m_heightFactor));
-            }
-            updateGL();
-            */
-
-
-
-    if (event->key() == Qt::Key_W) {
-        //QVector3D camera_->getRotation() * QVector3D(0, 0, -1);
-        //QVector3D translation = camera_->getCameraMatrix() * QVector3D(0,0,0.01);
-        /*
-        QQuaternion rotationX = QQuaternion::fromAxisAndAngle(camera_->getRotation().x(), 0, 0, camera_->getRotation().scalar());
-        QMatrix4x4 rotationXMatrix = QMatrix4x4();
-        rotationXMatrix.rotate(rotationX);
-        QVector3D translation = rotationXMatrix * QVector3D(0, 0, 0.1);
-
-        std::cout << "translating by: " << translation.x() << ", " << translation.y() << ", " << translation.z() << std::endl;
-        std::cout << "camera rotation: x: " << camera_->getRotation().x() << std::endl;
-
-        camera_->translate(translation);
-        */
-
+   if (event->key() == Qt::Key_W) {
         QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0, 0, 0.2));
         camera_->translate(translation);
         if (checkCollision()) camera_->translate(-translation);
-
-        //camera_->zoom(translation.z());
-        //camera_->translate(QVector2D(1,0));
     } else if (event->key() == Qt::Key_S) {
-        /*
-        QQuaternion rotationX = QQuaternion::fromAxisAndAngle(camera_->getRotation().x(), 0, 0, camera_->getRotation().scalar());
-        QMatrix4x4 rotationXMatrix = QMatrix4x4();
-        rotationXMatrix.rotate(rotationX);
-        QVector3D translation = rotationXMatrix * QVector3D(0, 0, -0.1);        
-        camera_->translate(translation);
-        */
         QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0, 0, -0.2));
         camera_->translate(translation);
         if (checkCollision()) camera_->translate(-translation);
-
-        //camera_->zoom(-0.1);
-        //camera_->translate(QVector2D(0, 0.05));
     } else if (event->key() == Qt::Key_A) {
-        //camera_->translate(QVector2D(0.05, 0));
-        //camera_->rotate(QQuaternion::fromAxisAndAngle(0, 1, 0, 1));
         QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(0.2, 0, 0));
         camera_->translate(translation);
         if (checkCollision()) camera_->translate(-translation);
     } else if (event->key() == Qt::Key_D) {
-        //camera_->rotate(QQuaternion::fromAxisAndAngle(0, 1, 0, -1));
-        //camera_->translate(QVector2D(-0.05, 0));
         QVector3D translation = camera_->getRotation().conjugate().rotatedVector(QVector3D(-0.2, 0, 0));
         camera_->translate(translation);
         if (checkCollision()) camera_->translate(-translation);

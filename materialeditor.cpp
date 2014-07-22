@@ -6,7 +6,7 @@
 #include <QString>
 #include <sstream>
 
-MaterialEditor::MaterialEditor(QWidget *parent) :
+MaterialEditor::MaterialEditor(QWidget *parent, MaterialPreview *preview) :
     QWidget(parent)
 {
     gridLayout = new QGridLayout(this);
@@ -16,118 +16,171 @@ MaterialEditor::MaterialEditor(QWidget *parent) :
     QFont boldFont = QFont();
     boldFont.setBold(true);
 
+    int row = 0;
+
+    preview_ = preview;
+
+    // position preview widget
+    gridLayout->addWidget(preview_, row, 0, 1, 4, Qt::AlignHCenter);
+
+    row++;
 
     // Labels first row
     for (int i = 0; i < NR_COMPONENTS; i++) {
         componentLabels[i] = new QLabel(this);
         componentLabels[i]->setText(componentToString(static_cast<Component>(i)));
-        gridLayout->addWidget(componentLabels[i], 0, i + 1, Qt::AlignHCenter);
+        gridLayout->addWidget(componentLabels[i], row, i + 1, Qt::AlignHCenter);
     }
+    row++;
 
     // ambient color labels & lineEdits
     ambientLabel = new QLabel(this);
     ambientLabel->setText("ambient");
-    gridLayout->addWidget(ambientLabel, 1, 0, Qt::AlignHCenter);
+    gridLayout->addWidget(ambientLabel, row, 0, Qt::AlignHCenter);
 
     for (int i = 0; i < NR_COMPONENTS; i++) {
-        ambientColor[i] = 255;
+        ambientColor[i] = 0;
         ambientEdits[i] = new QLineEdit(this);
         ambientEdits[i]->setInputMask("000");
         ambientEdits[i]->setText(QString::number(ambientColor[i]));
-        connect(ambientEdits[i], SIGNAL(textChanged(QString)), this, SLOT(ambientComponentChanged(QString)));
-        gridLayout->addWidget(ambientEdits[i], 1, i + 1, Qt::AlignHCenter);
+        ambientEdits[i]->setMaximumWidth(70);
+        connect(ambientEdits[i], SIGNAL(textEdited(QString)), this, SLOT(ambientComponentChanged(QString)));
+
+        gridLayout->addWidget(ambientEdits[i], row, i + 1, Qt::AlignHCenter);
     }
+    row++;
 
     // diffuse color labels & lineEdits
     diffuseLabel = new QLabel(this);
     diffuseLabel->setText("diffuse");
-    gridLayout->addWidget(diffuseLabel, 2, 0, Qt::AlignHCenter);
+    gridLayout->addWidget(diffuseLabel, row, 0, Qt::AlignHCenter);
 
     for (int i = 0; i < NR_COMPONENTS; i++) {
-        diffuseColor[i] = 255;
+        diffuseColor[i] = 0;
         diffuseEdits[i] = new QLineEdit(this);
         diffuseEdits[i]->setInputMask("000");
         diffuseEdits[i]->setText(QString::number(diffuseColor[i]));
-        connect(diffuseEdits[i], SIGNAL(textChanged(QString)), this, SLOT(diffuseComponentChanged(QString)));
-        gridLayout->addWidget(diffuseEdits[i], 2, i + 1, Qt::AlignHCenter);
+        diffuseEdits[i]->setMaximumWidth(70);
+        connect(diffuseEdits[i], SIGNAL(textEdited(QString)), this, SLOT(diffuseComponentChanged(QString)));
+        gridLayout->addWidget(diffuseEdits[i], row, i + 1, Qt::AlignHCenter);
     }
+    row++;
 
     // specular color labels & lineEdits
     specularLabel = new QLabel(this);
     specularLabel->setText("specular");
-    gridLayout->addWidget(specularLabel, 3, 0, Qt::AlignHCenter);
+    gridLayout->addWidget(specularLabel, row, 0, Qt::AlignHCenter);
 
     for (int i = 0; i < NR_COMPONENTS; i++) {
-        specularColor[i] = 255;
+        specularColor[i] = 0;
         specularEdits[i] = new QLineEdit(this);
         specularEdits[i]->setInputMask("000");
         specularEdits[i]->setText(QString::number(specularColor[i]));
-        connect(specularEdits[i], SIGNAL(textChanged(QString)), this, SLOT(specularComponentChanged(QString)));
-        gridLayout->addWidget(specularEdits[i], 3, i + 1, Qt::AlignHCenter);
+        specularEdits[i]->setMaximumWidth(70);
+        connect(specularEdits[i], SIGNAL(textEdited(QString)), this, SLOT(specularComponentChanged(QString)));
+        gridLayout->addWidget(specularEdits[i], row, i + 1, Qt::AlignHCenter);
     }
+    row++;
+
+
+    // ka, kd, ks factors
+    factorsLabel = new QLabel(this);
+    factorsLabel->setText("ka / kd / ks");
+    gridLayout->addWidget(factorsLabel, row, 0, Qt::AlignHCenter);
+
+    kaSlider = new QSlider(Qt::Horizontal, this);
+    kaSlider->setRange(0, 100);
+    kaSlider->setFixedWidth(70);
+    kaSlider->setValue(100);
+    connect(kaSlider, SIGNAL(valueChanged(int)), this, SIGNAL(kaChanged(int)));
+    connect(kaSlider, SIGNAL(valueChanged(int)), this, SLOT(kaChangedSlot(int)));
+    gridLayout->addWidget(kaSlider, row, 1, Qt::AlignHCenter);
+
+    kdSlider = new QSlider(Qt::Horizontal, this);
+    kdSlider->setRange(0, 100);
+    kdSlider->setFixedWidth(70);
+    kdSlider->setValue(100);
+    connect(kdSlider, SIGNAL(valueChanged(int)), this, SIGNAL(kdChanged(int)));
+    connect(kdSlider, SIGNAL(valueChanged(int)), this, SLOT(kdChangedSlot(int)));
+    gridLayout->addWidget(kdSlider, row, 2, Qt::AlignHCenter);
+
+    ksSlider = new QSlider(Qt::Horizontal, this);
+    ksSlider->setRange(0, 100);
+    ksSlider->setFixedWidth(70);
+    ksSlider->setValue(100);
+    connect(ksSlider, SIGNAL(valueChanged(int)), this, SIGNAL(ksChanged(int)));
+    connect(ksSlider, SIGNAL(valueChanged(int)), this, SLOT(ksChangedSlot(int)));
+    gridLayout->addWidget(ksSlider, row, 3, Qt::AlignHCenter);
+
+    row++;
 
     // roughness label & slider
     roughnessLabel = new QLabel(this);
     roughnessLabel->setText("roughness");
-    gridLayout->addWidget(roughnessLabel, 4, 0, Qt::AlignHCenter);
+    gridLayout->addWidget(roughnessLabel, row, 0, Qt::AlignHCenter);
 
     roughnessSlider = new QSlider(Qt::Horizontal, this);
-    roughnessSlider->setRange(0, 100);
+    roughnessSlider->setRange(1, 99);
     roughnessSlider->setFixedWidth(100);
-    roughnessSlider->setValue(100);
+    roughnessSlider->setValue(50);
     connect(roughnessSlider, SIGNAL(valueChanged(int)), this, SIGNAL(roughnessChanged(int)));
-    gridLayout->addWidget(roughnessSlider, 4, 1, 1, 2, Qt::AlignLeft);
+    gridLayout->addWidget(roughnessSlider, row, 1, 1, 2, Qt::AlignLeft);
+
+    row++;
 
     // refractionIndex label & slider
     refractionIndexLabel = new QLabel(this);
     refractionIndexLabel->setText("refraction \n index");
-    gridLayout->addWidget(refractionIndexLabel, 5, 0, Qt::AlignHCenter);
+    gridLayout->addWidget(refractionIndexLabel, row, 0, Qt::AlignHCenter);
 
 
     refractionIndexSlider = new QSlider(Qt::Horizontal, this);
     refractionIndexSlider->setRange(0, 100);
     refractionIndexSlider->setFixedWidth(100);
-    refractionIndexSlider->setValue(100);
+    refractionIndexSlider->setValue(50);
     connect(refractionIndexSlider, SIGNAL(valueChanged(int)), this, SIGNAL(refractionIndexChanged(int)));
-    gridLayout->addWidget(refractionIndexSlider, 5, 1, 1, 2, Qt::AlignLeft);
+    gridLayout->addWidget(refractionIndexSlider, row, 1, 1, 2, Qt::AlignLeft);
 
+    row++;
 
     // texture uploads
 
     texturesLabel = new QLabel("Textures", this);
     texturesLabel->setFont(boldFont);
-    gridLayout->addWidget(texturesLabel, 6, 0, Qt::AlignHCenter);
+    gridLayout->addWidget(texturesLabel, row, 0, Qt::AlignHCenter);
+
+    row++;
 
     for (int i = 0; i < Primitive::NR_TEXTURES; i++) {
         textureCheckboxes[i] = new QCheckBox(this);
         connect(textureCheckboxes[i], SIGNAL(toggled(bool)), this, SLOT(textureChecked(bool)));
-        gridLayout->addWidget(textureCheckboxes[i], 7 + i, 0, Qt::AlignRight);
+        gridLayout->addWidget(textureCheckboxes[i], row + i, 0, Qt::AlignRight);
 
         textureLabels[i] = new QLabel(textureToString(static_cast<Primitive::Textures>(i)), this);
-        gridLayout->addWidget(textureLabels[i], 7 + i, 1, Qt::AlignHCenter);
+        gridLayout->addWidget(textureLabels[i], row + i, 1, Qt::AlignHCenter);
 
         textureUploadButtons[i] = new QPushButton("Upload", this);
         textureUploadButtons[i]->setFixedWidth(70);
         connect(textureUploadButtons[i], SIGNAL(clicked()), this, SLOT(textureUploadInitialized()));
-        gridLayout->addWidget(textureUploadButtons[i], 7 + i, 2, Qt::AlignLeft);
+        gridLayout->addWidget(textureUploadButtons[i], row + i, 2, Qt::AlignLeft);
 
         texturePreviewPixmaps[i] = new QPixmap();
         texturePreviewsLabels[i] = new QLabel(this);
         texturePreviewsLabels[i]->setPixmap(*texturePreviewPixmaps[i]);
         texturePreviewsLabels[i]->setScaledContents(true);
         texturePreviewsLabels[i]->setFixedSize(40, 40);
-        gridLayout->addWidget(texturePreviewsLabels[i], 7 + i, 3, Qt::AlignHCenter);
+        gridLayout->addWidget(texturePreviewsLabels[i], row + i, 3, Qt::AlignHCenter);
 
         textureImage[i] = new QImage();
         hasTexture[i] = false;
     }
 
-    int line = 7 + Primitive::NR_TEXTURES;
+    row += Primitive::NR_TEXTURES;
 
     // diffuse shaders group
     diffuseShadersLabel = new QLabel("Diffuse shaders", this);
     diffuseShadersLabel->setFont(boldFont);
-    gridLayout->addWidget(diffuseShadersLabel, line, 0, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(diffuseShadersLabel, row, 0, 1, 2, Qt::AlignHCenter);
 
     noDiffuseButton = new QPushButton("none", this);
     noDiffuseButton->setCheckable(true);
@@ -142,16 +195,17 @@ MaterialEditor::MaterialEditor(QWidget *parent) :
     diffuseShadersGroup->addButton(lambertButton, 1);
     diffuseShadersGroup->addButton(orenNayarButton, 2);
 
-    gridLayout->addWidget(noDiffuseButton, line + 1, 0, 1, 2, Qt::AlignHCenter);
-    gridLayout->addWidget(lambertButton, line + 2, 0, 1, 2, Qt::AlignHCenter);
-    gridLayout->addWidget(orenNayarButton, line + 3, 0, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(noDiffuseButton, row + 1, 0, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(lambertButton, row + 2, 0, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(orenNayarButton, row + 3, 0, 1, 2, Qt::AlignHCenter);
 
     connect(diffuseShadersGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(diffuseShaderChanged(int)));
+    connect(diffuseShadersGroup, SIGNAL(buttonClicked(int)), this, SLOT(diffuseShaderChangedSlot(int)));
 
     // specular shaders group
     specularShadersLabel = new QLabel("Specular shaders", this);
     specularShadersLabel->setFont(boldFont);
-    gridLayout->addWidget(specularShadersLabel, line, 2, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(specularShadersLabel, row, 2, 1, 2, Qt::AlignHCenter);
 
     noSpecularButton = new QPushButton("none", this);
     noSpecularButton->setCheckable(true);
@@ -166,11 +220,14 @@ MaterialEditor::MaterialEditor(QWidget *parent) :
     specularShadersGroup->addButton(phongButton, 1);
     specularShadersGroup->addButton(cookTorranceButton, 2);
 
-    gridLayout->addWidget(noSpecularButton, line + 1, 2, 1, 2, Qt::AlignHCenter);
-    gridLayout->addWidget(phongButton, line + 2, 2, 1, 2, Qt::AlignHCenter);
-    gridLayout->addWidget(cookTorranceButton, line + 3, 2, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(noSpecularButton, row + 1, 2, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(phongButton, row + 2, 2, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(cookTorranceButton, row + 3, 2, 1, 2, Qt::AlignHCenter);
 
     connect(specularShadersGroup, SIGNAL(buttonClicked(int)), this, SIGNAL(specularShaderChanged(int)));
+    connect(specularShadersGroup, SIGNAL(buttonClicked(int)), this, SLOT(specularShaderChangedSlot(int)));
+
+    row += 4;
 
     // load and save buttons
     loadButton = new QPushButton("Load Material", this);
@@ -178,26 +235,171 @@ MaterialEditor::MaterialEditor(QWidget *parent) :
     saveButton = new QPushButton("Save Material", this);
     connect(saveButton, SIGNAL(clicked()), this, SLOT(saveMaterial()));
 
-    gridLayout->addWidget(loadButton, line + 4, 0, 1, 2, Qt::AlignHCenter);
-    gridLayout->addWidget(saveButton, line + 4, 2, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(loadButton, row, 0, 1, 2, Qt::AlignHCenter);
+    gridLayout->addWidget(saveButton, row, 2, 1, 2, Qt::AlignHCenter);
 
-
+    row++;
 
     // create line to separate sections
     QFrame* separator = new QFrame();
     separator->setFrameShape(QFrame::HLine);
     separator->setFrameShadow(QFrame::Plain);
-    gridLayout->addWidget(separator, line + 6, 0, 1, 4, Qt::AlignLeft);
+    gridLayout->addWidget(separator, row, 0, 1, 4, Qt::AlignLeft);
 
 
 
 
 
+    resetProperties();
+
+}
 
 
+void MaterialEditor::adjustToPrimitive(Primitive *p) {
+    if (p != NULL) {
+        preview_->setEnabled(true);
+
+        for (int i = 0; i < NR_COMPONENTS; i++) {
+            ambientEdits[i]->setEnabled(true);
+            diffuseEdits[i]->setEnabled(true);
+            specularEdits[i]->setEnabled(true);
+        }
+
+        ambientEdits[0]->setText(QString::number(p->getAmbientColor().x_ * 255));
+        ambientEdits[1]->setText(QString::number(p->getAmbientColor().y_ * 255));
+        ambientEdits[2]->setText(QString::number(p->getAmbientColor().z_ * 255));
+        emit ambientColorChanged(ambientEdits[0]->text().toInt(), ambientEdits[1]->text().toInt(), ambientEdits[2]->text().toInt());
+
+        diffuseEdits[0]->setText(QString::number(p->getDiffuseColor().x_ * 255));
+        diffuseEdits[1]->setText(QString::number(p->getDiffuseColor().y_ * 255));
+        diffuseEdits[2]->setText(QString::number(p->getDiffuseColor().z_ * 255));
+        emit diffuseColorChanged(diffuseEdits[0]->text().toInt(), diffuseEdits[1]->text().toInt(), diffuseEdits[2]->text().toInt());
+
+        specularEdits[0]->setText(QString::number(p->getSpecularColor().x_ * 255));
+        specularEdits[1]->setText(QString::number(p->getSpecularColor().y_ * 255));
+        specularEdits[2]->setText(QString::number(p->getSpecularColor().z_ * 255));
+        emit specularColorChanged(specularEdits[0]->text().toInt(), specularEdits[1]->text().toInt(), specularEdits[2]->text().toInt());
+
+        kaSlider->setValue(p->getKa() * 100);
+        kaSlider->setEnabled(true);
+        kdSlider->setValue(p->getKd() * 100);
+        kdSlider->setEnabled(true);
+        ksSlider->setValue(p->getKs() * 100);
+        ksSlider->setEnabled(true);
+
+        roughnessSlider->setValue(p->getRoughness() * 100);
+        roughnessSlider->setEnabled(true);
+        refractionIndexSlider->setValue((p->getRefractionIndex() - 1) / 3 * 100);
+        refractionIndexSlider->setEnabled(true);
+
+        int id = p->getDiffuseShader();
+        switch (id) {
+        case 0: noDiffuseButton->setChecked(true); break;
+        case 1: lambertButton->setChecked(true); break;
+        case 2: orenNayarButton->setChecked(true); break;
+        default: noDiffuseButton->setChecked(true); break;
+        }
+
+        emit diffuseShadersGroup->buttonClicked(id);
 
 
+        id = p->getSpecularShader();
+        switch (id) {
+        case 0: noSpecularButton->setChecked(true); break;
+        case 1: phongButton->setChecked(true); break;
+        case 2: cookTorranceButton->setChecked(true); break;
+        default: noSpecularButton->setChecked(true); break;
+        }
 
+        emit specularShadersGroup->buttonClicked(id);
+
+        noDiffuseButton->setEnabled(true);
+        lambertButton->setEnabled(true);
+        orenNayarButton->setEnabled(true);
+        noSpecularButton->setEnabled(true);
+        phongButton->setEnabled(true);
+        cookTorranceButton->setEnabled(true);
+        saveButton->setEnabled(true);
+        loadButton->setEnabled(true);
+
+        for (int i = 0; i < Primitive::NR_TEXTURES; i++) {
+            if (p->isTextureActive(static_cast<Primitive::Textures>(i))) {
+                textureCheckboxes[i]->setChecked(true);
+            } else {
+                textureCheckboxes[i]->setChecked(false);
+            }
+
+            textureCheckboxes[i]->setEnabled(true);
+            textureUploadButtons[i]->setEnabled(true);
+
+            textureImage[i] = p->getTexture(static_cast<Primitive::Textures>(i));
+            *texturePreviewPixmaps[i] = QPixmap::fromImage(*textureImage[i]);
+            texturePreviewsLabels[i]->setPixmap(*texturePreviewPixmaps[i]);
+
+
+            if (textureImage[i]->width() > 0) {
+                std::cout << "Primitive " << p->getID() << " has texture " << i << std::endl;
+                // upload texture to preview, but not again to the selected primitive, so not emitting the textureUploaded() signal here
+                preview_->setTexture(static_cast<Primitive::Textures>(i), *textureImage[i]);
+                hasTexture[i] = true;
+            } else {
+                hasTexture[i] = false;
+            }
+        }
+    } else {
+        resetProperties();
+    }
+}
+
+void MaterialEditor::resetProperties() {
+    preview_->setEnabled(false);
+
+    for (int i = 0; i < NR_COMPONENTS; i++) {
+        ambientEdits[i]->setText(QString::number(0));
+        diffuseEdits[i]->setText(QString::number(0));
+        specularEdits[i]->setText(QString::number(0));
+        ambientEdits[i]->setEnabled(false);
+        diffuseEdits[i]->setEnabled(false);
+        specularEdits[i]->setEnabled(false);
+    }
+    emit ambientColorChanged(ambientEdits[0]->text().toInt(), ambientEdits[1]->text().toInt(), ambientEdits[2]->text().toInt());
+    emit diffuseColorChanged(diffuseEdits[0]->text().toInt(), diffuseEdits[1]->text().toInt(), diffuseEdits[2]->text().toInt());
+    emit specularColorChanged(specularEdits[0]->text().toInt(), specularEdits[1]->text().toInt(), specularEdits[2]->text().toInt());
+
+    kaSlider->setValue(100);
+    kaSlider->setEnabled(false);
+    kdSlider->setValue(100);
+    kdSlider->setEnabled(false);
+    ksSlider->setValue(100);
+    ksSlider->setEnabled(false);
+
+    roughnessSlider->setValue(50);
+    roughnessSlider->setEnabled(false);
+    refractionIndexSlider->setValue(50);
+    refractionIndexSlider->setEnabled(false);
+
+    for (int i = 0; i < Primitive::NR_TEXTURES; i++) {
+        hasTexture[i] = false;
+        textureCheckboxes[i]->setChecked(false);
+        textureCheckboxes[i]->setEnabled(false);
+        texturePreviewPixmaps[i] = new QPixmap();
+        texturePreviewsLabels[i]->setPixmap(*texturePreviewPixmaps[i]);
+        textureUploadButtons[i]->setEnabled(false);
+    }
+    noDiffuseButton->setChecked(true);
+    noSpecularButton->setChecked(true);
+
+    emit diffuseShadersGroup->buttonClicked(0);
+    emit specularShadersGroup->buttonClicked(0);
+
+    noDiffuseButton->setEnabled(false);
+    lambertButton->setEnabled(false);
+    orenNayarButton->setEnabled(false);
+    noSpecularButton->setEnabled(false);
+    phongButton->setEnabled(false);
+    cookTorranceButton->setEnabled(false);
+    saveButton->setEnabled(false);
+    loadButton->setEnabled(false);
 }
 
 void MaterialEditor::loadMaterial() {
@@ -234,9 +436,22 @@ void MaterialEditor::loadMaterial() {
         }
         emit specularColorChanged(specularColor[RED], specularColor[GREEN], specularColor[BLUE]);
 
-        // read in roughness and refraction index
         line = file.readLine(maxLineLength);
         QStringList value = QString(line).split(' ');
+
+        int ka = value[0].toInt();
+        int kd = value[1].toInt();
+        int ks = value[2].toInt();
+        kaSlider->setValue(ka);
+        kdSlider->setValue(kd);
+        ksSlider->setValue(ks);
+        emit kaChanged(ka);
+        emit kdChanged(kd);
+        emit ksChanged(ks);
+
+        // read in roughness and refraction index
+        line = file.readLine(maxLineLength);
+        value = QString(line).split(' ');
         int roughness = value[0].toInt();
         roughnessSlider->setValue(roughness);
         emit roughnessChanged(roughness);
@@ -319,6 +534,8 @@ void MaterialEditor::saveMaterial() {
         }
         data << "\n";
 
+        data << kaSlider->value() << " " << kdSlider->value() << " " << ksSlider->value() << "\n";
+
         data << roughnessSlider->value() << "\n";
         data << refractionIndexSlider->value() << "\n";
 
@@ -366,11 +583,9 @@ void MaterialEditor::uploadTexture(int index, QString fileName) {
         std::cout << "uploading texture: " << fileName.toStdString() << " to index " << index << std::endl;
         textureImage[index] = new QImage(fileName);
         hasTexture[index] = true;
-        QImage texture = QGLWidget::convertToGLFormat(*textureImage[index]);
-        delete texturePreviewPixmaps[index];
-        texturePreviewPixmaps[index] = new QPixmap(fileName);
+        *texturePreviewPixmaps[index] = QPixmap::fromImage(*textureImage[index]);
         texturePreviewsLabels[index]->setPixmap(*texturePreviewPixmaps[index]);
-        emit textureUploaded(static_cast<Primitive::Textures>(index), texture);
+        emit textureUploaded(static_cast<Primitive::Textures>(index), *textureImage[index]);
     } else {
         std::cout << "texture upload failed." << std::endl;
     }
@@ -381,8 +596,10 @@ void MaterialEditor::textureChecked(bool status) {
     for (int i = 0; i < Primitive::NR_TEXTURES; i++) {
         if (sender() == textureCheckboxes[i]) {
             x = static_cast<Primitive::Textures>(i);
+            std::cout << "textureChecked() was set to " << status << " for texture " << x << std::endl;
         }
     }
+
     emit textureChecked(x, status);
 }
 
@@ -452,17 +669,44 @@ QString MaterialEditor::textureToString(Primitive::Textures x) {
     default: return "default";
     }
 }
-/*
-MaterialEditor::~MaterialEditor() {
-    for (int i = 0; i < NR_COMPONENTS; i++) {
-        delete componentLabels[i];
-        delete ambientEdits[i];
-        delete diffuseEdits[i];
-        delete specularEdits[i];
-    }
 
-    delete ambientLabel;
-    delete diffuseLabel;
-    delete specularLabel;
+void MaterialEditor::diffuseShaderChangedSlot(int id) {
+    //if (id == 0)
 }
+
+void MaterialEditor::specularShaderChangedSlot(int id) {
+    //if (id == 0)
+}
+
+void MaterialEditor::kaChangedSlot(int value) {
+    /*int ka = value;
+    int kd = kdSlider->value();
+    int ks = ksSlider->value();
+
+    int total = ka + kd + ks;
+    int rest = 0;
+    int over = total - 100;
+    int overHalf = over / 2;
+    if (over % 2 == 1 && over > 0) rest = 1;
+    if (over % 2 == 1 && over < 0) rest = -1;
+
+    if (changedKd) {
+        changedKd = false;
+        kdSlider->setValue(kd - overHalf);
+        ksSlider->setValue(ks - (overHalf + rest));
+    } else {
+        changedKd = true;
+        kdSlider->setValue(kd - (overHalf + rest));
+        ksSlider->setValue(ks - overHalf);
+    }
+    std::cout << "ka: " << ka << ", kd: " << kdSlider->value() << ", ks: " << ksSlider->value() << std::endl;
 */
+}
+
+void MaterialEditor::kdChangedSlot(int value) {
+
+}
+
+void MaterialEditor::ksChangedSlot(int value) {
+
+}

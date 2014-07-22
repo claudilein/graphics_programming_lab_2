@@ -3,11 +3,17 @@
 varying vec3 normal;
 varying vec3 lightRay;
 varying vec3 viewRay;
+varying vec2 texCoord;
+varying vec3 lightRay_TS;
+varying vec3 viewRay_TS;
+varying vec3 tangent_out;
+varying vec3 bitangent_out;
 //uniform int nrLightSources;
 
-uniform vec3 color;
 attribute vec3 normal_in;
-attribute vec3 color_in;
+attribute vec3 tex_in;
+attribute vec3 tangent_in;
+attribute vec3 bitangent_in;
 
 
 void main() {
@@ -17,8 +23,16 @@ void main() {
 	lightRay = gl_LightSource[0].position.xyz - vec3(gl_ModelViewMatrix * gl_Vertex);
 	viewRay = (- gl_ModelViewMatrix * gl_Vertex).xyz;
 
-	gl_FrontColor =  vec4(color, 1);
-	gl_BackColor = vec4(color, 1);
+	texCoord = tex_in.xy;
+	vec3 tangent = normalize(vec3(gl_ModelViewMatrix * vec4(tangent_in, 0)));
+	vec3 bitangent = normalize(vec3(gl_ModelViewMatrix * vec4(bitangent_in, 0)));
+	vec3 normal_CC = normalize(vec3(gl_ModelViewMatrix * vec4(normal_in, 0)));
+
+	mat3 TBN = transpose(mat3(tangent, bitangent, normal_CC));
+	lightRay_TS = TBN * lightRay;
+	viewRay_TS = TBN * viewRay;
+tangent_out = tangent;
+bitangent_out = bitangent;
 
 	//for (int i = 0; i < nrLightSources; i++) {
 	// lightRay[i] = gl_LightSource[i].position.xyz - vec3(gl_ModelViewMatrix * gl_Vertex);

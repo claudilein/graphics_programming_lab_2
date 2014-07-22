@@ -3,41 +3,254 @@
 varying vec3 normal;
 varying vec3 lightRay;
 varying vec3 viewRay;
+varying vec2 texCoord;
+varying vec3 lightRay_TS;
+varying vec3 viewRay_TS;
+varying vec3 tangent_out;
+varying vec3 bitangent_out;
 
 uniform float id;
-uniform sampler2D diffuseTexture;
+uniform vec3 ambientColor_in;
+uniform vec3 diffuseColor_in;
+uniform vec3 specularColor_in;
+uniform float ka_in;
+uniform float kd_in;
+uniform float ks_in;
+uniform float roughness_in;
+uniform float refractionIndex_in;
+uniform sampler2D texture[10];
+uniform int textureActive[10];
+uniform int nrTextures;
+uniform int diffuseShader;
+uniform int specularShader;
+
+vec3 computeLambertShading(vec3 color, float LdotN) {
+	return color * LdotN;
+}
+
+vec3 computeOrenNayarShading(vec3 color, vec3 N, vec3 L, vec3 V, float roughness) {
+
+    const float PI = 3.14159;
+
+    // interpolating normals will change the length of the normal, so renormalize the normal.
+    vec3 normal = normalize(N);
+    vec3 eyeDir = normalize(V);
+    
+    // calculate intermediary values
+    float NdotL = dot(normal, L);
+    float NdotV = dot(normal, eyeDir); 
+
+    float angleVN = acos(NdotV);
+    float angleLN = acos(NdotL);
+    
+    float alpha = max(angleVN, angleLN);
+    float beta = min(angleVN, angleLN);
+    float gamma = dot(eyeDir - normal * dot(eyeDir, normal), L - normal * dot(L, normal));
+    
+    float roughnessSquared = roughness * roughness;
+    float roughnessSquared9 = (roughnessSquared / (roughnessSquared + 0.09));
+    
+    // calculate C1, C2 and C3
+    float C1 = 1.0 - 0.5 * (roughnessSquared / (roughnessSquared + 0.33));
+    float C2 = 0.45 * roughnessSquared9;
+    
+    if(gamma >= 0.0)
+    {
+        C2 *= sin(alpha);
+    }
+    else
+    {
+        C2 *= (sin(alpha) - pow((2.0 * beta) / PI, 3.0));
+    }
+ 
+    float powValue = (4.0 * alpha * beta) / (PI * PI);
+    float C3  = 0.125 * roughnessSquared9 * powValue * powValue;
+ 
+    // now calculate both main parts of the formula
+    float A = gamma * C2 * tan(beta);
+    float B = (1.0 - abs(gamma)) * C3 * tan((alpha + beta) / 2.0);
+ 
+    // put it all together
+    float L1 = max(0.0, NdotL) * (C1 + A + B);
+    
+    // also calculate interreflection
+    float twoBetaPi = 2.0 * beta / PI;
+	//TODO: p is squared in this case... how to separate this?
+    float L2 = 0.17 * max(0.0, NdotL) * (roughnessSquared / (roughnessSquared + 0.13)) * (1.0 - gamma * twoBetaPi * twoBetaPi);
+    
+    // get the final color by summing both components
+    vec3 final = color * (L1 + L2);
+
+
+
+
+
+   /* float LdotN = dot(L, N);
+    float VdotN = dot(V, N);
+
+    float alpha    = max(acos(VdotN), acos(LdotN));
+    float beta     = min(acos(VdotN), acos(LdotN));
+    float gamma    = dot(V - N * VdotN, L - N * LdotN);
+    float squaredRoughness = roughness * roughness;
+ 
+
+    float A = 1.0f - 0.5f * squaredRoughness / (squaredRoughness + 0.57f);
+    float B = 0.45f * squaredRoughness / (squaredRoughness + 0.09f);
+
+    vec3 final = color * LdotN * (A + B * max(0, gamma) * sin(alpha) * tan(beta));
+*/
+
+    /*
+
+	const float PI = 3.14159f;
+	float C1       = 1.0f - 0.5f * ( squaredRoughness / ( squaredRoughness + 0.33f ) );
+ 
+    float C2       = 0.45f * ( squaredRoughness / ( squaredRoughness + 0.09 ) );
+    if( gamma >= 0 )
+    {
+        C2 *= sin( alpha );
+    }
+    else
+    {
+        C2 *= ( sin( alpha ) - pow( (2 * beta) / PI, 3 ) );
+    }
+ 
+    float C3  = (1.0f / 8.0f) ;
+    C3       *= ( squaredRoughness / ( squaredRoughness + 0.09f ) );
+    C3       *= pow( ( 4.0f * alpha * beta ) / (PI * PI), 2 );
+ 
+    float A = gamma * C2 * tan( beta );
+    float B = (1 - abs( gamma )) * C3 * tan( (alpha + beta) / 2.0f );
+ 
+    vec3 final = color * max( 0.0f, LdotN ) * ( C1 + A + B );
+*/
+
+    return final;
+}
+
+vec3 computePhongShading(vec3 color, vec3 N, vec3 L, vec3 V, float roughness) {
+	float NdotL = dot(N, L);
+	if (NdotL > 0.0f) {
+		vec3 R = 2 * NdotL * N - L;
+		float RdotV = max(0, dot(R,V));
+		float m = max(1.0f, (80.0f * (1.0f - roughness) * (1.0f - roughness)));
+		return color * pow(RdotV, m) * (m + 2.0f) / 2.0f;	
+	} else {
+		return vec3(0,0,0);
+	}
+}
+
+vec3 computeCookTorranceShading(vec3 color, vec3 N, vec3 L, vec3 V, float roughness, float refractionIndex) {
+
+	float NdotL = dot(N, L);
+	if (NdotL > 0.0f) {	
+
+		// compute half vector and dot products		
+		vec3 H = normalize(V + L);
+		float VdotH = max(0.0f, dot(V, H));
+		float NdotH = max(0.0f, dot(N, H));
+		float NdotV = max(0.0f, dot(N, V));
+		
+		//compute Fresnel-term for reflected fraction of the light
+		// common refractive indices range btwn [1, 4]. 
+		float fZero = ((1.0f - refractionIndex) / (1 + refractionIndex)) *
+			      ((1.0f - refractionIndex) / (1 + refractionIndex));
+		float F = fZero + (1 - fZero) * pow(1 - NdotV, 5);
+	
+		// compute Geometry-term for shadowing and self masking of the microfacetes
+		float G1 = (2.0f * NdotH * NdotV) / VdotH;
+		float G2 = (2.0f * NdotH * NdotL) / VdotH;
+		float G = min(1.0f, max(0.0f, min(G1, G2)));
+
+		// compute Microfacet-Slope-Distribution for probability that surface normals equal half vector and are thus reflecting directly into the camera
+		float alpha = acos(NdotH);
+		int gaussConstant = 100;
+		float D = gaussConstant * exp(-(alpha * alpha) / (roughness * roughness));
+
+		return color * (F * G * D) / (NdotL * NdotV * 3.14);
+		
+	} else {
+		return vec3(0,0,0);
+	}
+}
+
+
+
+
+
+
 
 void main() {
+	vec3 diffuseColor = diffuseColor_in;
+	vec3 specularColor = specularColor_in;
+	vec3 ambientColor = ambientColor_in;
+	float roughness = roughness_in;
+	float refractionIndex = refractionIndex_in;
+	float ka = ka_in;
+	float kd = kd_in;
+	float ks = ks_in;	
 	vec3 N = normalize(normal);
 	vec3 L = normalize(lightRay);
 	vec3 V = normalize(viewRay);
 
+	if (textureActive[0] == 1) ambientColor = texture2D(texture[0], texCoord).xyz;
+	if (textureActive[1] == 1) diffuseColor = texture2D(texture[1], texCoord).xyz;
+	if (textureActive[2] == 1) specularColor = texture2D(texture[2], texCoord).xyz;
+	if (textureActive[3] == 1) roughness = texture2D(texture[3], texCoord).x;
+	if (textureActive[4] == 1) refractionIndex = texture2D(texture[4], texCoord).x;
+	if (textureActive[5] == 1) {
+		N = normalize(texture2D(texture[5], texCoord).xyz * 2.0f - 1.0f);
+		L = normalize(lightRay_TS);
+		V = normalize(viewRay_TS);
+	}
+	
 
 
 	float LdotN = dot(L, N);
 
-	// only calculate lighting if light source is not behind the surface
-	if (LdotN >= 0) {
-	// R = reflection ray
-	vec3 R = 2 * LdotN * N - L;
-	float RdotV = max(0, dot(R,V));
+	vec3 diffuseComponent = vec3(0, 0, 0);
+	vec3 specularComponent = vec3(0, 0, 0);
+	vec3 ambientComponent = ambientColor;
 
-
-	// diffuse = kd * <L,N> * ld
-	vec4 diffuseColor = gl_Color * LdotN * gl_LightSource[0].diffuse; 
-
-	// specular = ks * <R,V>^n * ls
-	vec4 specularColor = gl_FrontMaterial.specular * pow(RdotV, gl_FrontMaterial.shininess) * gl_LightSource[0].specular;
-
-	gl_FragData[0] = diffuseColor + specularColor + vec4(gl_Color.x / 5, gl_Color.y / 5, gl_Color.z / 5, 1);
-	} else {
-	//gl_FragData[0] = vec4(0,0,0,1);
-	gl_FragData[0] = vec4(gl_Color.x / 5, gl_Color.y / 5, gl_Color.z / 5, 1);
+	if (diffuseShader == 1) {		// Lambert shading
+		diffuseComponent = computeLambertShading(diffuseColor, LdotN);
+	} else if (diffuseShader == 2) {	// Oren-Nayar shading
+		diffuseComponent = computeOrenNayarShading(diffuseColor, N, L, V, roughness);
 	}
+
+	if (specularShader == 1) {		// Phong shading
+		specularComponent = computePhongShading(specularColor, N, L, V, roughness);
+	} else if (specularShader == 2) {	// Cook-Torrance shading
+		specularComponent = computeCookTorranceShading(specularColor, N, L, V, roughness, refractionIndex);
+	}
+
+	/*vec3 color = diffuseComponent * kd * gl_LightSource[0].diffuse.xyz
+		   + specularComponent * ks * gl_LightSource[0].specular.xyz
+		   + ambientComponent * ka * gl_LightSource[0].ambient.xyz;*/
+
+	float total = ka + kd + ks;
+	ka /= total;
+	kd /= total;
+	ks /= total;
+
+
+
+	vec3 color = diffuseComponent * kd 
+		   + specularComponent * ks
+		   + ambientComponent * ka;
+
+	//float totalColor = color.x + color.y + color.z;
+	//color /= totalColor;
+
+	//color = specularComponent;
+
+
+	gl_FragData[0] = vec4(color, 1);
+
 
 	// id texture uses the RED channel only!
 	gl_FragData[1] = vec4(id, 0, 0, 0);
 
-	gl_FragData[0] = texture2D(diffuseTexture, vec2(0.5, 0.5));
+
 
 }

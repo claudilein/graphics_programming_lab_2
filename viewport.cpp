@@ -233,6 +233,13 @@ void Viewport::initializeGL()
 
     shadingProgram->addShader(shadingVertexShader);
     shadingProgram->addShader(shadingFragmentShader);
+
+
+    glBindAttribLocation(shadingProgram->programId(), 1, "normal_in");
+    glBindAttribLocation(shadingProgram->programId(), 3, "tex_in");
+    glBindAttribLocation(shadingProgram->programId(), 4, "tangent_in");
+    glBindAttribLocation(shadingProgram->programId(), 5, "bitangent_in");
+
     shadingProgram->link();
 
     // SELECTION SHADER
@@ -247,6 +254,9 @@ void Viewport::initializeGL()
 
     selectionProgram->addShader(selectionVertexShader);
     selectionProgram->addShader(selectionFragmentShader);
+
+    glBindAttribLocation(selectionProgram->programId(), 3, "tex_in");
+
     selectionProgram->link();
 
     // GRID SHADER
@@ -305,10 +315,22 @@ void Viewport::initializeGL()
     // distribute uniform IDs
 
     shadingIdID_ = glGetUniformLocation(shadingProgram->programId(), "id");
-    shadingColorID_ = glGetUniformLocation(shadingProgram->programId(), "color");
-    shadingDiffuseTextureID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseTexture");
-    shadingDiffuseShaderID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseShader");
-    shadingSpecularShaderID_ = glGetUniformLocation(shadingProgram->programId(), "specularShader");
+    //shadingColorID_ = glGetUniformLocation(shadingProgram->programId(), "color");
+    ambientColorID_ = glGetUniformLocation(shadingProgram->programId(), "ambientColor_in");
+    diffuseColorID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseColor_in");
+    specularColorID_ = glGetUniformLocation(shadingProgram->programId(), "specularColor_in");
+    roughnessID_ = glGetUniformLocation(shadingProgram->programId(), "roughness_in");
+    refractionIndexID_ = glGetUniformLocation(shadingProgram->programId(), "refractionIndex_in");
+    textureIDs_ = glGetUniformLocation(shadingProgram->programId(), "texture");
+    textureActiveIDs_ = glGetUniformLocation(shadingProgram->programId(), "textureActive");
+    nrTexturesID_ = glGetUniformLocation(shadingProgram->programId(), "nrTextures");
+    diffuseShaderID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseShader");
+    specularShaderID_ = glGetUniformLocation(shadingProgram->programId(), "specularShader");
+    kaID_ = glGetUniformLocation(shadingProgram->programId(), "ka_in");
+    kdID_ = glGetUniformLocation(shadingProgram->programId(), "kd_in");
+    ksID_ = glGetUniformLocation(shadingProgram->programId(), "ks_in");
+
+
 
     idTextureID_ = glGetUniformLocation(selectionProgram->programId(), "idTexture");
     colorTextureID_ = glGetUniformLocation(selectionProgram->programId(), "colorTexture");
@@ -344,7 +366,6 @@ void Viewport::initializeGL()
     wireframeID_ = glGetUniformLocation(terrainProgram->programId(), "wireframe");
 
 
-    glBindAttribLocation(shadingProgram->programId(), 1, "normal_in");
 
 
 
@@ -415,21 +436,58 @@ void Viewport::paintGL()
 
     // draw all primitives that are not a volume
     for (int i = 0; i < primitives->size(); i++) {
-        if (!primitives->at(i)->isVolume() && !primitives->at(i)->isTerrain()) {
-            glUniform1f(shadingIdID_, primitives->at(i)->getID());
-            glUniform3f(shadingColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
-            glUniform1i(shadingDiffuseShaderID_, diffuseShader_);
-            glUniform1i(shadingSpecularShaderID_, specularShader_);
+        Primitive *p = primitives->at(i);
+        if (!p->isVolume() && !p->isTerrain()) {
+            glUniform1f(shadingIdID_, p->getID());
+            //glUniform3f(shadingColorID_, primitives->at(i)->getColor()->x_, primitives->at(i)->getColor()->y_, primitives->at(i)->getColor()->z_);
+            glUniform3f(ambientColorID_, p->getAmbientColor().x_, p->getAmbientColor().y_, p->getAmbientColor().z_);
+            glUniform3f(diffuseColorID_, p->getDiffuseColor().x_, p->getDiffuseColor().y_, p->getDiffuseColor().z_);
+            glUniform3f(specularColorID_, p->getSpecularColor().x_, p->getSpecularColor().y_, p->getSpecularColor().z_);
+            glUniform1f(kaID_, p->getKa());
+            glUniform1f(kdID_, p->getKd());
+            glUniform1f(ksID_, p->getKs());
+            glUniform1f(roughnessID_, p->getRoughness());
+            glUniform1f(refractionIndexID_, p->getRefractionIndex());
 
-            // do this for every texture and think about other shaders, too!! do uber shader? seems easier to implement and its just two if statements
-            glUniform1i(shadingDiffuseTextureID_, 11);
+            int *textureIDs = (int*) malloc(sizeof(int) * Primitive::NR_TEXTURES);
+            int *textureActiveIDs = (int*) malloc(sizeof(int) * Primitive::NR_TEXTURES);
+            for (int i = 0; i < Primitive::NR_TEXTURES; i++) {
+                textureIDs[i] = 10 + i;
+                if (p->isTextureActive(static_cast<Primitive::Textures>(i))) {
+                    textureActiveIDs[i] = 1;
+                } else {
+                    textureActiveIDs[i] = 0;
+                }
+
+                if (primitiveBufferIDs_[p->getID()].hasTextures_[i]) {
+                    glActiveTexture(GL_TEXTURE10 + i);
+                    glBindTexture(GL_TEXTURE_2D, primitiveBufferIDs_[p->getID()].textures_[i]);
+                } else {
+                    glActiveTexture(GL_TEXTURE10 + i);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                    textureActiveIDs[i] = 0;
+                }
+            }
+            glActiveTexture(GL_TEXTURE0);
+            checkGLErrors("binding textures to master shader");
+
+            glUniform1iv(textureIDs_, Primitive::NR_TEXTURES, textureIDs);
+            glUniform1iv(textureActiveIDs_, Primitive::NR_TEXTURES, textureActiveIDs);
+            glUniform1i(nrTexturesID_, Primitive::NR_TEXTURES);
+
+            glUniform1i(diffuseShaderID_, p->getDiffuseShader());
+            glUniform1i(specularShaderID_, p->getSpecularShader());
 
             glPushMatrix();
-            glMultMatrix(primitives->at(i)->getModelMatrix().constData());
+            glMultMatrix(p->getModelMatrix().constData());
 
-            primitives->at(i)->draw(primitiveBufferIDs_[primitives->at(i)->getID()]);
-
+            p->draw(primitiveBufferIDs_[p->getID()]);
+            shadingProgram->release();
+            p->debugTangentSpace(false, false, false);
+            shadingProgram->bind();
             glPopMatrix();
+
+
         }
     }
 
@@ -745,7 +803,7 @@ void Viewport::setClickedId(int x, int y) {
 }
 
 Primitive::bufferIDs Viewport::createPrimitiveBufferIDs(Primitive* p) {
-    GLuint VAO, positions, indices, normals, colors, texCoords;
+    GLuint VAO, positions, indices, normals, colors, texCoords, tangents, bitangents;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &positions);
@@ -760,9 +818,16 @@ Primitive::bufferIDs Viewport::createPrimitiveBufferIDs(Primitive* p) {
     if (p->hasVBO(Primitive::TEXCOORDS)) {
         glGenBuffers(1, &texCoords);
     }
+    if (p->hasVBO(Primitive::TANGENTS)) {
+        glGenBuffers(1, &tangents);
+    }
+    if (p->hasVBO(Primitive::BITANGENTS)) {
+        glGenBuffers(1, &bitangents);
+    }
 
-    Primitive::bufferIDs buffIDs = Primitive::bufferIDs(VAO, positions, indices, normals, colors, texCoords,
-                                                        p->hasVBO(Primitive::NORMALS), p->hasVBO(Primitive::COLORS), p->hasVBO(Primitive::TEXCOORDS));
+    Primitive::bufferIDs buffIDs = Primitive::bufferIDs(VAO, positions, indices, normals, colors, texCoords, tangents, bitangents,
+                                                        p->hasVBO(Primitive::NORMALS), p->hasVBO(Primitive::COLORS),
+                                                        p->hasVBO(Primitive::TEXCOORDS), p->hasVBO(Primitive::TANGENTS), p->hasVBO(Primitive::BITANGENTS));
     return buffIDs;
 }
 
@@ -776,12 +841,13 @@ void Viewport::uploadTerrainMaterialData(Terrain *t, QString fileName) {
 }
 
 void Viewport::copyTextureData(Primitive *p, Primitive::Textures x) {
+    makeCurrent();
     int primitiveID = p->getID();
 
     glGenTextures(1, &primitiveBufferIDs_[primitiveID].textures_[x]);
+    std::cout << "GLuint ID for Primitive " << p->getID() << " for texture " << x << ": " << primitiveBufferIDs_[primitiveID].textures_[x] << std::endl;
     p->copyTextureToCurrentContext(primitiveBufferIDs_[primitiveID].textures_[x], x);
     primitiveBufferIDs_[primitiveID].hasTextures_[x] = true;
-    std::cout << "copyTextureData executed for tex " << x << std::endl;
 }
 
 void Viewport::copyVAOData(Primitive *p) {
@@ -904,15 +970,6 @@ void Viewport::setStepSize(int i) {
 
 }
 
-void Viewport::setDiffuseShader(int id) {
-    diffuseShader_ = id;
-    std::cout << "diffuse shader set to " << id << std::endl;
-}
-
-void Viewport::setSpecularShader(int id) {
-    specularShader_ = id;
-    std::cout << "specular shader set to " << id << std::endl;
-}
 
 
 void Viewport::checkGLErrors(const char *label) {

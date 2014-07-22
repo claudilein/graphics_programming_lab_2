@@ -33,7 +33,7 @@ void Camera::zoom(float zoom)
 void Camera::reset()
 {
     rotation_ = initialRotation_;
-    zoom_ = -20;
+    zoom_ = -10;
     pointOfInterest_ = QVector3D();
     emit zoomChanged();
 }

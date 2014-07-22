@@ -196,26 +196,30 @@ Primitive* Model::getPrimitive(int ID) {
 
 void Model::setActivePrimitive(float ID)
 {
+    // only do something if active primitive has actually changed
+    if (activePrimitive_ != NULL && activePrimitive_->getID() == ID) {}
+    else {
 
-    if (ID != 0) {
-        for (int i = 0; i < scenegraphModel_->getPrimitiveList()->size(); i++) {
-            if (scenegraphModel_->getPrimitiveList()->at(i)->getID() == ID) {
-                activePrimitive_ = scenegraphModel_->getPrimitiveList()->at(i);
-                break;
+        if (ID != 0) {
+            for (int i = 0; i < scenegraphModel_->getPrimitiveList()->size(); i++) {
+                if (scenegraphModel_->getPrimitiveList()->at(i)->getID() == ID) {
+                    activePrimitive_ = scenegraphModel_->getPrimitiveList()->at(i);
+                    break;
+                }
+
             }
 
+            QModelIndex index = scenegraphModel_->index(scenegraphModel_->getPrimitiveList()->indexOf(activePrimitive_), 0, QModelIndex());
+            emit selectItem(index);
+
+        } else {
+            activePrimitive_ = NULL;
         }
 
-        QModelIndex index = scenegraphModel_->index(scenegraphModel_->getPrimitiveList()->indexOf(activePrimitive_), 0, QModelIndex());
-        emit selectItem(index);
-
-    } else {
-        activePrimitive_ = NULL;
+        emit updateStatusBar();
+        emit updateGL();
+        emit activePrimitiveChanged();
     }
-
-    emit updateStatusBar();
-    emit updateGL();
-    emit activePrimitiveChanged();
 
 }
 

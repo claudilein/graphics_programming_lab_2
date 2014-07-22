@@ -1,6 +1,7 @@
 #ifndef MATERIALEDITOR_H
 #define MATERIALEDITOR_H
 
+
 #include <QWidget>
 #include <QGridLayout>
 #include <QLabel>
@@ -12,15 +13,18 @@
 #include <QButtonGroup>
 #include <QPixmap>
 #include <primitive.h>
+#include <materialpreview.h>
 
 class MaterialEditor : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MaterialEditor(QWidget *parent = 0);
+    explicit MaterialEditor(QWidget *parent = 0, MaterialPreview *preview = 0);
     //~MaterialEditor();
     enum Component {RED, GREEN, BLUE};
     static const int NR_COMPONENTS = 3;
+
+    void adjustToPrimitive(Primitive* p);
 
 
 
@@ -34,6 +38,9 @@ signals:
     void textureUploaded(Primitive::Textures x, QImage texture);
     void diffuseShaderChanged(int id);
     void specularShaderChanged(int id);
+    void kaChanged(int ka);
+    void kdChanged(int kd);
+    void ksChanged(int ks);
 
 public slots:
     void ambientComponentChanged(QString value);
@@ -43,10 +50,18 @@ public slots:
     void textureUploadInitialized();
     void loadMaterial();
     void saveMaterial();
+    void diffuseShaderChangedSlot(int id);
+    void specularShaderChangedSlot(int id);
+    void kaChangedSlot(int value);
+    void kdChangedSlot(int value);
+    void ksChangedSlot(int value);
 
 private:
 
     QGridLayout *gridLayout;
+
+    // material preview
+    MaterialPreview *preview_;
 
     // Labels first row
     QLabel *componentLabels[NR_COMPONENTS];
@@ -66,7 +81,13 @@ private:
     QLineEdit *specularEdits[NR_COMPONENTS];
     uint specularColor[NR_COMPONENTS];
 
-    // roughnessne Freundin getroffen
+    // ka, kd, ks factors
+    QLabel *factorsLabel;
+    QSlider *kaSlider;
+    QSlider *kdSlider;
+    QSlider *ksSlider;
+
+    // roughness
     QLabel *roughnessLabel;
     QSlider *roughnessSlider;
 
@@ -104,9 +125,12 @@ private:
     QPushButton *loadButton;
     QPushButton *saveButton;
 
-
+    bool changedKd;
+    bool changedKs;
+    bool changedKa;
 
     void uploadTexture(int index, QString fileName);
+    void resetProperties();
     QString componentToString(Component x);
     QString textureToString(Primitive::Textures x);
 };
