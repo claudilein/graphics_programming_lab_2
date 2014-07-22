@@ -25,6 +25,7 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     diffuseColor_ = float3(0, 0, 0);
     specularColor_ = float3(0, 0, 0);
     roughness_ = 0.50f;
+    specularRoughness_ = 0.50f;
     refractionIndex_ = 2.5f;
     ka_ = 1; kd_ = 1; ks_ = 1;
     diffuseShader_ = 0;
@@ -361,10 +362,11 @@ void Primitive::setSpecularColor(float3 color) {
 void Primitive::setRoughness(float roughness) {
     roughness_ = roughness;
     std::cout << "roughness set to " << roughness_ << std::endl;
-    float m = std::max(0.2f, (50.0f * (1.0f - roughness) * (1.0f - roughness)));
-    std::cout << "phong roughness: " << m << std::endl;
+}
 
-
+void Primitive::setSpecularRoughness(float roughness) {
+    specularRoughness_ = roughness;
+    std::cout << "specular roughness set to " << specularRoughness_ << std::endl;
 }
 
 void Primitive::setRefractionIndex(float refractionIndex) {
@@ -426,6 +428,10 @@ Primitive::float3 Primitive::getSpecularColor() {
 
 float Primitive::getRoughness() {
     return roughness_;
+}
+
+float Primitive::getSpecularRoughness() {
+    return specularRoughness_;
 }
 
 float Primitive::getRefractionIndex() {

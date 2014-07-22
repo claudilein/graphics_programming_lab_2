@@ -74,6 +74,7 @@ signals:
     void diffuseColorChanged(uint red, uint green, uint blue);
     void specularColorChanged(uint red, uint green, uint blue);
     void roughnessChanged(int roughness);
+    void roughnessSpecularChanged(int roughness);
     void refractionIndexChanged(int refractionIndex);
     void textureChecked(Primitive::Textures x, bool status);
     void textureUploaded(Primitive::Textures x, QImage texture);

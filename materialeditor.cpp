@@ -116,15 +116,22 @@ MaterialEditor::MaterialEditor(QWidget *parent, MaterialPreview *preview) :
 
     // roughness label & slider
     roughnessLabel = new QLabel(this);
-    roughnessLabel->setText("roughness");
+    roughnessLabel->setText("roughness d/s");
     gridLayout->addWidget(roughnessLabel, row, 0, Qt::AlignHCenter);
 
     roughnessSlider = new QSlider(Qt::Horizontal, this);
     roughnessSlider->setRange(1, 99);
-    roughnessSlider->setFixedWidth(100);
+    roughnessSlider->setFixedWidth(70);
     roughnessSlider->setValue(50);
     connect(roughnessSlider, SIGNAL(valueChanged(int)), this, SIGNAL(roughnessChanged(int)));
-    gridLayout->addWidget(roughnessSlider, row, 1, 1, 2, Qt::AlignLeft);
+    gridLayout->addWidget(roughnessSlider, row, 1, 1, 1, Qt::AlignLeft);
+
+    roughnessSpecularSlider = new QSlider(Qt::Horizontal, this);
+    roughnessSpecularSlider->setRange(1, 99);
+    roughnessSpecularSlider->setFixedWidth(70);
+    roughnessSpecularSlider->setValue(50);
+    connect(roughnessSpecularSlider, SIGNAL(valueChanged(int)), this, SIGNAL(roughnessSpecularChanged(int)));
+    gridLayout->addWidget(roughnessSpecularSlider, row, 2, 1, 1, Qt::AlignLeft);
 
     row++;
 
@@ -289,6 +296,9 @@ void MaterialEditor::adjustToPrimitive(Primitive *p) {
 
         roughnessSlider->setValue(p->getRoughness() * 100);
         roughnessSlider->setEnabled(true);
+        roughnessSpecularSlider->setValue(p->getSpecularRoughness() * 100);
+        roughnessSpecularSlider->setEnabled(true);
+
         refractionIndexSlider->setValue((p->getRefractionIndex() - 1) / 3 * 100);
         refractionIndexSlider->setEnabled(true);
 
@@ -375,6 +385,9 @@ void MaterialEditor::resetProperties() {
 
     roughnessSlider->setValue(50);
     roughnessSlider->setEnabled(false);
+    roughnessSpecularSlider->setValue(50);
+    roughnessSpecularSlider->setEnabled(false);
+
     refractionIndexSlider->setValue(50);
     refractionIndexSlider->setEnabled(false);
 
@@ -458,6 +471,12 @@ void MaterialEditor::loadMaterial() {
 
         line = file.readLine(maxLineLength);
         value = QString(line).split(' ');
+        roughness = value[0].toInt();
+        roughnessSpecularSlider->setValue(roughness);
+        emit roughnessSpecularChanged(roughness);
+
+        line = file.readLine(maxLineLength);
+        value = QString(line).split(' ');
         int refractionIndex = value[0].toInt();
         refractionIndexSlider->setValue(refractionIndex);
         emit refractionIndexChanged(refractionIndex);
@@ -537,6 +556,7 @@ void MaterialEditor::saveMaterial() {
         data << kaSlider->value() << " " << kdSlider->value() << " " << ksSlider->value() << "\n";
 
         data << roughnessSlider->value() << "\n";
+        data << roughnessSpecularSlider->value() << "\n";
         data << refractionIndexSlider->value() << "\n";
 
         data << diffuseShadersGroup->checkedId() << "\n";
@@ -663,9 +683,10 @@ QString MaterialEditor::textureToString(Primitive::Textures x) {
     case Primitive::AMBIENT: return "ambient";
     case Primitive::DIFFUSE: return "diffuse";
     case Primitive::SPECULAR: return "specular";
-    case Primitive::ROUGHNESS: return "roughness";
+    case Primitive::ROUGHNESS_D: return "roughness \n diffuse";
     case Primitive::REFRACTION_INDEX: return "refraction \n index";
     case Primitive::NORMAL: return "normal";
+    //case Primitive::ROUGHNESS_S: return "roughness \n specular";
     default: return "default";
     }
 }

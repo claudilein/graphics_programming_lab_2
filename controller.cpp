@@ -48,6 +48,7 @@ void Controller::setView(View *view) {
     connect(view_, SIGNAL(diffuseColorChanged(uint,uint,uint)), this, SLOT(setDiffuseColor(uint,uint,uint)));
     connect(view_, SIGNAL(specularColorChanged(uint,uint,uint)), this, SLOT(setSpecularColor(uint,uint,uint)));
     connect(view_, SIGNAL(roughnessChanged(int)), this, SLOT(setRoughness(int)));
+    connect(view_, SIGNAL(roughnessSpecularChanged(int)), this, SLOT(setSpecularRoughness(int)));
     connect(view_, SIGNAL(refractionIndexChanged(int)), this, SLOT(setRefractionIndex(int)));
     connect(view_, SIGNAL(textureChecked(Primitive::Textures,bool)), this, SLOT(setTextureChecked(Primitive::Textures,bool)));
     connect(view_, SIGNAL(textureUploaded(Primitive::Textures,QImage)), this, SLOT(setTexture(Primitive::Textures,QImage)));
@@ -158,6 +159,13 @@ void Controller::setSpecularColor(uint red, uint green, uint blue) {
 void Controller::setRoughness(int roughness) {
     if (model_->getActivePrimitive() != NULL) {
         model_->getActivePrimitive()->setRoughness(roughness / 100.0f);
+        emit updateViewports();
+    }
+}
+
+void Controller::setSpecularRoughness(int roughness) {
+    if (model_->getActivePrimitive() != NULL) {
+        model_->getActivePrimitive()->setSpecularRoughness(roughness / 100.0f);
         emit updateViewports();
     }
 }

@@ -96,6 +96,7 @@ void MaterialPreview::initializeGL()
     diffuseColorID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseColor_in");
     specularColorID_ = glGetUniformLocation(shadingProgram->programId(), "specularColor_in");
     roughnessID_ = glGetUniformLocation(shadingProgram->programId(), "roughness_in");
+    specularRoughnessID_ = glGetUniformLocation(shadingProgram->programId(), "specularRoughness_in");
     refractionIndexID_ = glGetUniformLocation(shadingProgram->programId(), "refractionIndex_in");
     textureIDs_ = glGetUniformLocation(shadingProgram->programId(), "texture");
     textureActiveIDs_ = glGetUniformLocation(shadingProgram->programId(), "textureActive");
@@ -136,6 +137,7 @@ void MaterialPreview::paintGL() {
     glUniform1f(kdID_, sphere_->getKd());
     glUniform1f(ksID_, sphere_->getKs());
     glUniform1f(roughnessID_, sphere_->getRoughness());
+    glUniform1f(specularRoughnessID_, sphere_->getSpecularRoughness());
     glUniform1f(refractionIndexID_, sphere_->getRefractionIndex());
 
     int *textureIDs = (int*) malloc(sizeof(int) * Primitive::NR_TEXTURES);
@@ -229,6 +231,12 @@ void MaterialPreview::setSpecularColor(uint red, uint green, uint blue) {
 
 void MaterialPreview::setRoughness(int roughness) {
     sphere_->setRoughness(roughness / 100.0f);
+    updateGL();
+}
+
+void MaterialPreview::setSpecularRoughness(int roughness) {
+    sphere_->setSpecularRoughness(roughness / 100.0f);
+
     updateGL();
 }
 

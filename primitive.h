@@ -17,7 +17,7 @@ class Primitive : public QObject
 public:
     enum VBO { NORMALS, COLORS, TEXCOORDS, TANGENTS, BITANGENTS };
     static const int NR_VBOS = 5;
-    enum Textures { AMBIENT, DIFFUSE, SPECULAR, ROUGHNESS, REFRACTION_INDEX, NORMAL };
+    enum Textures { AMBIENT, DIFFUSE, SPECULAR, ROUGHNESS_D, REFRACTION_INDEX, NORMAL };
     static const int NR_TEXTURES = 6;
 
     struct bufferIDs {
@@ -128,6 +128,7 @@ public:
     void setDiffuseColor(float3 color);
     void setSpecularColor(float3 color);
     void setRoughness(float roughness);
+    void setSpecularRoughness(float specularRoughness);
     void setRefractionIndex(float refractionIndex);
     void setTexture(Textures x, QImage texture);
     void setTextureActive(Textures x, bool status);
@@ -142,6 +143,7 @@ public:
     float3 getDiffuseColor();
     float3 getSpecularColor();
     float getRoughness();
+    float getSpecularRoughness();
     float getRefractionIndex();
     int getDiffuseShader();
     int getSpecularShader();
@@ -169,6 +171,7 @@ protected:
     float3 diffuseColor_;
     float3 specularColor_;
     float roughness_;
+    float specularRoughness_;
     float refractionIndex_;
     QImage textures[NR_TEXTURES];
     bool texturesActive[NR_TEXTURES];

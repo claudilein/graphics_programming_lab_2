@@ -33,6 +33,7 @@ signals:
     void diffuseColorChanged(uint red, uint green, uint blue);
     void specularColorChanged(uint red, uint green, uint blue);
     void roughnessChanged(int roughness);
+    void roughnessSpecularChanged(int roughness);
     void refractionIndexChanged(int refractionIndex);
     void textureChecked(Primitive::Textures x, bool status);
     void textureUploaded(Primitive::Textures x, QImage texture);
@@ -87,9 +88,14 @@ private:
     QSlider *kdSlider;
     QSlider *ksSlider;
 
-    // roughness
+    // roughness diffuse
     QLabel *roughnessLabel;
     QSlider *roughnessSlider;
+
+    // roughness specular
+    QLabel *roughnessSpecularLabel;
+    QSlider *roughnessSpecularSlider;
+
 
     // refraction index for fresnel term
     QLabel *refractionIndexLabel;

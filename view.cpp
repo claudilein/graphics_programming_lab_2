@@ -453,6 +453,7 @@ void View::setModel(Model *model)
     connect(materialEditor, SIGNAL(diffuseColorChanged(uint,uint,uint)), this, SIGNAL(diffuseColorChanged(uint,uint,uint)));
     connect(materialEditor, SIGNAL(specularColorChanged(uint,uint,uint)), this, SIGNAL(specularColorChanged(uint,uint,uint)));
     connect(materialEditor, SIGNAL(roughnessChanged(int)), this, SIGNAL(roughnessChanged(int)));
+    connect(materialEditor, SIGNAL(roughnessSpecularChanged(int)), this, SIGNAL(roughnessSpecularChanged(int)));
     connect(materialEditor, SIGNAL(refractionIndexChanged(int)), this, SIGNAL(refractionIndexChanged(int)));
     connect(materialEditor, SIGNAL(textureChecked(Primitive::Textures,bool)), this, SIGNAL(textureChecked(Primitive::Textures,bool)));
     connect(materialEditor, SIGNAL(textureUploaded(Primitive::Textures,QImage)), this, SIGNAL(textureUploaded(Primitive::Textures,QImage)));
@@ -467,6 +468,7 @@ void View::setModel(Model *model)
     connect(materialEditor, SIGNAL(diffuseColorChanged(uint,uint,uint)), materialPreview, SLOT(setDiffuseColor(uint,uint,uint)));
     connect(materialEditor, SIGNAL(specularColorChanged(uint,uint,uint)), materialPreview, SLOT(setSpecularColor(uint,uint,uint)));
     connect(materialEditor, SIGNAL(roughnessChanged(int)), materialPreview, SLOT(setRoughness(int)));
+    connect(materialEditor, SIGNAL(roughnessSpecularChanged(int)), materialPreview, SLOT(setSpecularRoughness(int)));
     connect(materialEditor, SIGNAL(refractionIndexChanged(int)), materialPreview, SLOT(setRefractionIndex(int)));
     connect(materialEditor, SIGNAL(textureChecked(Primitive::Textures,bool)), materialPreview, SLOT(setTextureChecked(Primitive::Textures,bool)));
     connect(materialEditor, SIGNAL(textureUploaded(Primitive::Textures,QImage)), materialPreview, SLOT(setTexture(Primitive::Textures,QImage)));

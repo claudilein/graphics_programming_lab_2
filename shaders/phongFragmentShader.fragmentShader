@@ -17,6 +17,7 @@ uniform float ka_in;
 uniform float kd_in;
 uniform float ks_in;
 uniform float roughness_in;
+uniform float specularRoughness_in;
 uniform float refractionIndex_in;
 uniform sampler2D texture[10];
 uniform int textureActive[10];
@@ -185,6 +186,7 @@ void main() {
 	vec3 specularColor = specularColor_in;
 	vec3 ambientColor = ambientColor_in;
 	float roughness = roughness_in;
+	float specularRoughness = specularRoughness_in;
 	float refractionIndex = refractionIndex_in;
 	float ka = ka_in;
 	float kd = kd_in;
@@ -219,9 +221,9 @@ void main() {
 	}
 
 	if (specularShader == 1) {		// Phong shading
-		specularComponent = computePhongShading(specularColor, N, L, V, roughness);
+		specularComponent = computePhongShading(specularColor, N, L, V, specularRoughness);
 	} else if (specularShader == 2) {	// Cook-Torrance shading
-		specularComponent = computeCookTorranceShading(specularColor, N, L, V, roughness, refractionIndex);
+		specularComponent = computeCookTorranceShading(specularColor, N, L, V, specularRoughness, refractionIndex);
 	}
 
 	/*vec3 color = diffuseComponent * kd * gl_LightSource[0].diffuse.xyz
@@ -238,6 +240,8 @@ void main() {
 	vec3 color = diffuseComponent * kd 
 		   + specularComponent * ks
 		   + ambientComponent * ka;
+
+	
 
 	//float totalColor = color.x + color.y + color.z;
 	//color /= totalColor;

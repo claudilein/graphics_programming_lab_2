@@ -123,6 +123,7 @@ private:
     GLuint diffuseColorID_;
     GLuint specularColorID_;
     GLuint roughnessID_;
+    GLuint specularRoughnessID_;
     GLuint refractionIndexID_;
     GLuint textureIDs_;
     GLuint textureActiveIDs_;

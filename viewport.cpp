@@ -320,6 +320,7 @@ void Viewport::initializeGL()
     diffuseColorID_ = glGetUniformLocation(shadingProgram->programId(), "diffuseColor_in");
     specularColorID_ = glGetUniformLocation(shadingProgram->programId(), "specularColor_in");
     roughnessID_ = glGetUniformLocation(shadingProgram->programId(), "roughness_in");
+    specularRoughnessID_ = glGetUniformLocation(shadingProgram->programId(), "specularRoughness_in");
     refractionIndexID_ = glGetUniformLocation(shadingProgram->programId(), "refractionIndex_in");
     textureIDs_ = glGetUniformLocation(shadingProgram->programId(), "texture");
     textureActiveIDs_ = glGetUniformLocation(shadingProgram->programId(), "textureActive");
@@ -447,6 +448,7 @@ void Viewport::paintGL()
             glUniform1f(kdID_, p->getKd());
             glUniform1f(ksID_, p->getKs());
             glUniform1f(roughnessID_, p->getRoughness());
+            glUniform1f(specularRoughnessID_, p->getSpecularRoughness());
             glUniform1f(refractionIndexID_, p->getRefractionIndex());
 
             int *textureIDs = (int*) malloc(sizeof(int) * Primitive::NR_TEXTURES);

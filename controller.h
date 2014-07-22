@@ -31,6 +31,7 @@ public slots:
     void setDiffuseColor(uint red, uint green, uint blue);
     void setSpecularColor(uint red, uint green, uint blue);
     void setRoughness(int roughness);
+    void setSpecularRoughness(int roughness);
     void setRefractionIndex(int refractionIndex);
     void setTextureChecked(Primitive::Textures x, bool status);
     void setTexture(Primitive::Textures x, QImage texture);
