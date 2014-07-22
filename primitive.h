@@ -17,8 +17,8 @@ class Primitive : public QObject
 public:
     enum VBO { NORMALS, COLORS, TEXCOORDS, TANGENTS, BITANGENTS };
     static const int NR_VBOS = 5;
-    enum Textures { AMBIENT, DIFFUSE, SPECULAR, ROUGHNESS_D, REFRACTION_INDEX, NORMAL };
-    static const int NR_TEXTURES = 6;
+    enum Textures { AMBIENT, DIFFUSE, SPECULAR, ROUGHNESS_D, REFRACTION_INDEX, NORMAL, ROUGHNESS_S };
+    static const int NR_TEXTURES = 7;
 
     struct bufferIDs {
         bufferIDs() : VAO_(0), positions_(0), indices_(0), normals_(0), colors_(0), texCoords_(0), tangents_(0), bitangents_(0),

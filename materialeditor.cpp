@@ -91,7 +91,7 @@ MaterialEditor::MaterialEditor(QWidget *parent, MaterialPreview *preview) :
     kaSlider = new QSlider(Qt::Horizontal, this);
     kaSlider->setRange(0, 100);
     kaSlider->setFixedWidth(70);
-    kaSlider->setValue(100);
+    kaSlider->setValue(0);
     connect(kaSlider, SIGNAL(valueChanged(int)), this, SIGNAL(kaChanged(int)));
     connect(kaSlider, SIGNAL(valueChanged(int)), this, SLOT(kaChangedSlot(int)));
     gridLayout->addWidget(kaSlider, row, 1, Qt::AlignHCenter);
@@ -107,7 +107,7 @@ MaterialEditor::MaterialEditor(QWidget *parent, MaterialPreview *preview) :
     ksSlider = new QSlider(Qt::Horizontal, this);
     ksSlider->setRange(0, 100);
     ksSlider->setFixedWidth(70);
-    ksSlider->setValue(100);
+    ksSlider->setValue(30);
     connect(ksSlider, SIGNAL(valueChanged(int)), this, SIGNAL(ksChanged(int)));
     connect(ksSlider, SIGNAL(valueChanged(int)), this, SLOT(ksChangedSlot(int)));
     gridLayout->addWidget(ksSlider, row, 3, Qt::AlignHCenter);
@@ -129,7 +129,7 @@ MaterialEditor::MaterialEditor(QWidget *parent, MaterialPreview *preview) :
     roughnessSpecularSlider = new QSlider(Qt::Horizontal, this);
     roughnessSpecularSlider->setRange(1, 99);
     roughnessSpecularSlider->setFixedWidth(70);
-    roughnessSpecularSlider->setValue(50);
+    roughnessSpecularSlider->setValue(30);
     connect(roughnessSpecularSlider, SIGNAL(valueChanged(int)), this, SIGNAL(roughnessSpecularChanged(int)));
     gridLayout->addWidget(roughnessSpecularSlider, row, 2, 1, 1, Qt::AlignLeft);
 
@@ -376,11 +376,11 @@ void MaterialEditor::resetProperties() {
     emit diffuseColorChanged(diffuseEdits[0]->text().toInt(), diffuseEdits[1]->text().toInt(), diffuseEdits[2]->text().toInt());
     emit specularColorChanged(specularEdits[0]->text().toInt(), specularEdits[1]->text().toInt(), specularEdits[2]->text().toInt());
 
-    kaSlider->setValue(100);
+    kaSlider->setValue(0);
     kaSlider->setEnabled(false);
     kdSlider->setValue(100);
     kdSlider->setEnabled(false);
-    ksSlider->setValue(100);
+    ksSlider->setValue(30);
     ksSlider->setEnabled(false);
 
     roughnessSlider->setValue(50);
@@ -388,7 +388,7 @@ void MaterialEditor::resetProperties() {
     roughnessSpecularSlider->setValue(50);
     roughnessSpecularSlider->setEnabled(false);
 
-    refractionIndexSlider->setValue(50);
+    refractionIndexSlider->setValue(30);
     refractionIndexSlider->setEnabled(false);
 
     for (int i = 0; i < Primitive::NR_TEXTURES; i++) {
@@ -686,7 +686,7 @@ QString MaterialEditor::textureToString(Primitive::Textures x) {
     case Primitive::ROUGHNESS_D: return "roughness \n diffuse";
     case Primitive::REFRACTION_INDEX: return "refraction \n index";
     case Primitive::NORMAL: return "normal";
-    //case Primitive::ROUGHNESS_S: return "roughness \n specular";
+    case Primitive::ROUGHNESS_S: return "roughness \n specular";
     default: return "default";
     }
 }

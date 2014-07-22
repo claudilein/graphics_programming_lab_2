@@ -25,9 +25,9 @@ Primitive::Primitive(QObject *parent, std::string name, int id, int tesselation,
     diffuseColor_ = float3(0, 0, 0);
     specularColor_ = float3(0, 0, 0);
     roughness_ = 0.50f;
-    specularRoughness_ = 0.50f;
+    specularRoughness_ = 0.30f;
     refractionIndex_ = 2.5f;
-    ka_ = 1; kd_ = 1; ks_ = 1;
+    ka_ = 0; kd_ = 1; ks_ = 0.3;
     diffuseShader_ = 0;
     specularShader_ = 0;
 

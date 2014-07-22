@@ -205,6 +205,7 @@ void main() {
 		L = normalize(lightRay_TS);
 		V = normalize(viewRay_TS);
 	}
+	if (textureActive[6] == 1) specularRoughness = texture2D(texture[6], texCoord).x;
 	
 
 
